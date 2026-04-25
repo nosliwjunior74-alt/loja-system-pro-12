@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Segurança do Produtor</title>
+  <link rel="stylesheet" href="css/dashboard.css">
+  <style>
+    body{font-family:Arial,sans-serif;background:linear-gradient(135deg,#fff1f7,#ffe4f0);margin:0;color:#3b1230}
+    .wrap{max-width:760px;margin:40px auto;padding:24px}
+    .card{background:#fff;border-radius:22px;padding:26px;box-shadow:0 20px 50px rgba(145,31,88,.16);border:1px solid #ffd1e5}
+    h1{margin:0 0 10px;color:#b32672}
+    label{display:block;font-weight:700;margin:18px 0 8px}
+    input{width:100%;padding:14px;border:1px solid #f0a8ca;border-radius:14px;font-size:16px;box-sizing:border-box}
+    button{margin-top:18px;background:#db2777;color:#fff;border:0;border-radius:14px;padding:14px 18px;font-weight:800;cursor:pointer}
+    .muted{color:#7a4f67;line-height:1.5}
+    .ok{color:#047857;font-weight:700}
+    .err{color:#b91c1c;font-weight:700}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+    @media(max-width:700px){.grid{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h1>🔐 Segurança do Produtor</h1>
+      <p class="muted">Troque a senha aqui. A nova senha será salva como hash seguro no servidor, sem mostrar a senha real.</p>
+      <div id="statusBox" class="muted">Carregando status...</div>
+      <label>Senha atual</label>
+      <input id="currentPassword" type="password" autocomplete="current-password" placeholder="Digite a senha atual">
+      <div class="grid">
+        <div>
+          <label>Nova senha</label>
+          <input id="newPassword" type="password" autocomplete="new-password" placeholder="Ex: Loja@2026#Segura">
+        </div>
+        <div>
+          <label>Confirmar nova senha</label>
+          <input id="confirmPassword" type="password" autocomplete="new-password" placeholder="Repita a nova senha">
+        </div>
+      </div>
+      <button id="changeBtn">Alterar senha com segurança</button>
+      <button id="logoutBtn" style="background:#334155">Sair da sessão</button>
+      <p id="msg" class="muted"></p>
+    </div>
+  </div>
+<script>
+async function api(url, options={}){
+  const r = await fetch(url, options);
+  const data = await r.json().catch(()=>({}));
+  if(!r.ok) throw new Error(data.error || 'Erro na solicitação.');
+  return data;
+}
+async function loadStatus(){
+  try{
+    const s = await api('/api/admin/security-status');
+    document.getElementById('statusBox').innerHTML = `<span class="ok">Sessão ativa</span><br>Usuário: ${s.username}<br>Senha alterada no servidor: ${s.hasStoredPassword ? 'sim' : 'ainda usando hash do Railway'}<br>Sessão expira em até ${s.sessionMaxHours} horas.`;
+  }catch(e){
+    location.href = '/admin-login.html';
+  }
+}
+document.getElementById('changeBtn').onclick = async () => {
+  const currentPassword = document.getElementById('currentPassword').value;
+  const newPassword = document.getElementById('newPassword').value;
+  const confirmPassword = document.getElementById('confirmPassword').value;
+  const msg = document.getElementById('msg');
+  if(newPassword !== confirmPassword){ msg.className='err'; msg.textContent='A confirmação não confere.'; return; }
+  try{
+    const data = await api('/api/admin/change-password', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({ currentPassword, newPassword })
+    });
+    msg.className='ok';
+    msg.textContent=data.message + ' Use a nova senha no próximo login.';
+    document.getElementById('currentPassword').value='';
+    document.getElementById('newPassword').value='';
+    document.getElementById('confirmPassword').value='';
+    loadStatus();
+  }catch(e){
+    msg.className='err';
+    msg.textContent=e.message;
+  }
+};
+document.getElementById('logoutBtn').onclick = async () => {
+  await fetch('/api/admin/logout', {method:'POST'});
+  location.href='/admin-login.html';
+};
+loadStatus();
+</script>
+</body>
+</html>

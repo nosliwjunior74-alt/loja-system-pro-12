@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Sua Loja - Provador</title><link rel="stylesheet" href="css/estilo.css"></head>
+<body class="home"><main class="wrapper"><section class="tv">
+<header class="topbar">
+<a class="small-link" href="admin.html">Painel da Loja</a>
+<img class="logo small" src="imagens/logo.png" alt="Sua Loja">
+<h1 class="title" id="provadorTitle" style="font-size:28px">PROVADOR PREMIUM</h1>
+<p class="subtitle">Notebook ou PC com webcam USB</p>
+<p class="kicker">Experiência da Loja</p>
+<div class="topbar-status">Modo Zara: detecção automática do corpo sem mudar a aparência original</div>
+</header>
+<section class="camera-area">
+<div class="badge" id="provadorBadge">Look</div>
+<div class="select-client"><select id="clienteSelect"></select></div>
+<div class="controls-mini"><button id="trackingBtn" onclick="CameraModule.toggleTracking()">Tracking ligado</button></div>
+<video id="video" class="live-video" autoplay playsinline muted></video>
+<canvas id="poseCanvas" class="overlay-canvas"></canvas>
+<div class="hint" id="cameraTip">Abrindo câmera...</div>
+</section>
+<section class="carousel">
+<button class="arrow" onclick="prevProvador()">‹</button>
+<div class="track" id="provadorTrack"></div>
+<button class="arrow" onclick="nextProvador()">›</button>
+</section>
+<section class="actions">
+<button class="btn primary" onclick="fotoLook()">FOTO DO LOOK</button>
+<button class="btn secondary" onclick="enviarWhats()">ENVIAR WHATSAPP</button>
+<button class="btn neutral" onclick="location.href='catalogo.html'">TROCAR LOOK</button>
+<div class="track-note">O visual e o formato do aplicativo foram mantidos. O tracking automático precisa de internet para carregar o MediaPipe.</div>
+</section>
+</section></main>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+<script src="js/salvar.js"></script><script src="js/estoque.js"></script><script src="js/camera.js"></script><script src="js/whatsapp.js"></script><script src="js/provador.js"></script>
+<script>initProvador();</script><script src="../shared/brand-sync.js"></script>
+<script src="js/client-neutral-brand.js"></script>
+</body></html>

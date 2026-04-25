@@ -1,0 +1,32 @@
+UPGRADE NÍVEL EMPRESA - LOGIN SEGURO
+
+Recursos aplicados:
+- login do produtor com bcrypt hash
+- troca de senha dentro do painel: menu Segurança
+- sessão com cookie httpOnly
+- expiração de sessão em até 8 horas
+- limite de tentativas de login
+- logout seguro
+- senha do cliente/loja continua com hash
+- banco preparado para /data no Railway
+- removido uso obrigatório de senha 123456
+
+Variáveis recomendadas no Railway:
+PORT=8080
+NODE_ENV=production
+ADMIN_USER=produtor
+ADMIN_PASSWORD_HASH=HASH_ATUAL_QUE_FUNCIONA
+SESSION_SECRET=uma_chave_grande_segura
+LICENSE_SECRET=outra_chave_grande_segura
+DB_PATH=/data/loja-system.sqlite
+
+Como trocar senha sem mexer no Railway:
+1. Entre no painel do produtor.
+2. Clique no menu Segurança.
+3. Digite a senha atual.
+4. Digite a nova senha forte.
+5. Salve.
+6. No próximo login use a nova senha.
+
+A nova senha é salva em /data/admin-auth.json.
+Por isso, para persistir após redeploy, use volume /data no Railway.

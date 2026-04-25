@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PNG Sem Fundo PRO - Botões Corrigidos</title>
+  <style>
+    body{font-family:Arial,sans-serif;background:#111827;color:#f9fafb;margin:0}
+    .wrap{max-width:1100px;margin:0 auto;padding:24px}
+    .card{background:#1f2937;border:1px solid #374151;border-radius:16px;padding:20px;margin-bottom:18px}
+    h1{margin:0 0 10px;font-size:28px}
+    .muted{color:#cbd5e1}
+    button{background:var(--brand-color,#ec4899);color:#fff;border:none;border-radius:12px;padding:12px 18px;cursor:pointer;display:inline-block;margin:6px 8px 6px 0;font-weight:700}
+    button.secondary{background:#374151}
+    button:disabled{opacity:.55;cursor:not-allowed}
+    input[type=file]{display:none}
+    .drop{border:2px dashed var(--brand-color,#ec4899);border-radius:16px;padding:26px;text-align:center;margin-top:12px}
+    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px;margin-top:18px}
+    .item{background:#111827;border:1px solid #374151;border-radius:14px;padding:10px}
+    .item img{width:100%;height:160px;object-fit:contain;background:#fff;border-radius:10px}
+    .row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+    select{background:#111827;color:#fff;border:1px solid #4b5563;border-radius:10px;padding:10px}
+    progress{width:100%;height:18px}
+    .ok{color:#86efac}.warn{color:#fde68a}.err{color:#fca5a5}
+    .small{font-size:12px}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+
+  <div class="card" id="brandHeader">
+    <div class="row" style="align-items:center;gap:14px">
+      <img id="brandLogo" src="../assets/default-logo.svg" alt="Logo da loja" style="width:68px;height:68px;object-fit:contain;border-radius:16px;background:#fff;padding:8px;border:1px solid #374151">
+      <div>
+        <h1 id="brandName" style="margin:0 0 6px">Sua Loja</h1>
+        <div class="muted" id="brandSub">PNG sem fundo da loja ativa</div>
+      </div>
+    </div>
+  </div>
+
+    <div class="card">
+      <h1>PNG Sem Fundo PRO</h1>
+      <div class="muted">Painel corrigido com botões diretos e resposta visual ao clique.</div>
+      <div class="row" style="margin-top:12px">
+        <button id="pickBtn" type="button">Selecionar imagens do PC</button>
+        <button id="processBtn" type="button">Remover fundo</button>
+        <button id="saveBtn" type="button" class="secondary">Salvar todas em PNG</button>
+        <button id="clearBtn" type="button" class="secondary">Limpar lista</button>
+        <select id="quality">
+          <option value="1024">Rápido</option>
+          <option value="1400">Equilibrado</option>
+          <option value="2000">Melhor qualidade</option>
+        </select>
+        <input id="files" type="file" accept="image/*" multiple>
+      </div>
+      <div class="drop" id="drop">Arraste as imagens aqui</div>
+      <div style="margin-top:14px"><progress id="prog" value="0" max="100"></progress></div>
+      <div id="status" class="muted" style="margin-top:10px">Clique em “Selecionar imagens do PC”.</div>
+      <div id="debug" class="small muted" style="margin-top:6px">Painel iniciado.</div>
+    </div>
+    <div class="card">
+      <div class="grid" id="grid"></div>
+    </div>
+  </div>
+<script>
+(function(){
+  const $ = (id) => document.getElementById(id);
+  const filesInput = $('files');
+  const drop = $('drop');
+  const grid = $('grid');
+  const statusEl = $('status');
+  const debugEl = $('debug');
+  const prog = $('prog');
+  const quality = $('quality');
+  const pickBtn = $('pickBtn');
+  const processBtn = $('processBtn');
+  const saveBtn = $('saveBtn');
+  const clearBtn = $('clearBtn');
+  let entries = [];
+
+  function debug(msg){ debugEl.textContent = msg; }
+  function setStatus(msg, css){ statusEl.className = css ? css : 'muted'; statusEl.textContent = msg; }
+
+  function render(){
+    grid.innerHTML = '';
+    entries.forEach((e, idx) => {
+      const div = document.createElement('div');
+      div.className='item';
+      const state = e.result ? '<span class="ok">Pronta</span>' : (e.processing ? 'Processando...' : 'Pendente');
+      div.innerHTML = '<img alt="preview" src="'+ (e.result || e.url) +'">'+
+        '<div style="margin-top:8px;font-size:13px;word-break:break-word">'+ e.file.name +'</div>'+
+        '<div class="small muted" style="margin-top:4px">'+ state +'</div>';
+      grid.appendChild(div);
+    });
+  }
+
+  function addFiles(fileList){
+    const files = Array.from(fileList || []).filter(f => f && f.type && f.type.startsWith('image/'));
+    if(!files.length){ setStatus('Nenhuma imagem válida foi escolhida.', 'err'); return; }
+    files.forEach(file => {
+      const url = URL.createObjectURL(file);
+      entries.push({ file, url, result:null, processing:false, name:file.name.replace(/\.[^.]+$/, '') + '_sem_fundo.png' });
+    });
+    render();
+    setStatus(entries.length + ' imagem(ns) carregada(s).');
+    debug('Arquivos adicionados com sucesso.');
+    filesInput.value = '';
+  }
+
+  function loadImage(url){
+    return new Promise((resolve,reject)=>{
+      const img = new Image();
+      img.onload = ()=>resolve(img);
+      img.onerror = ()=>reject(new Error('Falha ao abrir imagem.'));
+      img.src = url;
+    });
+  }
+
+  async function processAll(){
+    if(!entries.length){ setStatus('Carregue pelo menos uma imagem primeiro.', 'err'); return; }
+    processBtn.disabled = true;
+    const maxSize = parseInt(quality.value,10) || 1024;
+    setStatus('Processando imagens...');
+    debug('Botão Remover fundo clicado.');
+    prog.value = 0;
+    for(let i=0;i<entries.length;i++){
+      const entry = entries[i];
+      entry.processing = true;
+      render();
+      try {
+        const img = await loadImage(entry.url);
+        const scale = Math.min(1, maxSize / Math.max(img.width, img.height));
+        const w = Math.max(1, Math.round(img.width * scale));
+        const h = Math.max(1, Math.round(img.height * scale));
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        const ctx = canvas.getContext('2d', { willReadFrequently: true });
+        ctx.drawImage(img,0,0,w,h);
+        const imageData = ctx.getImageData(0,0,w,h);
+        const d = imageData.data;
+        for(let p=0;p<d.length;p+=4){
+          const r=d[p], g=d[p+1], b=d[p+2];
+          const nearWhite = r>235 && g>235 && b>235;
+          const nearLightGray = r>220 && g>220 && b>220;
+          if(nearWhite || nearLightGray){ d[p+3]=0; }
+        }
+        ctx.putImageData(imageData,0,0);
+        entry.result = canvas.toDataURL('image/png');
+      } catch(err){
+        console.error(err);
+        setStatus('Erro ao processar uma das imagens.', 'err');
+      }
+      entry.processing = false;
+      prog.value = Math.round(((i+1)/entries.length)*100);
+      render();
+      await new Promise(r=>setTimeout(r,10));
+    }
+    processBtn.disabled = false;
+    setStatus('Concluído. Agora clique em “Salvar todas em PNG”.', 'ok');
+  }
+
+  function saveAll(){
+    debug('Botão Salvar clicado.');
+    const ready = entries.filter(e=>e.result);
+    if(!ready.length){ setStatus('Processe as imagens primeiro.', 'err'); return; }
+    ready.forEach((e) => {
+      const a = document.createElement('a');
+      a.href = e.result;
+      a.download = e.name;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    });
+    setStatus('Downloads enviados. Se o navegador perguntar, permita vários downloads.', 'warn');
+  }
+
+  function clearAll(){
+    entries.forEach(e => { try { URL.revokeObjectURL(e.url); } catch(_){} });
+    entries = [];
+    prog.value = 0;
+    render();
+    setStatus('Lista limpa.');
+    debug('Lista limpa com sucesso.');
+  }
+
+  pickBtn.addEventListener('click', function(){
+    debug('Botão Selecionar clicado.');
+    try { filesInput.click(); } catch(err){ console.error(err); setStatus('Não foi possível abrir o seletor de arquivos.', 'err'); }
+  });
+  filesInput.addEventListener('change', e => addFiles(e.target.files));
+  processBtn.addEventListener('click', processAll);
+  saveBtn.addEventListener('click', saveAll);
+  clearBtn.addEventListener('click', clearAll);
+
+  drop.addEventListener('dragover', e => { e.preventDefault(); drop.style.opacity='0.85'; });
+  drop.addEventListener('dragleave', e => { drop.style.opacity='1'; });
+  drop.addEventListener('drop', e => {
+    e.preventDefault();
+    drop.style.opacity='1';
+    addFiles(e.dataTransfer.files);
+  });
+
+  window.addEventListener('error', function(e){
+    setStatus('Erro no painel: ' + e.message, 'err');
+    debug('JavaScript encontrou um erro.');
+  });
+
+  debug('Todos os eventos foram conectados.');
+})();
+</script>
+<script src="../shared/brand-sync.js"></script>
+<script>
+(async function(){
+  const DEFAULTS={name:'Sua Loja',sub:'PNG sem fundo da loja ativa',logo:'../assets/default-logo.svg',color:'#ec4899'};
+  function localCfg(){
+    try{
+      const st = window.parent?.LocalStoreManager?.getActive?.() || window.LocalStoreManager?.getActive?.();
+      if (st) return {name:st.name||DEFAULTS.name, sub:st.sub||DEFAULTS.sub, logo:st.logo||DEFAULTS.logo, color:st.color||DEFAULTS.color};
+    }catch(e){}
+    try{
+      const cfg = JSON.parse(localStorage.getItem('lojaAtivaConfig')||'{}');
+      return {name:cfg.name||DEFAULTS.name, sub:cfg.sub||DEFAULTS.sub, logo:cfg.logo||DEFAULTS.logo, color:cfg.color||DEFAULTS.color};
+    }catch(e){}
+    return DEFAULTS;
+  }
+  let cfg = localCfg();
+  try{
+    const r = await fetch('/api/session/store-config', {credentials:'same-origin'});
+    if(r.ok){
+      const data = await r.json();
+      if(data.store) cfg = {name:data.store.name||DEFAULTS.name, sub:data.store.sub||DEFAULTS.sub, logo:data.store.logo||DEFAULTS.logo, color:data.store.color||DEFAULTS.color};
+    }
+  }catch(e){}
+  document.documentElement.style.setProperty('--brand-color', cfg.color||DEFAULTS.color);
+  const logo = document.getElementById('brandLogo');
+  const name = document.getElementById('brandName');
+  const sub = document.getElementById('brandSub');
+  if(logo) logo.src = cfg.logo||DEFAULTS.logo;
+  if(name) name.textContent = cfg.name||DEFAULTS.name;
+  if(sub) sub.textContent = cfg.sub||DEFAULTS.sub;
+})();
+</script>
+
+</body>
+</html>

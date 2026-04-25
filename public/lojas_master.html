@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang='pt-br'>
+<head>
+<meta charset='UTF-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0'>
+<title>Painel Mestre do Produtor</title>
+<style>
+body{font-family:Arial,sans-serif;background:#fff7fb;color:#4b1d36;margin:0;padding:24px}
+.wrap{max-width:1260px;margin:0 auto}
+.hero,.card{background:#fff;border-radius:22px;box-shadow:0 14px 34px rgba(227,61,143,.10);padding:22px}
+.hero{margin-bottom:18px}.hero h1{margin:0 0 6px;color:#b12d6e}
+.grid{display:grid;grid-template-columns:400px 1fr;gap:18px}
+.manuals{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:18px}
+label{display:block;font-weight:700;margin:12px 0 6px}
+input,select{width:100%;padding:12px;border:1px solid #e4b0ca;border-radius:14px;box-sizing:border-box}
+button{border:none;border-radius:14px;padding:10px 14px;background:#e33d8f;color:#fff;font-weight:700;cursor:pointer}
+button.secondary{background:#fff;color:#b12d6e;border:1px solid #e4b0ca}
+button.danger{background:#76254d}
+.actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px}
+.stores{display:grid;gap:12px}
+.store{border:1px solid #f3c8dd;border-radius:18px;padding:14px;background:#fff7fb;display:grid;grid-template-columns:72px 1fr auto;gap:14px;align-items:center}
+.store img{width:72px;height:72px;object-fit:contain;background:#fff;border-radius:16px;border:1px solid #f1d1e2;padding:8px;box-sizing:border-box}
+.tag{display:inline-block;background:#f7d4e5;color:#8a2558;border-radius:999px;padding:4px 10px;font-size:12px;font-weight:700;margin-top:8px}
+.tag.active{background:#e9ffe9;color:#136c2e}.tag.inactive{background:#fff1f1;color:#8d1f1f}.tag.tasting{background:#fff7dd;color:#8d6a00}
+.muted{color:#7f5f70}.meta{display:flex;flex-direction:column;gap:4px}
+.row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.toolbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;gap:12px}
+.code{font-family:Consolas,monospace;background:#fff;border:1px dashed #e5bdd1;border-radius:12px;padding:8px 10px;color:#7d3156;word-break:break-all}
+.tip{background:#fff1f7;border-left:4px solid #e33d8f;padding:12px 14px;border-radius:12px}
+.store .actions{justify-content:flex-end}
+.manual-card h3{margin:0 0 6px;color:#b12d6e}.manual-card p{margin:0 0 14px}
+@media (max-width:920px){.grid,.manuals{grid-template-columns:1fr}.store{grid-template-columns:56px 1fr}.store .actions{grid-column:1/-1;justify-content:flex-start}}
+</style>
+</head>
+<body>
+<div class='wrap'>
+  <div class='hero'>
+    <h1>Painel Mestre do Produtor</h1>
+    <div class='muted'>Ative, desative, envie acesso por WhatsApp/E-mail e selecione qual loja deseja editar sem mexer nas outras.</div>
+    <div class='tip'>A seleção da loja para edição é independente da ativação da loja.</div>
+  </div>
+
+  <div class='grid'>
+    <div class='card'>
+      <input type='hidden' id='storeId'>
+      <label>Nome da loja</label><input id='storeName' placeholder='Ex.: Elegance Store'>
+      <label>Subtítulo</label><input id='storeSub' placeholder='Ex.: Vitrine interativa e campanhas'>
+      <label>Cor principal</label><input id='storeColor' type='color' value='#e33d8f'>
+      <label>Slug do link</label><input id='storeSlug' placeholder='ex.: elegance-store'>
+      <label>Login da loja</label><input id='storeLogin' placeholder='Ex.: admin'>
+      <label>Nova senha da loja</label><input id='storePassword' placeholder='Digite para criar ou resetar a senha'>
+      <label>E-mail do cliente</label><input id='storeEmail' type='email' placeholder='cliente@loja.com'>
+      <label>WhatsApp do cliente</label><input id='storePhone' placeholder='5531999999999'>
+      <label>Plano</label><select id='storePlan'><option value='premium'>Premium</option><option value='pro'>Pro</option><option value='enterprise'>Enterprise</option></select>
+      <label>Expira em</label><input id='storeExpiresAt' type='date'>
+      <label>Status</label><select id='storeStatus'><option value='ativo'>Ativa</option><option value='degustacao'>Em degustação</option><option value='inativo'>Bloqueada</option></select>
+      <label>Domínio próprio da loja</label><input id='storeCustomDomain' placeholder='Ex.: painel.sualoja.com'>
+      <label>Logo por URL</label><input id='storeLogo' placeholder='https://...'>
+      <label>Baixar logo do cliente do PC</label><input id='storeLogoFile' type='file' accept='image/*'>
+      <div class='actions'>
+        <button id='saveBtn'>Salvar loja</button>
+        <button class='secondary' id='clearBtn'>Nova loja</button>
+      </div>
+      <p class='muted' id='status'></p>
+    </div>
+
+    <div class='card'>
+      <div class='toolbar'>
+        <strong>Lojas cadastradas</strong>
+        <button class='secondary' id='openProvadorBtn'>Abrir Provador</button>
+      </div>
+      <div class='stores' id='storeList'></div>
+    </div>
+  </div>
+
+  <div class='manuals'>
+    <div class='card manual-card'><h3>Manual do Produtor</h3><p class='muted'>Como preencher, selecionar a loja para editar, ativar/desativar e enviar acesso.</p><div class='actions'><button class='secondary' id='openProducerManual'>Abrir manual do produtor</button></div></div>
+    <div class='card manual-card'><h3>Manual do Cliente</h3><p class='muted'>Como abrir o link, entrar com login e senha e usar o painel no PC ou celular.</p><div class='actions'><button class='secondary' id='openClientManual'>Abrir manual do cliente</button></div></div>
+  </div>
+</div>
+
+<script src="js/local-store.js"></script>
+<script>
+const el=id=>document.getElementById(id);
+let uploadData=''; let stores=[]; let activeStoreId=''; let online=false;
+function esc(v){return String(v||'').replace(/[&<>"']/g,s=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s]));}
+function statusTag(store){
+  const st = store.status || 'ativo';
+  if(st==='degustacao') return "<span class='tag tasting'>Em degustação</span>";
+  if(st==='inativo') return "<span class='tag inactive'>Bloqueada</span>";
+  return "<span class='tag active'>Ativa</span>";
+}
+function fillForm(store){
+  el('storeId').value=store?.id||'';
+  el('storeName').value=store?.name||'';
+  el('storeSub').value=store?.sub||'';
+  el('storeColor').value=store?.color||'#e33d8f';
+  el('storeSlug').value=store?.slug||'';
+  el('storeLogin').value=store?.login||'admin';
+  el('storePassword').value='';
+  el('storeEmail').value=store?.email||'';
+  el('storePhone').value=store?.phone||'';
+  el('storePlan').value=store?.plan||'premium';
+  el('storeExpiresAt').value=store?.expiresAt||'';
+  el('storeStatus').value=store?.status||'ativo';
+  el('storeCustomDomain').value=store?.customDomain||'';
+  el('storeLogo').value=(store?.logo&&!String(store.logo).startsWith('data:'))?store.logo:'';
+  uploadData=store?.logo&&String(store.logo).startsWith('data:')?store.logo:'';
+}
+function resetForm(){ fillForm(null); el('status').textContent='Pronto para cadastrar uma nova loja.'; }
+function buildLink(store){ return store.customDomain ? `https://${store.customDomain}` : (store.publicLink||`${location.origin}${location.pathname.replace(/\/[^/]*$/,'')}/login-loja.html?loja=${encodeURIComponent(store.slug)}`); }
+function copyText(value){ navigator.clipboard?.writeText(value).then(()=>el('status').textContent='Mensagem copiada com sucesso.').catch(()=>prompt('Copie o texto abaixo:',value)); }
+function formatAccessMessage(store){
+  return `Olá, ${store.name}!\n\nSegue o acesso do painel da sua loja:\n\n🔗 ${buildLink(store)}\n👤 Login: ${store.login}\n🔒 Senha: ${store.password || 'definida no cadastro'}\n\nEsse acesso pode ser usado após a contratação ou durante a degustação.`;
+}
+function openWhatsApp(store){
+  const phone=(store.phone||'').replace(/\D+/g,'');
+  const url=`https://wa.me/${phone}?text=${encodeURIComponent(formatAccessMessage(store))}`;
+  window.open(url,'_blank');
+}
+function openEmail(store){
+  if(!store.email){ alert('Cadastre o e-mail do cliente nesta loja.'); return; }
+  const subject=encodeURIComponent(`Acesso ao painel da loja ${store.name}`);
+  const body=encodeURIComponent(formatAccessMessage(store).replace('Olá, '+store.name+'!','Olá, '+store.name+'.'));
+  window.location.href=`mailto:${encodeURIComponent(store.email)}?subject=${subject}&body=${body}`;
+}
+function render(){
+  el('storeList').innerHTML = stores.map(store => `
+    <div class='store'>
+      <img src='${esc(store.logo||'assets/default-logo.svg')}' alt='${esc(store.name)}'>
+      <div class='meta'>
+        <strong>${esc(store.name)}</strong>
+        <span>${esc(store.sub||'Dashboard Integrado Multi-Loja')}</span>
+        <div class='row'><span class='muted'>Plano: ${esc(store.plan||'premium')}</span><span class='muted'>•</span><span class='muted'>Licença: ${esc(store.licenseStatus||'ativa')}</span></div>
+        <div class='muted'>Login: <strong>${esc(store.login||'admin')}</strong> • E-mail: ${esc(store.email||'-')}</div>
+        <div class='code'>${esc(buildLink(store))}</div>
+        <div class='row'>${statusTag(store)} ${activeStoreId===store.id?"<span class='tag'>Selecionada para edição</span>":""}</div>
+      </div>
+      <div class='actions'>
+        <button class='secondary' data-action='select' data-id='${esc(store.id)}'>Selecionar loja</button>
+        <button data-action='activate' data-id='${esc(store.id)}'>Ativar</button>
+        <button class='danger' data-action='deactivate' data-id='${esc(store.id)}'>Desativar</button>
+        <button class='secondary' data-action='tasting' data-id='${esc(store.id)}'>Degustação</button>
+        <button class='secondary' data-action='open' data-id='${esc(store.id)}'>Abrir link</button>
+        <button class='secondary' data-action='copy' data-id='${esc(store.id)}'>Copiar acesso</button>
+        <button class='secondary' data-action='wa' data-id='${esc(store.id)}'>WhatsApp</button>
+        <button class='secondary' data-action='mail' data-id='${esc(store.id)}'>E-mail</button>
+        <button class='secondary' data-action='edit' data-id='${esc(store.id)}'>Editar</button>
+        <button class='danger' data-action='delete' data-id='${esc(store.id)}'>Excluir</button>
+      </div>
+    </div>`).join('');
+}
+async function loadStores(){
+  LocalStoreManager.ensureSeed();
+  stores = LocalStoreManager.list();
+  activeStoreId = LocalStoreManager.getActiveId();
+  render();
+  fillForm(stores.find(s=>s.id===activeStoreId)||stores[0]||null);
+}
+el('storeLogoFile').addEventListener('change',()=>{
+  const file=el('storeLogoFile').files&&el('storeLogoFile').files[0];
+  if(!file) return;
+  const reader=new FileReader();
+  reader.onload=()=>{ uploadData=reader.result; el('status').textContent='Logo carregada. Salve a loja para aplicar.'; };
+  reader.readAsDataURL(file);
+});
+el('saveBtn').addEventListener('click',()=>{
+  const payload={name:el('storeName').value.trim()||'Sua Loja',sub:el('storeSub').value.trim()||'Dashboard Integrado Multi-Loja',color:el('storeColor').value||'#e33d8f',slug:el('storeSlug').value.trim()||el('storeName').value.trim(),login:el('storeLogin').value.trim()||'admin',email:el('storeEmail').value.trim(),phone:el('storePhone').value.trim(),plan:el('storePlan').value||'premium',expiresAt:el('storeExpiresAt').value,status:el('storeStatus').value||'ativo',customDomain:el('storeCustomDomain').value.trim(),logo:uploadData||el('storeLogo').value.trim()||'assets/default-logo.svg'};
+  if(el('storePassword').value.trim()) payload.password=el('storePassword').value.trim();
+  if(el('storeId').value) LocalStoreManager.update(el('storeId').value,payload); else LocalStoreManager.create(payload);
+  el('status').textContent='Loja salva com sucesso.';
+  loadStores();
+});
+el('clearBtn').addEventListener('click', resetForm);
+el('openProvadorBtn').addEventListener('click',()=> parent.postMessage({type:'open-url', url:'provador/provador.html'}, '*'));
+el('openProducerManual').addEventListener('click',()=> window.open('manual/manual-produtor.html', '_blank'));
+el('openClientManual').addEventListener('click',()=> window.open('manual/manual-cliente.html', '_blank'));
+el('storeList').addEventListener('click',(e)=>{
+  const id=e.target.dataset.id, action=e.target.dataset.action;
+  if(!id || !action) return;
+  const store=stores.find(s=>s.id===id); if(!store) return;
+  if(action==='select'){ LocalStoreManager.setActive(id); activeStoreId=id; fillForm(store); render(); el('status').textContent='Loja selecionada para edição.'; }
+  if(action==='activate'){ LocalStoreManager.updateStatus(id,'ativo'); el('status').textContent='Loja ativada.'; loadStores(); }
+  if(action==='deactivate'){ LocalStoreManager.updateStatus(id,'inativo'); el('status').textContent='Loja desativada.'; loadStores(); }
+  if(action==='tasting'){ LocalStoreManager.updateStatus(id,'degustacao'); el('status').textContent='Loja colocada em degustação.'; loadStores(); }
+  if(action==='open'){ window.open(buildLink(store), '_blank'); }
+  if(action==='copy'){ copyText(formatAccessMessage(store)); }
+  if(action==='wa'){ openWhatsApp(store); }
+  if(action==='mail'){ openEmail(store); }
+  if(action==='edit'){ LocalStoreManager.setActive(id); activeStoreId=id; fillForm(store); render(); el('status').textContent='Editando loja selecionada.'; }
+  if(action==='delete'){ if(!confirm('Excluir esta loja?')) return; LocalStoreManager.remove(id); el('status').textContent='Loja removida.'; loadStores(); }
+});
+loadStores();
+</script>
+</body>
+</html>

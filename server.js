@@ -127,7 +127,9 @@ function requireAdmin(req,res,next){ if(req.session?.adminLoggedIn) return next(
 function requireAdminApi(req,res,next){ if(req.session?.adminLoggedIn) return next(); return res.status(401).json({ error:'unauthorized' }); }
 function requireClientApi(req,res,next){ if(req.session?.clientStoreId) return next(); return res.status(401).json({ error:'unauthorized' }); }
 app.get('/', (req,res)=> req.session?.adminLoggedIn ? res.redirect('/index.html') : res.redirect('/admin-login.html'));
-app.get('/s/:slug', (req,res)=> res.redirect(`/login-loja.html?loja=${encodeURIComponent(req.params.slug)}`));
+app.get('/s/:slug', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'login-loja.html'));
+});
 app.get('/login-loja.html', (req, res) => {
   const loja = req.query.loja;
 

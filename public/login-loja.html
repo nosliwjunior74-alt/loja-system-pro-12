@@ -218,7 +218,29 @@
   </div>
 
   <script src="js/local-store.js"></script>
-  <script>
+ let loja = null;
+
+// pega da URL ?loja=
+const params = new URLSearchParams(window.location.search);
+
+
+// pega da URL /s/nome-da-loja
+if (!loja && window.location.pathname.startsWith('/s/')) {
+  loja = window.location.pathname.replace('/s/', '');
+}
+
+// decodifica
+if (loja) {
+  loja = decodeURIComponent(loja);
+}
+
+// debug (pode apagar depois)
+console.log('LOJA DETECTADA:', loja);
+
+// se não tiver loja
+if (!loja) {
+  document.body.innerHTML = '<h2>Loja não informada</h2>';
+}
     const params = new URLSearchParams(window.location.search);
     const slug = params.get('loja');
     let store = null;

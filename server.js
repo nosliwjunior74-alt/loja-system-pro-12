@@ -204,7 +204,22 @@ app.post('/api/public/login', authLimiter, (req,res)=>{
   });
 });
 app.post('/api/public/logout', requireClientApi, (req,res)=>{ delete req.session.clientStoreId; delete req.session.clientStoreSlug; res.json({ ok:true }); });
-app.get('/api/public/store/:slug', (req,res)=>{ const store = getStoreBySlug(req.params.slug, baseUrl(req)); if(!store) return res.status(404).json({ error:'Loja não encontrada' }); res.json({ store }); });
+app.get('/api/public/store/:slug', (req, res) => {
+  const slug = String(req.params.slug || '')
+    .trim()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/\s+/g, '-');
+
+  const store = getStoreBySlug(slug, baseUrl(req));
+
+  if (!store) {
+    return res.status(404).json({ error: 'Loja não encontrada', slug });
+  }
+
+  res.json({ store });
+});
 app.get('/api/public/session-store', (req,res)=>{ const store = req.session?.clientStoreId ? getStoreById(req.session.clientStoreId, baseUrl(req)) : null; if(!store) return res.status(401).json({ error:'unauthorized' }); res.json({ store }); });
 app.put('/api/public/store-branding', requireClientApi, (req,res)=>{
   const current = getStoreById(req.session.clientStoreId, baseUrl(req));

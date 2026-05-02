@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang='pt-br'>
+<head>
+  <meta charset='UTF-8'>
+  <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+  <title>Painel da Loja</title>
+  <link rel='stylesheet' href='css/dashboard.css'>
+  <style>
+    .store-meta{display:flex;flex-direction:column;gap:6px}
+    .status-wrap{display:flex;flex-direction:column;gap:8px;margin-top:8px}
+    .license-box{background:rgba(255,255,255,.72);border:1px solid rgba(138,34,88,.12);border-radius:16px;padding:10px 12px;display:flex;flex-direction:column;gap:5px}
+    .license-line{font-size:12px;color:#7d4b66}
+    .license-line strong{color:#4b1d36}
+    .client-tools{display:flex;flex-direction:column;gap:10px;margin-top:6px}
+    .tool-toggle{display:flex;align-items:center;justify-content:space-between;gap:10px}
+    .tool-panel{display:none;background:rgba(255,255,255,.78);border:1px solid rgba(138,34,88,.12);border-radius:18px;padding:14px;box-shadow:0 12px 24px rgba(227,61,143,.08)}
+    .tool-panel.open{display:block}
+    .tool-panel h3{margin:0 0 6px;font-size:15px;color:var(--pink-5)}
+    .tool-panel p{margin:0 0 12px;color:#8c5570;font-size:13px}
+    .tool-grid{display:grid;gap:12px}
+    .tool-field{display:flex;flex-direction:column;gap:6px}
+    .tool-field label{font-size:13px;font-weight:700;color:#6b294a}
+    .tool-field input[type='color']{width:100%;height:48px;border:none;border-radius:14px;background:#fff;cursor:pointer;padding:4px}
+    .tool-field small{color:#8c5570;font-size:12px}
+    .tool-actions{display:flex;flex-direction:column;gap:10px}
+    .tool-info{font-size:12px;color:#6b294a;background:#fff7fb;border:1px dashed rgba(138,34,88,.18);border-radius:14px;padding:10px 12px}
+    .action-stack{display:flex;flex-direction:column;gap:10px}
+    .action-btn.full{text-align:center}
+    @media (max-width: 900px){
+      .action-stack{margin-top:0}
+    }
+  </style>
+</head>
+<body>
+  <div class='shell'>
+    <aside class='sidebar'>
+      <div class='brand'>
+        <img src='assets/default-logo.svg' alt='Logo da loja' class='brand-logo' id='brandLogo'>
+        <div class='store-meta'>
+          <h1 id='brandName'>Sua Loja</h1>
+          <p id='brandSub'>Painel administrativo da loja</p>
+          <div class='status-wrap'>
+            <span id='storeStatusBadge' style='display:inline-block;width:max-content;padding:5px 10px;border-radius:999px;background:#f7d4e5;color:#8a2558;font-size:12px;font-weight:700'>Ativa</span>
+            <div class='license-box'>
+              <div class='license-line'><strong>Status da licença:</strong> <span id='licenseStatusText'>Ativa</span></div>
+              <div class='license-line'><strong>Data de expiração:</strong> <span id='licenseExpiryText'>Não informada</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <nav class='menu'>
+        <button class='menu-btn active' data-url='provador/index.html'>👗 Vitrine / Provador</button>
+        <button class='menu-btn' data-url='provador/admin.html'>📦 Painel da Loja</button>
+        <button class='menu-btn' data-url='remover_fundo/index.html'>🖼️ PNG sem Fundo</button>
+        <button class='menu-btn' data-url='display_pro/loja.html'>📲 Display Pro System</button>
+        <button class='menu-btn' data-url='manual/manual-painel-cliente.html'>📘 Manual</button>
+        <button class='menu-btn' data-url='configuracao-cobranca.html'>💳 Cobrança</button>
+      </nav>
+
+      <div class='client-tools'>
+        <button class='action-btn full' id='toggleClientToolsBtn' type='button'>🎛️ Personalização do painel do cliente</button>
+        <div class='tool-panel' id='clientToolsPanel'>
+          <h3>Etiqueta, cor e logo</h3>
+          <p>Esses ajustes aparecem no painel do cliente sem alterar as configurações internas da loja.</p>
+          <div class='tool-grid'>
+            <div class='tool-field'>
+              <label for='clientColorInput'>Seletor de cor da loja</label>
+              <input id='clientColorInput' type='color' value='#e33d8f'>
+              <small>A cor é aplicada ao painel do cliente e à identidade visual da loja.</small>
+            </div>
+            <div class='tool-actions'>
+              <button class='action-btn full' id='changeLogoBtn' type='button'>🖼️ Trocar logo</button>
+              <div class='tool-info'>A etiqueta de status, o status da licença e a data de expiração são mostrados logo acima, no topo do painel.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class='actions action-stack'>
+        <input id='clientLogoFile' type='file' accept='image/*' style='display:none'>
+        <button class='action-btn' id='logoutBtn' type='button'>⎋ Sair</button>
+      </div>
+    </aside>
+
+    <main class='main-area'>
+      <header class='topbar'>
+        <div>
+          <strong id='currentTitle'>Vitrine / Provador</strong>
+          <span id='topbarSub'>Painel da loja</span>
+        </div>
+      </header>
+      <iframe id='appFrame' src='provador/index.html' title='Aplicativo'></iframe>
+    </main>
+  </div>
+
+  <script src='js/local-store.js'></script>
+  <script>
+    const buttons = document.querySelectorAll('.menu-btn');
+    const frame = document.getElementById('appFrame');
+    const title = document.getElementById('currentTitle');
+    const changeLogoBtn = document.getElementById('changeLogoBtn');
+    const clientLogoFile = document.getElementById('clientLogoFile');
+    const clientColorInput = document.getElementById('clientColorInput');
+    const toggleClientToolsBtn = document.getElementById('toggleClientToolsBtn');
+    const clientToolsPanel = document.getElementById('clientToolsPanel');
+    let currentStore = null;
+    let currentOnline = false;
+
+    function formatBrDate(dateStr){
+      if(!dateStr) return 'Não informada';
+      const [y,m,d] = String(dateStr).split('-');
+      if(!y || !m || !d) return dateStr;
+      return `${d}/${m}/${y}`;
+    }
+
+    function normalizeLicenseLabel(status){
+      const raw = String(status || '').toLowerCase();
+      if(raw === 'ativa') return 'Ativa';
+      if(raw === 'expirada') return 'Expirada';
+      if(raw === 'bloqueada' || raw === 'inativa') return 'Bloqueada';
+      if(raw === 'em degustação' || raw === 'degustacao') return 'Em degustação';
+      return status || 'Ativa';
+    }
+
+    function activateButtonForUrl(url){
+      buttons.forEach(b => b.classList.toggle('active', b.dataset.url === url));
+    }
+
+    buttons.forEach(btn => btn.addEventListener('click', () => {
+      activateButtonForUrl(btn.dataset.url);
+      frame.src = btn.dataset.url;
+      title.textContent = btn.textContent.trim();
+    }));
+
+    window.addEventListener('message', (ev) => {
+      if(ev?.data?.type === 'open-url' && ev.data.url){
+        frame.src = ev.data.url;
+        activateButtonForUrl(ev.data.url);
+      }
+      if(ev?.data?.type === 'branding-updated'){
+        loadSession();
+      }
+    });
+
+    toggleClientToolsBtn.addEventListener('click', () => {
+      const opened = clientToolsPanel.classList.toggle('open');
+      toggleClientToolsBtn.textContent = opened ? '✅ Fechar personalização do painel do cliente' : '🎛️ Personalização do painel do cliente';
+    });
+
+    async function loadSession(){
+      const slug = new URLSearchParams(location.search).get('loja') || '';
+      try{
+        const r = await fetch('/api/public/session-store');
+        const data = await r.json().catch(() => ({}));
+        if(!r.ok) throw new Error('offline');
+        applyStore(data.store, true);
+      } catch(e){
+        const session = JSON.parse(sessionStorage.getItem('dashboardStoreSessionLocal') || 'null');
+        const store = LocalStoreManager.list().find(s => s.slug === slug);
+        if(!session || session.slug !== slug || !store){
+          location.href = 'login-loja.html?loja=' + encodeURIComponent(slug);
+          return;
+        }
+        applyStore(store, false);
+      }
+    }
+
+    function applyStore(store, online){
+      currentStore = store;
+      currentOnline = !!online;
+      document.getElementById('brandName').textContent = store.name || 'Sua Loja';
+      document.getElementById('brandSub').textContent = store.sub || 'Painel administrativo da loja';
+      document.getElementById('topbarSub').textContent = store.sub || 'Painel da sua loja';
+      document.getElementById('brandLogo').src = store.logo || 'assets/default-logo.svg';
+      document.documentElement.style.setProperty('--pink-4', store.color || '#e33d8f');
+      document.documentElement.style.setProperty('--brand-color', store.color || '#e33d8f');
+      clientColorInput.value = store.color || '#e33d8f';
+
+      const badge = document.getElementById('storeStatusBadge');
+      const st = store.status || 'ativo';
+      badge.textContent = st === 'degustacao' ? 'Em degustação' : (st === 'inativo' ? 'Bloqueada' : 'Ativa');
+      badge.style.background = st === 'degustacao' ? '#fff7dd' : (st === 'inativo' ? '#fff1f1' : '#e9ffe9');
+      badge.style.color = st === 'degustacao' ? '#8d6a00' : (st === 'inativo' ? '#8d1f1f' : '#136c2e');
+
+      document.getElementById('licenseStatusText').textContent = normalizeLicenseLabel(store.licenseStatus || 'ativa');
+      document.getElementById('licenseExpiryText').textContent = formatBrDate(store.expiresAt || '');
+
+      document.title = (store.name || 'Sua Loja') + ' • Painel da Loja';
+      frame.onload = () => {
+        try {
+          frame.contentWindow.postMessage({
+            type:'set-subtitle',
+            subtitle: store.sub || 'Painel da sua loja'
+          }, '*');
+        } catch(e) {}
+      };
+
+      localStorage.setItem('lojaAtivaConfig', JSON.stringify({
+        name: store.name,
+        sub: store.sub,
+        logo: store.logo,
+        color: store.color,
+        status: store.status,
+        licenseStatus: store.licenseStatus,
+        expiresAt: store.expiresAt || ''
+      }));
+      document.body.dataset.online = online ? '1' : '0';
+    }
+
+    async function persistClientBranding(patch){
+      if(!currentStore) return null;
+      if(currentOnline){
+        const response = await fetch('/api/public/store-branding', {
+          method:'PUT',
+          headers:{ 'Content-Type':'application/json' },
+          body: JSON.stringify(patch)
+        });
+        const data = await response.json().catch(() => ({}));
+        if(!response.ok) throw new Error(data.error || 'Não foi possível salvar a personalização.');
+        return data.store || null;
+      }
+      const updated = LocalStoreManager.update(currentStore.id, patch);
+      LocalStoreManager.setActive(currentStore.id);
+      return updated;
+    }
+
+    if(changeLogoBtn && clientLogoFile){
+      changeLogoBtn.addEventListener('click', () => clientLogoFile.click());
+      clientLogoFile.addEventListener('change', async () => {
+        const file = clientLogoFile.files && clientLogoFile.files[0];
+        if(!file) return;
+        const reader = new FileReader();
+        reader.onload = async () => {
+          try {
+            const updatedStore = await persistClientBranding({ logo: reader.result });
+            if(updatedStore) applyStore(updatedStore, currentOnline);
+            alert('Logo da loja atualizada com sucesso.');
+          } catch(error) {
+            alert(error.message || 'Não foi possível trocar a logo da loja.');
+          } finally {
+            clientLogoFile.value = '';
+          }
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    if(clientColorInput){
+      clientColorInput.addEventListener('input', async () => {
+        try {
+          const updatedStore = await persistClientBranding({ color: clientColorInput.value || '#e33d8f' });
+          if(updatedStore) applyStore(updatedStore, currentOnline);
+        } catch(error) {
+          console.error(error);
+        }
+      });
+    }
+
+    document.getElementById('logoutBtn').addEventListener('click', async () => {
+      const slug = new URLSearchParams(location.search).get('loja') || '';
+      try{ await fetch('/api/public/logout', { method:'POST' }); } catch(e){}
+      sessionStorage.removeItem('dashboardStoreSessionLocal');
+      location.href = 'login-loja.html?loja=' + encodeURIComponent(slug);
+    });
+
+    loadSession();
+  </script>
+</body>
+</html>

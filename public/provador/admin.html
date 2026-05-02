@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Sua Loja - Painel da Loja</title><link rel="stylesheet" href="css/estilo.css"></head>
+<body><main class="admin-wrap"><section class="admin">
+<div class="admin-head">
+<div><h1 style="margin:0">Painel da Loja</h1><div class="muted">Visual premium rosa mesclado, estoque offline e integração com vitrine, catálogo e provador.</div></div>
+<div class="admin-nav"><a href="index.html">Vitrine</a><a href="catalogo.html">Catálogo</a><a href="provador.html">Provador</a><a href="descanso.html">Descanso</a></div>
+</div>
+<div class="grid">
+<div class="panel">
+<h2 style="margin-top:0">Cadastro de roupas</h2>
+<input type="hidden" id="itemId"><input type="hidden" id="imageData">
+<label>Nome da roupa</label><input id="nome" placeholder="Ex.: Camisa Branca Social">
+<div class="row"><div><label>Categoria</label><input id="categoria" placeholder="Ex.: Camisas"></div><div><label>Quantidade</label><input id="quantidade" type="number" min="0" value="1"></div></div>
+<label>Preço</label><input id="preco" placeholder="Ex.: 99,90">
+<label>Imagem da roupa</label><input id="imagemFile" type="file" accept="image/*">
+<div style="margin-top:12px"><img id="previewImg" class="preview" src="" alt=""></div>
+<div class="item-actions"><button id="saveBtn" class="small-btn">Salvar roupa</button><button class="small-btn" id="clearBtn">Limpar formulário</button></div>
+<div class="item-actions"><button class="small-btn" id="restoreBtn">Restaurar estoque inicial</button></div>
+
+<div class="divider"></div>
+
+<h2 style="margin-top:0">Cadastro de clientes</h2>
+<input type="hidden" id="customerId">
+<label>Nome do cliente</label><input id="clienteNome" placeholder="Ex.: Maria Silva">
+<label>Telefone</label><input id="clienteTelefone" placeholder="Ex.: 31999999999">
+<label>Observações</label><textarea id="clienteObs" placeholder="Ex.: Gosta de looks sociais."></textarea>
+<div class="item-actions"><button class="small-btn" id="saveCustomerBtn">Salvar cliente</button><button class="small-btn" id="clearCustomerBtn">Limpar cadastro</button></div>
+<div class="item-actions"><button class="small-btn" id="restoreCustomersBtn">Restaurar clientes iniciais</button></div>
+
+<div class="divider"></div>
+
+<h2 style="margin-top:0">Tela de descanso</h2>
+<div class="muted">Escolha foto ou vídeo do PC para tela vertical.</div>
+<label>Arquivo de mídia</label><input type="file" id="restFile" accept="image/*,video/*">
+<div class="muted" id="restInfo" style="margin-top:10px">Atual: Logo padrão da loja</div>
+<div class="rest-box" id="restPreview"></div>
+<div class="item-actions"><button class="small-btn" id="openRestBtn">Abrir descanso</button><button class="small-btn" id="defaultRestBtn">Restaurar logo</button></div>
+</div>
+
+<div class="panel">
+<h2 style="margin-top:0">Roupas cadastradas</h2>
+<div class="muted" style="margin-bottom:12px">Tudo que estiver aqui aparece na vitrine, catálogo e provador.</div>
+<div id="inventory" class="inventory"></div>
+
+<div class="divider"></div>
+
+<h2 style="margin-top:0">Clientes cadastrados</h2>
+<div class="muted" style="margin-bottom:12px">Usados no envio para WhatsApp.</div>
+<div id="customers" class="customers"></div>
+</div>
+</div>
+</section></main>
+<script src="js/salvar.js"></script><script src="js/estoque.js"></script>
+<script>
+async function renderInventory(){
+  await AppStore.ensureSeed();
+  const inv = document.getElementById('inventory');
+  const items = await Estoque.all();
+  inv.innerHTML = items.map(i=>`
+    <div class="item">
+      <img src="${i.imagem}" alt="${i.nome}">
+      <h3 style="margin:10px 0 4px">${i.nome}</h3>
+      <div class="muted">${i.categoria}</div>
+      <div class="badge2">Estoque: ${i.quantidade}</div> ${i.preco?`<div class="badge2">R$ ${i.preco}</div>`:''}
+      <div class="item-actions">
+        <button class="small-btn" onclick="editItem('${i.id}')">Editar</button>
+        <button class="small-btn danger" onclick="removeItem('${i.id}')">Excluir</button>
+      </div>
+    </div>`).join('');
+}
+async function renderCustomers(){
+  const list = document.getElementById('customers');
+  const customers = await Estoque.customers();
+  list.innerHTML = customers.map(c=>`
+    <div class="customer">
+      <h3 style="margin:0 0 6px">${c.nome}</h3>
+      <div class="muted">${c.telefone || 'Sem telefone'}</div>
+      <div class="muted" style="margin-top:8px">${c.obs || 'Sem observações'}</div>
+      <div class="item-actions">
+        <button class="small-btn" onclick="editCustomer('${c.id}')">Editar</button>
+        <button class="small-btn danger" onclick="removeCustomer('${c.id}')">Excluir</button>
+      </div>
+    </div>`).join('');
+}
+function clearForm(){
+  itemId.value=''; nome.value=''; categoria.value=''; quantidade.value='1'; preco.value=''; imagemFile.value=''; imageData.value=''; previewImg.src=''; saveBtn.textContent='Salvar roupa';
+}
+function clearCustomerForm(){
+  customerId.value=''; clienteNome.value=''; clienteTelefone.value=''; clienteObs.value=''; saveCustomerBtn.textContent='Salvar cliente';
+}
+imagemFile.onchange = ()=>{
+  const file = imagemFile.files && imagemFile.files[0];
+  if(!file) return;
+  const r = new FileReader();
+  r.onload = ()=>{ imageData.value = r.result; previewImg.src = r.result; };
+  r.readAsDataURL(file);
+};
+saveBtn.onclick = async ()=>{
+  const item = {id:itemId.value||'', nome:nome.value.trim(), categoria:categoria.value.trim(), quantidade:Number(quantidade.value||0), preco:preco.value.trim(), imagem:imageData.value||''};
+  if(!item.nome || !item.categoria || !item.imagem){ alert('Preencha nome, categoria e imagem.'); return; }
+  await Estoque.save(item); clearForm(); await renderInventory(); alert('Roupa salva e fica gravada offline.'); 
+};
+window.editItem = async (id)=>{
+  const item = await Estoque.byId(id); if(!item) return;
+  itemId.value=item.id; nome.value=item.nome; categoria.value=item.categoria; quantidade.value=item.quantidade; preco.value=item.preco||''; imageData.value=item.imagem; previewImg.src=item.imagem; saveBtn.textContent='Atualizar roupa';
+};
+window.removeItem = async (id)=>{ if(!confirm('Excluir esta roupa?')) return; await Estoque.remove(id); await renderInventory(); };
+
+saveCustomerBtn.onclick = async ()=>{
+  const c = {id:customerId.value||'', nome:clienteNome.value.trim(), telefone:clienteTelefone.value.trim(), obs:clienteObs.value.trim()};
+  if(!c.nome){ alert('Informe o nome do cliente.'); return; }
+  await Estoque.saveCustomer(c); clearCustomerForm(); await renderCustomers();
+};
+window.editCustomer = async (id)=>{
+  const arr = await Estoque.customers(); const c = arr.find(x=>x.id===id); if(!c) return;
+  customerId.value=c.id; clienteNome.value=c.nome; clienteTelefone.value=c.telefone||''; clienteObs.value=c.obs||''; saveCustomerBtn.textContent='Atualizar cliente';
+};
+window.removeCustomer = async (id)=>{ if(!confirm('Excluir este cliente?')) return; await Estoque.removeCustomer(id); await renderCustomers(); };
+
+restoreBtn.onclick = async ()=>{ await Estoque.restoreSeed(); await renderInventory(); alert('Estoque inicial restaurado.'); };
+clearBtn.onclick = clearForm;
+clearCustomerBtn.onclick = clearCustomerForm;
+restoreCustomersBtn.onclick = async ()=>{ await Estoque.restoreCustomers(); await renderCustomers(); alert('Clientes iniciais restaurados.'); };
+
+restFile.onchange = async ()=>{
+  const file = restFile.files && restFile.files[0];
+  if(!file) return;
+  const type = file.type.startsWith('video/') ? 'video' : file.type.startsWith('image/') ? 'image' : '';
+  if(!type){ alert('Escolha uma imagem ou vídeo.'); return; }
+  await DB.setKV('rest_file', file);
+  await DB.setKV('rest_meta', {mode:'custom', type, name:file.name});
+  await renderRestPreview();
+};
+defaultRestBtn.onclick = async ()=>{ await DB.setKV('rest_meta',{mode:'default',type:'image',name:'Logo padrão da loja'}); await DB.setKV('rest_file', null); await renderRestPreview(); };
+openRestBtn.onclick = ()=>location.href='descanso.html';
+async function renderRestPreview(){
+  const meta = await DB.getKV('rest_meta');
+  const file = await DB.getKV('rest_file');
+  if(meta) restInfo.textContent = `Atual: ${meta.name||'Logo padrão da loja'} • Tipo: ${meta.type==='video'?'Vídeo':'Imagem'}`;
+  if(meta && meta.mode==='custom' && file){
+    const url = URL.createObjectURL(file);
+    restPreview.innerHTML = meta.type==='video' ? `<video src="${url}" autoplay muted loop playsinline controls></video>` : `<img src="${url}" alt="${meta.name||''}">`;
+  }else{
+    restPreview.innerHTML = `<img src="imagens/logo.png" alt="Sua Loja">`;
+  }
+}
+(async()=>{ await AppStore.ensureSeed(); await renderInventory(); await renderCustomers(); await renderRestPreview(); })();
+</script><script src="../shared/brand-sync.js"></script>
+<script src="js/client-neutral-brand.js"></script>
+</body></html>

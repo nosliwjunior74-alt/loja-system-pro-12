@@ -1,0 +1,15 @@
+VERSÃO INTEGRADA TIPO ZARA
+
+Mantida a mesma aparência e o mesmo formato do aplicativo em anexo.
+Melhorias:
+- provador com detecção automática do corpo (MediaPipe)
+- roupa seguindo o movimento
+- foto do look
+- WhatsApp com mensagem pronta
+- vitrine, catálogo e painel conectados
+- estoque com entrada/saída real
+- abertura offline sem erro de fetch
+
+Observação:
+- o tracking automático do corpo precisa de internet para carregar a biblioteca MediaPipe
+- o navegador não permite anexar a foto automaticamente no WhatsApp Web; a foto é salva e o WhatsApp abre com mensagem pronta

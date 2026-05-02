@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Sua Loja - Catálogo</title><link rel="stylesheet" href="css/estilo.css"></head>
+<body class="home"><main class="wrapper"><section class="tv">
+<header class="topbar">
+<a class="small-link" href="admin.html">Painel da Loja</a>
+<img class="logo small" src="imagens/logo.png" alt="Sua Loja">
+<h1 class="title" style="font-size:30px">CATÁLOGO PREMIUM</h1>
+<p class="subtitle">Clique em uma peça para abrir o provador</p>
+<p class="kicker">Escolha seu look ideal</p>
+</header>
+<section class="hero">
+<div class="hero-copy">
+  <h2>Seleção da Loja</h2>
+  <div class="lux-line"></div>
+  <p>Toque em uma peça do carrossel para abrir a experiência em tela cheia</p>
+</div>
+<img class="mannequin" src="imagens/logo.png" alt="" style="opacity:.08">
+</section>
+<section class="carousel">
+<button class="arrow" onclick="prevCatalog()">‹</button>
+<div class="track" id="catalogTrack"></div>
+<button class="arrow" onclick="nextCatalog()">›</button>
+</section>
+<section class="actions">
+<button class="btn primary" onclick="location.href='index.html'">VOLTAR VITRINE</button>
+<button class="btn secondary" onclick="location.href='admin.html'">PAINEL DA LOJA</button>
+<button class="btn neutral" onclick="location.href='descanso.html'">TELA DE DESCANSO</button>
+</section>
+</section></main>
+<script src="js/salvar.js"></script><script src="js/estoque.js"></script><script src="js/provador.js"></script>
+<script>renderCatalogo();</script><script src="../shared/brand-sync.js"></script>
+<script src="js/client-neutral-brand.js"></script>
+</body></html>

@@ -1,0 +1,42 @@
+[
+  {
+    "id": "look1",
+    "nome": "Blusa Floral Preta",
+    "categoria": "Blusas",
+    "preco": "89,90",
+    "quantidade": 5,
+    "imagem": "imagens/roupas/look1.jpg"
+  },
+  {
+    "id": "look2",
+    "nome": "Camisa Branca Social",
+    "categoria": "Camisas",
+    "preco": "99,90",
+    "quantidade": 4,
+    "imagem": "imagens/roupas/look2.jpg"
+  },
+  {
+    "id": "look3",
+    "nome": "Camisa Branca Sua Loja",
+    "categoria": "Camisas",
+    "preco": "109,90",
+    "quantidade": 3,
+    "imagem": "imagens/roupas/look3.jpg"
+  },
+  {
+    "id": "look4",
+    "nome": "Blazer Social Preto",
+    "categoria": "Blazers",
+    "preco": "189,90",
+    "quantidade": 2,
+    "imagem": "imagens/roupas/look4.jpg"
+  },
+  {
+    "id": "look5",
+    "nome": "Camiseta Preta Básica",
+    "categoria": "Básicos",
+    "preco": "59,90",
+    "quantidade": 6,
+    "imagem": "imagens/roupas/look5.jpg"
+  }
+]

@@ -1,0 +1,17 @@
+<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Display da Loja Instalável</title><link rel="stylesheet" href="style.css"><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#ff2f7d"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="Display Pro"><link rel="apple-touch-icon" href="icons/icon-192.png"></head><body>
+<div class="topo"><h1>Display da Loja</h1><p>Versão instalável para PC, celular e notebook</p></div>
+<div class="container">
+<div class="card center"><div class='logo-box'><img id='displayBrandLogo' src='../assets/default-logo.svg' alt='Logo da loja' style='max-width:72px;max-height:72px;object-fit:contain'></div><h2>Menu principal</h2><p>Instale pelo navegador e use como aplicativo.</p><div class="barra" style="justify-content:center"><button id="installBtn" class="blue hidden" onclick="installApp()">Instalar aplicativo</button><button class="sec" onclick="ir('instalar.html')">Como instalar</button><button class="sec" onclick="ir('MANUAL.html')">Manual</button></div><div class="info">No PC e notebook: instale pelo Chrome ou Edge. No celular Android: use “Adicionar à tela inicial”. No iPhone/iPad: use Compartilhar → Adicionar à Tela de Início.</div></div>
+<div class="menu-grid" style="margin-top:18px">
+<div class="menu-card"><h3>Licença</h3><button onclick="ir('licenca.html')">Abrir</button></div>
+<div class="menu-card"><h3>Painel da Loja</h3><button onclick="ir('cliente.html')">Abrir</button></div>
+<div class="menu-card"><h3>Painel da Loja</h3><button onclick="ir('admin.html')">Abrir</button></div>
+<div class="menu-card"><h3>Catálogo</h3><button onclick="ir('catalogo.html')">Abrir</button></div>
+<div class="menu-card"><h3>Provador</h3><button onclick="ir('provador.html')">Abrir</button></div>
+<div class="menu-card"><h3>Biblioteca de Campanhas</h3><button onclick="ir('videos.html')">Abrir</button></div>
+<div class="menu-card"><h3>Disparo Social</h3><button onclick="ir('social.html')">Abrir</button></div>
+<div class="menu-card"><h3>Calendário</h3><button onclick="ir('agenda.html')">Abrir</button></div>
+<div class="menu-card"><h3>Manual</h3><button onclick="ir('MANUAL.html')">Abrir</button></div>
+</div></div><div class="rodape">Display da Loja</div><script src="app.js"></script><script>requestNotify()</script><script src="../shared/brand-sync.js"></script>
+<script src="client-brand.js"></script>
+</body></html>

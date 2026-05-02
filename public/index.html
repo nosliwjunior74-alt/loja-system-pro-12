@@ -58,6 +58,17 @@
   <script src="js/local-store.js"></script>
   <script src="js/dashboard.js"></script>
   <script src="js/branding.js"></script>
+  <script>
+async function fazerBackup(){
+  try {
+    const r = await fetch('/api/admin/backup', { method: 'POST' });
+    const j = await r.json();
+    alert(j.ok ? '✅ Backup realizado com sucesso!' : '❌ Erro no backup');
+  } catch(e){
+    alert('Erro ao conectar com servidor');
+  }
+}
+</script>
 </body>
 </html>
 function abrirSeguranca() {

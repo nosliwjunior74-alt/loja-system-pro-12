@@ -29,6 +29,10 @@ function paymentLinkForStore(store, req){ return `${baseUrl(req)}/s/${store.slug
 const isRailway = Boolean(process.env.RAILWAY_ENVIRONMENT || process.env.RAILWAY_PROJECT_ID || process.env.RAILWAY_SERVICE_ID || process.env.RAILWAY_STATIC_URL);
 const DATA_DIR = process.env.DATA_DIR || (isRailway ? '/data' : path.join(__dirname, 'data'));
 const AUTH_FILE = path.join(DATA_DIR, 'admin-auth.json');
+if (process.env.NODE_ENV === 'production' && !DATA_DIR.startsWith('/data')) {
+  console.error('❌ ERRO CRÍTICO: Sistema sem volume /data');
+  process.exit(1);
+}
 function passwordWithPepper(password){ return String(password || '') + LOGIN_PEPPER; }
 function getStoredAdminHash(){
   try {

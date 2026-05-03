@@ -248,4 +248,31 @@ app.get('/api/session/store-config', (req,res)=>{ let store = null; if(req.sessi
 app.use(['/index.html','/lojas_master.html','/configuracoes.html','/configuracao-cobranca.html','/financeiro.html','/seguranca.html'], requireAdmin);
 app.use(express.static(PUBLIC_DIR, { extensions:['html'] }));
 setInterval(() => { runAutomaticChargeReminders({ protocol:'https', get:()=>BASE_URL.replace(/^https?:\/\//,'') }).catch(err => console.error('WhatsApp cobrança automática:', err)); }, 1000 * 60 * 30);
+// ===== BACKUP AUTOMÁTICO DIÁRIO =====
+
+function fazerBackupAuto() {
+  try {
+    const origem = process.env.DB_PATH || '/data/loja-system.sqlite';
+    const pastaBackup = '/data/backups';
+
+    if (!fs.existsSync(pastaBackup)) {
+      fs.mkdirSync(pastaBackup, { recursive: true });
+    }
+
+    const data = new Date().toISOString().slice(0, 10);
+    const destino = path.join(pastaBackup, `backup-${data}.sqlite`);
+
+    fs.copyFileSync(origem, destino);
+
+    console.log('✅ Backup automático criado:', destino);
+  } catch (err) {
+    console.error('❌ Erro no backup automático:', err.message);
+  }
+}
+
+// executa a cada 24 horas
+setInterval(fazerBackupAuto, 1000 * 60 * 60 * 24);
+
+// executa ao iniciar o servidor
+fazerBackupAuto();
 app.listen(PORT, '0.0.0.0', ()=> console.log(`Servidor em http://0.0.0.0:${PORT}`));

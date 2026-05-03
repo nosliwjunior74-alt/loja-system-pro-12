@@ -83,6 +83,9 @@ async function fazerBackup(){
 </script>
   <script>
 async function listarBackups(){
+  console.log('clicou backups');
+
+  const r = await fetch('/api/admin/backups');
   const r = await fetch('/api/admin/backups');
   const j = await r.json();
 

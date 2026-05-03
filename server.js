@@ -316,4 +316,14 @@ app.get('/api/admin/backups', (req, res) => {
     res.status(500).json({ backups: [] });
   }
 });
+// ===== BACKUP MANUAL =====
+app.post('/api/admin/backup', (req, res) => {
+  try {
+    fazerBackupAuto();
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('Erro no backup manual:', err);
+    res.status(500).json({ ok: false });
+  }
+});
 app.listen(PORT, '0.0.0.0', ()=> console.log(`Servidor em http://0.0.0.0:${PORT}`));

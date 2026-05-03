@@ -39,7 +39,7 @@
 ">
 💾 Backup agora
 </button>
-  <button onclick="listarBackups()" style="
+   <button type="button" onclick="listarBackups()" style="
   background:#6c5ce7;
   color:white;
   border:none;
@@ -51,7 +51,7 @@
 📂 Ver backups
 </button>
 
-<div id="listaBackups" style="margin-top:10px;"></div>      
+<div id="listaBackups" style="margin-top:10px; color:#000; background:#fff; padding:8px;"></div>    
       </nav>
       <div class="actions">
         <button class="action-btn" id="logoutAdminBtn" type="button">⎋ Sair</button>
@@ -81,38 +81,39 @@ async function fazerBackup(){
   }
 }
 </script>
-  <script>
-async function listarBackups(){
-  console.log('clicou backups');
+ <script>
+window.listarBackups = async function(){
+  alert('Botão Ver backups clicou');
 
-  const r = await fetch('/api/admin/backups');
   const r = await fetch('/api/admin/backups');
   const j = await r.json();
 
   const div = document.getElementById('listaBackups');
   div.innerHTML = '';
 
+  if (!j.backups || j.backups.length === 0) {
+    div.innerHTML = 'Nenhum backup encontrado';
+    return;
+  }
+
   j.backups.forEach(b => {
     const el = document.createElement('div');
-    el.innerHTML = `
-      ${b}
-      <button onclick="restaurar('${b}')">Restaurar</button>
-    `;
+    el.innerHTML = `${b} <button onclick="restaurar('${b}')">Restaurar</button>`;
     div.appendChild(el);
   });
 }
 
-async function restaurar(arquivo){
-  if (!confirm('Tem certeza que deseja restaurar este backup?')) return;
+window.restaurar = async function(arquivo){
+  if (!confirm('Restaurar este backup?')) return;
 
   const r = await fetch('/api/admin/restore', {
-    method: 'POST',
-    headers: {'Content-Type':'application/json'},
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
     body: JSON.stringify({ arquivo })
   });
 
   const j = await r.json();
-  alert(j.ok ? '✅ Restaurado com sucesso!' : '❌ Erro ao restaurar');
+  alert(j.ok ? 'Restaurado com sucesso!' : 'Erro ao restaurar');
 }
 </script>
 </body>

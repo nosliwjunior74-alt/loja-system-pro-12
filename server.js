@@ -275,4 +275,45 @@ setInterval(fazerBackupAuto, 1000 * 60 * 60 * 24);
 
 // executa ao iniciar o servidor
 fazerBackupAuto();
+// ===== RESTAURAR BACKUP =====
+app.post('/api/admin/restore', (req, res) => {
+  try {
+    const { arquivo } = req.body;
+
+    if (!arquivo) {
+      return res.status(400).json({ ok: false, error: 'Arquivo não informado' });
+    }
+
+    const origem = `/data/backups/${arquivo}`;
+    const destino = process.env.DB_PATH || '/data/loja-system.sqlite';
+
+    if (!fs.existsSync(origem)) {
+      return res.status(404).json({ ok: false, error: 'Backup não encontrado' });
+    }
+
+    fs.copyFileSync(origem, destino);
+
+    console.log('♻️ Backup restaurado:', arquivo);
+
+    res.json({ ok: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ ok: false });
+  }
+});
+// ===== LISTAR BACKUPS =====
+app.get('/api/admin/backups', (req, res) => {
+  try {
+    const pasta = '/data/backups';
+
+    if (!fs.existsSync(pasta)) {
+      return res.json({ backups: [] });
+    }
+
+    const arquivos = fs.readdirSync(pasta);
+    res.json({ backups: arquivos });
+  } catch (err) {
+    res.status(500).json({ backups: [] });
+  }
+});
 app.listen(PORT, '0.0.0.0', ()=> console.log(`Servidor em http://0.0.0.0:${PORT}`));

@@ -81,8 +81,39 @@ async function fazerBackup(){
   }
 }
 </script>
+  <script>
+async function listarBackups(){
+  const r = await fetch('/api/admin/backups');
+  const j = await r.json();
+
+  const div = document.getElementById('listaBackups');
+  div.innerHTML = '';
+
+  j.backups.forEach(b => {
+    const el = document.createElement('div');
+    el.innerHTML = `
+      ${b}
+      <button onclick="restaurar('${b}')">Restaurar</button>
+    `;
+    div.appendChild(el);
+  });
+}
+
+async function restaurar(arquivo){
+  if (!confirm('Tem certeza que deseja restaurar este backup?')) return;
+
+  const r = await fetch('/api/admin/restore', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ arquivo })
+  });
+
+  const j = await r.json();
+  alert(j.ok ? '✅ Restaurado com sucesso!' : '❌ Erro ao restaurar');
+}
+</script>
 </body>
 </html>
-function abrirSeguranca() {
+
   alert('Tela de segurança ainda não implementada');
 }

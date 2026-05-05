@@ -246,6 +246,9 @@ app.put('/api/public/store-branding', requireClientApi, (req,res)=>{
 });
 app.get('/api/session/store-config', (req,res)=>{ let store = null; if(req.session?.clientStoreId) store = getStoreById(req.session.clientStoreId, baseUrl(req)); if(!store && req.session?.adminLoggedIn && req.session?.activeStoreId) store = getStoreById(req.session.activeStoreId, baseUrl(req)); if(!store) store = listStores(baseUrl(req))[0] || null; res.json({ store }); });
 app.use(['/index.html','/lojas_master.html','/configuracoes.html','/configuracao-cobranca.html','/financeiro.html','/seguranca.html'], requireAdmin);
+app.get('/s/:slug', (req, res) => {
+  res.redirect(`/login-loja.html?loja=${encodeURIComponent(req.params.slug)}`);
+});
 app.use(express.static(PUBLIC_DIR, { extensions:['html'] }));
 setInterval(() => { runAutomaticChargeReminders({ protocol:'https', get:()=>BASE_URL.replace(/^https?:\/\//,'') }).catch(err => console.error('WhatsApp cobrança automática:', err)); }, 1000 * 60 * 30);
 // ===== BACKUP AUTOMÁTICO DIÁRIO =====

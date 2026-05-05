@@ -3,40 +3,135 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Provador IA</title>
+<title>Provador IA Profissional</title>
 
 <style>
+*{box-sizing:border-box}
 body{
   margin:0;
-  background:#000;
+  background:#050014;
+  font-family:Arial, sans-serif;
   overflow:hidden;
+  color:white;
 }
-
-video, canvas{
+.stage{
+  width:100vw;
+  height:100vh;
+  position:relative;
+  background:radial-gradient(circle,#2b0a2f,#050014 70%);
+}
+video,canvas{
   position:absolute;
-  top:0;
-  left:0;
+  inset:0;
   width:100%;
   height:100%;
   object-fit:cover;
+  transform:scaleX(-1);
 }
-
 #roupa{
   position:absolute;
   pointer-events:none;
-  transform:translate(-50%, -50%);
+  transform:translate(-50%,-20%);
+  z-index:5;
+  opacity:.95;
+  filter:drop-shadow(0 15px 30px rgba(0,0,0,.45));
+}
+.panel{
+  position:absolute;
+  right:24px;
+  top:24px;
+  width:280px;
+  z-index:20;
+  background:rgba(0,0,0,.55);
+  border:1px solid rgba(255,255,255,.25);
+  border-radius:22px;
+  padding:18px;
+  backdrop-filter:blur(12px);
+}
+.panel h2{
+  margin:0 0 12px;
+  color:#ff4da6;
+}
+.look{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin:10px 0;
+  padding:8px;
+  border-radius:14px;
+  background:rgba(255,255,255,.08);
+  cursor:pointer;
+}
+.look img{
+  width:52px;
+  height:52px;
+  object-fit:contain;
+  background:white;
+  border-radius:10px;
+}
+button{
+  width:100%;
+  padding:13px;
+  margin-top:10px;
+  border:0;
+  border-radius:14px;
+  font-weight:bold;
+  cursor:pointer;
+}
+.primary{background:#ff3f9f;color:white}
+.secondary{background:#7c3aed;color:white}
+.neutral{background:#e5e7eb;color:#111}
+.badge{
+  position:absolute;
+  left:24px;
+  top:24px;
+  z-index:20;
+  background:rgba(0,0,0,.55);
+  padding:12px 18px;
+  border-radius:18px;
+  border:1px solid rgba(255,255,255,.2);
 }
 </style>
 </head>
 
 <body>
+<div class="stage">
+  <video id="video" autoplay playsinline muted></video>
+  <canvas id="canvas"></canvas>
 
-<video id="video" autoplay playsinline></video>
-<canvas id="canvas"></canvas>
-<img id="roupa" src="../imagens/look1.png">
+  <img id="roupa" src="imagens/look1.png">
 
-<script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose"></script>
-<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils"></script>
+  <div class="badge">
+    <strong>Provador IA</strong><br>
+    Detector de corpo ativo
+  </div>
+
+  <div class="panel">
+    <h2>Looks</h2>
+
+    <div class="look" onclick="trocarLook('imagens/look1.png')">
+      <img src="imagens/look1.png">
+      <span>Look 1</span>
+    </div>
+
+    <div class="look" onclick="trocarLook('imagens/look2.png')">
+      <img src="imagens/look2.png">
+      <span>Look 2</span>
+    </div>
+
+    <div class="look" onclick="trocarLook('imagens/look3.png')">
+      <img src="imagens/look3.png">
+      <span>Look 3</span>
+    </div>
+
+    <button class="primary" onclick="capturarFoto()">📸 Tirar foto</button>
+    <button class="secondary" onclick="enviarWhatsApp()">📲 Enviar WhatsApp</button>
+    <button class="neutral" onclick="limparLook()">🧹 Limpar</button>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
 
 <script>
 const video = document.getElementById('video');
@@ -44,59 +139,99 @@ const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
 const roupa = document.getElementById('roupa');
 
-// câmera
-navigator.mediaDevices.getUserMedia({ video:true }).then(stream=>{
-  video.srcObject = stream;
-});
+let ultimoX = 0;
+let ultimoY = 0;
+let ultimaLargura = 180;
+let fotoCapturada = null;
 
-// IA
+function suavizar(atual, novo, peso=0.25){
+  return atual + (novo - atual) * peso;
+}
+
+function trocarLook(src){
+  roupa.src = src;
+  roupa.style.display = 'block';
+}
+
+function limparLook(){
+  roupa.style.display = 'none';
+}
+
+function capturarFoto(){
+  const link = document.createElement('a');
+  link.download = 'provador-ia.png';
+  link.href = canvas.toDataURL('image/png');
+  fotoCapturada = link.href;
+  link.click();
+}
+
+function enviarWhatsApp(){
+  const texto = encodeURIComponent('Olá! Gostei deste look no provador virtual.');
+  window.open('https://wa.me/?text=' + texto, '_blank');
+}
+
 const pose = new Pose({
-  locateFile: (file) => {
-    return `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`;
-  }
+  locateFile: file => `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`
 });
 
 pose.setOptions({
-  modelComplexity:1,
-  smoothLandmarks:true,
-  minDetectionConfidence:0.5,
-  minTrackingConfidence:0.5
+  modelComplexity: 1,
+  smoothLandmarks: true,
+  enableSegmentation: false,
+  minDetectionConfidence: 0.6,
+  minTrackingConfidence: 0.6
 });
 
-pose.onResults(results=>{
+pose.onResults(results => {
+  if(!video.videoWidth) return;
+
   canvas.width = video.videoWidth;
   canvas.height = video.videoHeight;
 
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-  ctx.drawImage(video,0,0,canvas.width,canvas.height);
+  ctx.save();
+  ctx.scale(-1,1);
+  ctx.drawImage(video, -canvas.width, 0, canvas.width, canvas.height);
+  ctx.restore();
 
-  if(results.poseLandmarks){
+  if(!results.poseLandmarks) return;
 
-    const ombroE = results.poseLandmarks[11];
-    const ombroD = results.poseLandmarks[12];
+  const p = results.poseLandmarks;
 
-    const x = (ombroE.x + ombroD.x)/2 * canvas.width;
-    const y = (ombroE.y + ombroD.y)/2 * canvas.height;
+  const ombroE = p[11];
+  const ombroD = p[12];
+  const quadrilE = p[23];
+  const quadrilD = p[24];
 
-    const largura = Math.abs(ombroD.x - ombroE.x) * canvas.width;
+  if(!ombroE || !ombroD || !quadrilE || !quadrilD) return;
 
-    roupa.style.left = x + 'px';
-    roupa.style.top = y + 'px';
-    roupa.style.width = largura * 2 + 'px';
-  }
+  const centroX = (ombroE.x + ombroD.x) / 2 * canvas.width;
+  const centroY = (ombroE.y + ombroD.y) / 2 * canvas.height;
+
+  const larguraOmbros = Math.abs(ombroD.x - ombroE.x) * canvas.width;
+  const alturaCorpo = Math.abs(((quadrilE.y + quadrilD.y)/2) - ((ombroE.y + ombroD.y)/2)) * canvas.height;
+
+  const alvoX = canvas.width - centroX;
+  const alvoY = centroY - alturaCorpo * 0.08;
+  const alvoLargura = larguraOmbros * 2.05;
+
+  ultimoX = suavizar(ultimoX || alvoX, alvoX);
+  ultimoY = suavizar(ultimoY || alvoY, alvoY);
+  ultimaLargura = suavizar(ultimaLargura || alvoLargura, alvoLargura);
+
+  roupa.style.left = ultimoX + 'px';
+  roupa.style.top = ultimoY + 'px';
+  roupa.style.width = ultimaLargura + 'px';
 });
 
-// loop
-const camera = new Camera(video,{
-  onFrame: async ()=>{
-    await pose.send({image:video});
+const camera = new Camera(video, {
+  onFrame: async () => {
+    await pose.send({ image: video });
   },
-  width:640,
-  height:480
+  width: 720,
+  height: 1280
 });
 
 camera.start();
 </script>
-
 </body>
 </html>

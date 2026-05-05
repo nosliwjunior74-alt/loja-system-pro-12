@@ -145,6 +145,7 @@ function limparLook(){
 }
   
 async function carregarLooksDaLoja(){
+  console.log('LOOKS CARREGANDO...');
   await AppStore.ensureSeed();
  const params = new URLSearchParams(window.location.search);
 const slug = params.get('loja') || params.get('slug');

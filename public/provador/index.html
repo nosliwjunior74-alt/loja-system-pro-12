@@ -145,7 +145,16 @@ function limparLook(){
 }
 async function carregarLooksDaLoja(){
   await AppStore.ensureSeed();
-  const itens = await Estoque.visible();
+ const params = new URLSearchParams(window.location.search);
+const slug = params.get('loja') || params.get('slug');
+
+let itens = await Estoque.visible();
+
+if (slug) {
+  itens = itens.filter(item =>
+    String(item.storeSlug || item.lojaSlug || item.slugLoja || item.loja || '').toLowerCase() === String(slug).toLowerCase()
+  );
+}
 
   const lista = document.getElementById('listaLooks');
   lista.innerHTML = '';

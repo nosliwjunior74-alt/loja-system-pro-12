@@ -143,6 +143,7 @@ function trocarLook(src){
 function limparLook(){
   roupa.style.display = 'none';
 }
+  carregarLooksDaLoja();
 async function carregarLooksDaLoja(){
   await AppStore.ensureSeed();
  const params = new URLSearchParams(window.location.search);

@@ -149,33 +149,32 @@ function limparLook(){
   
 async function carregarLooksDaLoja(){
   console.log('LOOKS CARREGANDO...');
+
   await AppStore.ensureSeed();
- const params = new URLSearchParams(window.location.search);
-const slug = params.get('loja') || params.get('slug');
 
-let itens = await Estoque.visible();
-
-itens = itens.filter(item => item.imagem || item.foto || item.logo);
+  let itens = await Estoque.visible();
 
   const lista = document.getElementById('listaLooks');
   lista.innerHTML = '';
 
   if (!itens || itens.length === 0) {
-    lista.innerHTML = 'Nenhuma roupa cadastrada';
+    lista.innerHTML = '<div class="look">Nenhuma roupa cadastrada</div>';
     return;
   }
 
   itens.forEach(item => {
-    const img = item.image || item.foto || item.logo || '';
-    if(!img) return;
+    const img = item.image || item.imagem || item.foto || item.logo || '';
+
+    if (!img) return;
 
     const div = document.createElement('div');
     div.className = 'look';
-    div.onclick = () => trocarLook(img);
     div.innerHTML = `
       <img src="${img}">
       <span>${item.name || item.nome || 'Look'}</span>
     `;
+
+    div.onclick = () => trocarLook(img);
     lista.appendChild(div);
   });
 }

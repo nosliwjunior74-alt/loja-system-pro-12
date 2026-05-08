@@ -102,3 +102,33 @@
   border-radius:10px;
   padding:10px;
 }
+#chatVendasBtn{
+  position:fixed;
+  left:20px;
+  bottom:20px;
+  z-index:9999;
+  background:#16a34a;
+  color:white;
+  border:none;
+  border-radius:50px;
+  padding:14px 20px;
+  font-weight:bold;
+  cursor:pointer;
+  box-shadow:0 8px 25px #0004;
+}
+
+#chatVendasBox{
+  position:fixed;
+  left:20px;
+  bottom:80px;
+  width:340px;
+  height:430px;
+  background:white;
+  color:#111;
+  border-radius:18px;
+  box-shadow:0 10px 35px #0005;
+  z-index:9999;
+  display:none;
+  flex-direction:column;
+  overflow:hidden;
+}

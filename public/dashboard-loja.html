@@ -90,7 +90,18 @@
           <span id='topbarSub'>Painel da loja</span>
         </div>
       </header>
-      <iframe id='appFrame' src='provador/index.html' title='Aplicativo'></iframe>
+      <div class="card">
+  <h2>🔗 Link público da loja</h2>
+  <p>Use este link para enviar ao cliente comprador pelo WhatsApp, Instagram ou QR Code.</p>
+
+  <input id="linkLojaPublica" readonly style="width:100%;padding:14px;border-radius:10px;border:1px solid #ddd;margin:10px 0;">
+
+  <button onclick="copiarLinkLoja()" class="btn">📋 Copiar link da loja</button>
+
+  <button onclick="testarLojaPublica()" class="btn">🧪 Testar como cliente</button>
+
+  <button onclick="enviarLinkWhatsApp()" class="btn">📲 Enviar pelo WhatsApp</button>
+</div>
     </main>
   </div>
 
@@ -266,6 +277,38 @@
 
     loadSession();
   </script>
- 
+ <script>
+function pegarLojaPainel(){
+  const params = new URLSearchParams(window.location.search);
+  return params.get("loja") || params.get("slug") || "";
+}
+
+function montarLinkPublicoLoja(){
+  const loja = pegarLojaPainel();
+  const link = window.location.origin + "/loja.html?loja=" + encodeURIComponent(loja);
+  const campo = document.getElementById("linkLojaPublica");
+  if(campo) campo.value = link;
+}
+
+function copiarLinkLoja(){
+  const campo = document.getElementById("linkLojaPublica");
+  campo.select();
+  document.execCommand("copy");
+  alert("Link da loja copiado!");
+}
+
+function testarLojaPublica(){
+  const link = document.getElementById("linkLojaPublica").value;
+  window.open(link, "_blank");
+}
+
+function enviarLinkWhatsApp(){
+  const link = document.getElementById("linkLojaPublica").value;
+  const texto = encodeURIComponent("Olá! Acesse nossa loja online e teste os looks no provador virtual: " + link);
+  window.open("https://wa.me/?text=" + texto, "_blank");
+}
+
+window.addEventListener("load", montarLinkPublicoLoja);
+</script>
 </body>
 </html>

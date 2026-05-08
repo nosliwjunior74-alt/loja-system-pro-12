@@ -1,60 +1,128 @@
-const numeroVendedor = "5531999999999"; // troque pelo WhatsApp da loja
+const whatsappVendedor = "5531999999999"; // troque pelo WhatsApp da loja
 
-function abrirChatVendas(){
-  document.getElementById("chatVendasBox").style.display = "flex";
+function botResposta(pergunta){
+  const texto = pergunta.toLowerCase();
+
+  if(texto.includes("vestido")){
+    return `
+👗 Temos vestidos disponíveis.
+
+Deseja:
+1 - Ver catálogo
+2 - Falar com vendedor
+3 - Testar no provador
+`;
+  }
+
+  if(texto.includes("blusa") || texto.includes("camisa")){
+    return `
+👚 Temos blusas e camisas disponíveis.
+
+Deseja:
+1 - Ver looks disponíveis
+2 - Saber tamanhos
+3 - Falar com vendedor
+`;
+  }
+
+  if(texto.includes("calça") || texto.includes("calca")){
+    return `
+👖 Temos calças disponíveis.
+
+Deseja:
+1 - Ver catálogo
+2 - Conferir tamanho
+3 - Falar com vendedor
+`;
+  }
+
+  if(texto.includes("preço") || texto.includes("valor")){
+    return "💰 Os preços aparecem no catálogo. Para desconto ou reserva, fale com o vendedor.";
+  }
+
+  if(texto.includes("tamanho")){
+    return "📏 Temos tamanhos P, M, G e numerações. Informe seu tamanho para o vendedor confirmar disponibilidade.";
+  }
+
+  if(texto.includes("entrega")){
+    return "🚚 A entrega ou retirada é combinada diretamente com a loja pelo WhatsApp.";
+  }
+
+  if(texto.includes("comprar") || texto.includes("vendedor")){
+    abrirWhatsapp();
+    return "📲 Vou te encaminhar para o vendedor finalizar sua compra.";
+  }
+
+  if(texto === "1"){
+    return "🛍 Clique em Catálogo ou Vitrine / Provador para ver os looks disponíveis.";
+  }
+
+  if(texto === "2"){
+    abrirWhatsapp();
+    return "📲 Chamando vendedor para atendimento.";
+  }
+
+  if(texto === "3"){
+    return "👗 Clique em Vitrine / Provador e escolha uma roupa para testar.";
+  }
+
+  return `
+Posso te ajudar com:
+👗 vestido
+👚 blusa
+👖 calça
+💰 preço
+📏 tamanho
+🚚 entrega
+💬 comprar
+`;
 }
 
-function fecharChatVendas(){
-  document.getElementById("chatVendasBox").style.display = "none";
+function abrirWhatsapp(){
+  const mensagem = encodeURIComponent("Olá! Vim pelo provador virtual e quero comprar uma roupa.");
+  window.open(`https://wa.me/${whatsappVendedor}?text=${mensagem}`, "_blank");
 }
 
-function msgVendas(texto, tipo="bot"){
-  const area = document.getElementById("chatVendasMensagens");
-  area.innerHTML += `<div class="msg ${tipo}">${texto}</div>`;
-  area.scrollTop = area.scrollHeight;
+function enviarVenda(){
+  const input = document.getElementById("chatVendaInput");
+  const mensagens = document.getElementById("chatVendaMensagens");
+  const pergunta = input.value.trim();
+
+  if(!pergunta) return;
+
+  mensagens.innerHTML += `<div class="msg user">${pergunta}</div>`;
+  mensagens.innerHTML += `<div class="msg bot">${botResposta(pergunta)}</div>`;
+
+  input.value = "";
+  mensagens.scrollTop = mensagens.scrollHeight;
 }
 
-function responderVenda(tipo){
-  if(tipo === "looks"){
-    msgVendas("Temos looks disponíveis no provador. Clique em uma peça no painel de looks para experimentar.");
-  }
-
-  if(tipo === "tamanho"){
-    msgVendas("Você pode informar seu tamanho aproximado ao vendedor. Exemplo: P, M, G ou 38, 40, 42.");
-  }
-
-  if(tipo === "comprar"){
-    msgVendas("Para comprar, clique em 'Falar com vendedor' e envie o look escolhido pelo WhatsApp.");
-  }
-
-  if(tipo === "entrega"){
-    msgVendas("A entrega e retirada são combinadas diretamente com a loja pelo WhatsApp.");
-  }
-
-  if(tipo === "vendedor"){
-    const texto = encodeURIComponent("Olá! Vi um look no provador virtual e quero atendimento.");
-    window.open(`https://wa.me/${numeroVendedor}?text=${texto}`, "_blank");
-  }
-}
-
-function montarChatVendas(){
+function montarChatVenda(){
   const html = `
-    <button id="chatVendasBtn" onclick="abrirChatVendas()">🛍️ Comprar</button>
+    <button id="chatVendaBtn" onclick="document.getElementById('chatVendaBox').style.display='block'">
+      🛍 Comprar
+    </button>
 
-    <div id="chatVendasBox">
+    <div id="chatVendaBox">
       <div class="chatbotHeader">
         <strong>Assistente de Vendas</strong>
-        <button onclick="fecharChatVendas()">×</button>
+        <button onclick="document.getElementById('chatVendaBox').style.display='none'">×</button>
       </div>
 
-      <div id="chatVendasMensagens">
-        <div class="msg bot">Olá! Posso te ajudar a escolher e comprar seu look.</div>
+      <div id="chatVendaMensagens">
+        <div class="msg bot">
+          👋 Olá, seja bem-vindo!<br>
+          Como podemos ajudar?<br><br>
+          🛍 Ver promoções<br>
+          👗 Testar provador<br>
+          📦 Acompanhar pedido<br>
+          💬 Falar com vendedor
+        </div>
+      </div>
 
-        <button class="quick" onclick="responderVenda('looks')">👗 Ver looks disponíveis</button>
-        <button class="quick" onclick="responderVenda('tamanho')">📏 Dúvida sobre tamanho</button>
-        <button class="quick" onclick="responderVenda('comprar')">💳 Como comprar</button>
-        <button class="quick" onclick="responderVenda('entrega')">🚚 Entrega</button>
-        <button class="quick" onclick="responderVenda('vendedor')">📲 Falar com vendedor</button>
+      <div class="chatbotFooter">
+        <input id="chatVendaInput" placeholder="Ex: tem vestido preto?">
+        <button onclick="enviarVenda()">Enviar</button>
       </div>
     </div>
   `;
@@ -62,4 +130,4 @@ function montarChatVendas(){
   document.body.insertAdjacentHTML("beforeend", html);
 }
 
-window.addEventListener("load", montarChatVendas);
+window.addEventListener("load", montarChatVenda);

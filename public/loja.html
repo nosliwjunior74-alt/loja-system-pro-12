@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Loja Online - Provador Pro</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+    body{
+      margin:0;
+      font-family:Arial, sans-serif;
+      background:#fff3fa;
+      color:#3b0b2f;
+    }
+
+    header{
+      background:linear-gradient(135deg,#e83e9f,#7c3aed);
+      color:white;
+      padding:22px;
+      text-align:center;
+    }
+
+    header h1{
+      margin:0;
+      font-size:26px;
+    }
+
+    header p{
+      margin:8px 0 0;
+      opacity:.95;
+    }
+
+    .container{
+      max-width:1100px;
+      margin:auto;
+      padding:20px;
+    }
+
+    .acoes{
+      display:flex;
+      gap:12px;
+      flex-wrap:wrap;
+      margin:20px 0;
+      justify-content:center;
+    }
+
+    .btn{
+      border:none;
+      border-radius:14px;
+      padding:14px 20px;
+      font-weight:bold;
+      cursor:pointer;
+      text-decoration:none;
+      display:inline-block;
+    }
+
+    .btn-pink{
+      background:#e83e9f;
+      color:white;
+    }
+
+    .btn-green{
+      background:#16a34a;
+      color:white;
+    }
+
+    .btn-purple{
+      background:#7c3aed;
+      color:white;
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+      gap:18px;
+    }
+
+    .card{
+      background:white;
+      border-radius:18px;
+      padding:14px;
+      box-shadow:0 8px 25px #0001;
+      border:1px solid #f3cce3;
+    }
+
+    .card img{
+      width:100%;
+      height:240px;
+      object-fit:cover;
+      border-radius:14px;
+      background:#f5f5f5;
+    }
+
+    .card h3{
+      margin:12px 0 6px;
+      color:#a01865;
+    }
+
+    .card p{
+      margin:4px 0;
+      font-size:14px;
+    }
+
+    .preco{
+      font-weight:bold;
+      color:#16a34a;
+      font-size:18px;
+      margin-top:8px;
+    }
+
+    .erro{
+      text-align:center;
+      padding:40px;
+      font-size:18px;
+      color:#a01865;
+    }
+
+    .whatsapp-fixo{
+      position:fixed;
+      right:20px;
+      bottom:20px;
+      background:#16a34a;
+      color:white;
+      padding:15px 22px;
+      border-radius:50px;
+      text-decoration:none;
+      font-weight:bold;
+      box-shadow:0 8px 25px #0004;
+      z-index:9999;
+    }
+
+    @media(max-width:600px){
+      header h1{font-size:22px}
+      .card img{height:210px}
+      .acoes{flex-direction:column}
+      .btn{text-align:center}
+    }
+  </style>
+</head>
+
+<body>
+
+<header>
+  <h1 id="nomeLoja">Carregando loja...</h1>
+  <p>Catálogo online com provador virtual</p>
+</header>
+
+<div class="container">
+
+  <div class="acoes">
+    <a id="btnProvador" class="btn btn-purple" href="#">👗 Testar no Provador</a>
+    <a id="btnWhats" class="btn btn-green" href="#" target="_blank">💬 Falar com Vendedor</a>
+  </div>
+
+  <h2>🛍 Looks disponíveis</h2>
+
+  <div id="listaProdutos" class="grid"></div>
+
+  <div id="mensagem" class="erro"></div>
+
+</div>
+
+<a id="whatsFixo" class="whatsapp-fixo" href="#" target="_blank">💬 Comprar pelo WhatsApp</a>
+
+<script src="js/local-store.js"></script>
+<script src="js/branding.js"></script>
+<script src="js/dashboard.js"></script>
+
+<script>
+  const params = new URLSearchParams(window.location.search);
+  const slug = params.get("loja") || params.get("slug") || "";
+
+  const nomeLoja = document.getElementById("nomeLoja");
+  const listaProdutos = document.getElementById("listaProdutos");
+  const mensagem = document.getElementById("mensagem");
+  const btnProvador = document.getElementById("btnProvador");
+  const btnWhats = document.getElementById("btnWhats");
+  const whatsFixo = document.getElementById("whatsFixo");
+
+  const whatsappPadrao = "5531999999999";
+
+  function normalizar(txt){
+    return String(txt || "").toLowerCase().trim();
+  }
+
+  function abrirWhatsProduto(nome){
+    const texto = encodeURIComponent(
+      "Olá! Vim pelo catálogo online e tenho interesse no produto: " + nome
+    );
+    return "https://wa.me/" + whatsappPadrao + "?text=" + texto;
+  }
+
+  async function carregarLojaPublica(){
+    try{
+      nomeLoja.textContent = slug ? "Loja " + slug : "Loja Online";
+
+      btnProvador.href = "provador/index.html?loja=" + encodeURIComponent(slug);
+      btnWhats.href = "https://wa.me/" + whatsappPadrao + "?text=" + encodeURIComponent("Olá! Vim pela loja online e quero atendimento.");
+      whatsFixo.href = btnWhats.href;
+
+      let itens = [];
+
+      if(window.AppStore && window.Estoque){
+        await AppStore.ensureSeed();
+        itens = await Estoque.visible();
+      }
+
+      if(slug){
+        itens = itens.filter(item => {
+          const lojaItem = normalizar(item.storeSlug || item.lojaSlug || item.slugLoja || item.loja || item.store || "");
+          return !lojaItem || lojaItem === normalizar(slug);
+        });
+      }
+
+      listaProdutos.innerHTML = "";
+
+      if(!itens || itens.length === 0){
+        mensagem.innerHTML = "Nenhum produto encontrado para esta loja.";
+        return;
+      }
+
+      itens.forEach(item => {
+        const img = item.imagem || item.image || item.foto || item.logo || "";
+        const nome = item.nome || item.name || "Produto";
+        const categoria = item.categoria || item.category || "Look";
+        const preco = item.preco || item.price || "";
+
+        const card = document.createElement("div");
+        card.className = "card";
+
+        card.innerHTML = `
+          <img src="${img}" alt="${nome}">
+          <h3>${nome}</h3>
+          <p>${categoria}</p>
+          <p class="preco">${preco ? "R$ " + preco : "Consulte o preço"}</p>
+          <div class="acoes">
+            <a class="btn btn-purple" href="provador/index.html?loja=${encodeURIComponent(slug)}">👗 Testar</a>
+            <a class="btn btn-green" target="_blank" href="${abrirWhatsProduto(nome)}">💬 Comprar</a>
+          </div>
+        `;
+
+        listaProdutos.appendChild(card);
+      });
+
+    }catch(e){
+      console.error(e);
+      mensagem.innerHTML = "Erro ao carregar loja pública.";
+    }
+  }
+
+  carregarLojaPublica();
+</script>
+
+</body>
+</html>

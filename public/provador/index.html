@@ -96,6 +96,15 @@ button{
 </head>
   <script src="js/chatbot-comprador.js"></script>
 <body>
+  <div style="position:fixed;top:15px;left:15px;z-index:99999;display:flex;gap:10px;">
+  <button onclick="voltarLojaPublica()" style="padding:12px 18px;border-radius:12px;border:none;background:#e83e9f;color:white;font-weight:bold;">
+    ⬅ Voltar para Loja
+  </button>
+
+  <button onclick="comprarWhatsApp()" style="padding:12px 18px;border-radius:12px;border:none;background:#16a34a;color:white;font-weight:bold;">
+    💬 Comprar no WhatsApp
+  </button>
+</div>
 <div class="stage">
   <video id="video" autoplay playsinline muted></video>
   <canvas id="canvas"></canvas>
@@ -262,5 +271,22 @@ camera.start();
 </script>
   <script src="../js/chatbot-vendas.js"></script>
   <script src="../js/chatbot.js"></script>
+  <script>
+function pegarLojaAtual(){
+  const params = new URLSearchParams(window.location.search);
+  return params.get("loja") || params.get("slug") || "";
+}
+
+function voltarLojaPublica(){
+  const loja = pegarLojaAtual();
+  window.location.href = "../loja.html?loja=" + encodeURIComponent(loja);
+}
+
+function comprarWhatsApp(){
+  const loja = pegarLojaAtual();
+  const texto = encodeURIComponent("Olá! Testei um look no provador virtual da loja " + loja + " e quero comprar.");
+  window.open("https://wa.me/5531999999999?text=" + texto, "_blank");
+}
+</script>
 </body>
 </html>

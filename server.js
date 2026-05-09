@@ -1,5 +1,6 @@
 const express = require('express');
 const session = require('express-session');
+const SQLiteStore = require('connect-sqlite3')(session);
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const path = require('path');

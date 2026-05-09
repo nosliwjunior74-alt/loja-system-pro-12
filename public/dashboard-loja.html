@@ -169,10 +169,10 @@
       } catch(e){
         const session = JSON.parse(sessionStorage.getItem('dashboardStoreSessionLocal') || 'null');
         const store = LocalStoreManager.list().find(s => s.slug === slug);
-        if(!session || session.slug !== slug || !store){
-          location.href = 'login-loja.html?loja=' + encodeURIComponent(slug);
-          return;
-        }
+       if(!session || !store){
+  location.href = 'login-loja.html?loja=' + encodeURIComponent(slug);
+  return;
+}
         applyStore(store, false);
       }
     }

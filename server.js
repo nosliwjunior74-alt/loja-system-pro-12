@@ -329,4 +329,164 @@ app.post('/api/admin/backup', (req, res) => {
     res.status(500).json({ ok: false });
   }
 });
+// ===============================
+// API REAL DAS LOJAS
+// ===============================
+
+const sqlite3 = require('sqlite3').verbose();
+
+const DB_PATH = process.env.DB_PATH || './loja-system.sqlite';
+
+const db = new sqlite3.Database(DB_PATH);
+
+// criar tabela
+db.serialize(() => {
+  db.run(`
+    CREATE TABLE IF NOT EXISTS stores (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT,
+      slug TEXT UNIQUE,
+      login TEXT,
+      password TEXT,
+      color TEXT,
+      logo TEXT,
+      status TEXT,
+      createdAt TEXT
+    )
+  `);
+});
+
+// LISTAR LOJAS
+app.get('/api/stores', (req, res) => {
+  db.all('SELECT * FROM stores ORDER BY id DESC', [], (err, rows) => {
+    if (err) {
+      return res.status(500).json({ error: err.message });
+    }
+
+    res.json(rows || []);
+  });
+});
+
+// CRIAR LOJA
+app.post('/api/stores', express.json(), (req, res) => {
+
+  const {
+    name,
+    slug,
+    login,
+    password,
+    color,
+    logo,
+    status
+  } = req.body;
+
+  db.run(`
+    INSERT INTO stores
+    (name, slug, login, password, color, logo, status, createdAt)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+  `,
+  [
+    name,
+    slug,
+    login,
+    password,
+    color || '#e83d8f',
+    logo || '',
+    status || 'ativa',
+    new Date().toISOString()
+  ],
+  function(err){
+
+    if(err){
+      return res.status(500).json({
+        error: err.message
+      });
+    }
+
+    res.json({
+      success:true,
+      id:this.lastID
+    });
+
+  });
+
+});
+
+// EDITAR LOJA
+app.put('/api/stores/:id', express.json(), (req, res) => {
+
+  const id = req.params.id;
+
+  const {
+    name,
+    slug,
+    login,
+    password,
+    color,
+    logo,
+    status
+  } = req.body;
+
+  db.run(`
+    UPDATE stores
+    SET
+      name=?,
+      slug=?,
+      login=?,
+      password=?,
+      color=?,
+      logo=?,
+      status=?
+    WHERE id=?
+  `,
+  [
+    name,
+    slug,
+    login,
+    password,
+    color,
+    logo,
+    status,
+    id
+  ],
+  function(err){
+
+    if(err){
+      return res.status(500).json({
+        error: err.message
+      });
+    }
+
+    res.json({
+      success:true
+    });
+
+  });
+
+});
+
+// DELETAR LOJA
+app.delete('/api/stores/:id', (req, res) => {
+
+  const id = req.params.id;
+
+  db.run(
+    'DELETE FROM stores WHERE id=?',
+    [id],
+    function(err){
+
+      if(err){
+        return res.status(500).json({
+          error: err.message
+        });
+      }
+
+      res.json({
+        success:true
+      });
+
+    }
+  );
+
+});
 app.listen(PORT, '0.0.0.0', ()=> console.log(`Servidor em http://0.0.0.0:${PORT}`));

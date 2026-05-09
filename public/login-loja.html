@@ -367,7 +367,16 @@
           msg.textContent = 'Login ou senha incorretos.';
           return;
         }
-        sessionStorage.setItem('dashboardStoreSessionLocal', JSON.stringify({storeId:store.id, slug:store.slug, at:Date.now()}));
+        const session = {
+  slug: slug,
+  storeId: store.id,
+  loginAt: Date.now()
+};
+
+sessionStorage.setItem(
+  'dashboardStoreSessionLocal',
+  JSON.stringify(session)
+);
         localStorage.setItem('lojaAtivaConfig', JSON.stringify({
           name:store.name,
           sub:store.sub,

@@ -124,6 +124,10 @@ app.use(express.urlencoded({ extended:true, limit:'10mb' }));
 app.use(session({
   name: SESSION_NAME,
   secret: SESSION_SECRET,
+  store: new SQLiteStore({
+  db: 'sessions.sqlite',
+  dir: '/data'
+}),
   resave:false,
   saveUninitialized:false,
   rolling:true,

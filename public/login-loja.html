@@ -338,57 +338,66 @@
       }
     }
 
-    document.getElementById('entrarBtn').addEventListener('click', async () => {
-      const login = document.getElementById('usuario').value.trim();
-      const password = document.getElementById('senha').value.trim();
-      const msg = document.getElementById('msg');
-      if(!store){
-        msg.textContent = 'Loja não encontrada.';
-        return;
-      }
-      if(isBlocked(store)){
-        msg.textContent = 'Acesso bloqueado por licença vencida ou inativa.';
-        return;
-      }
-      if(online){
-        const r = await fetch('/api/public/login', {
-          method:'POST',
-          headers:{'Content-Type':'application/json'},
-          body:JSON.stringify({slug, login, password})
-        });
-        const data = await r.json().catch(() => ({}));
-        if(!r.ok){
-          msg.textContent = data.error || 'Login ou senha incorretos.';
-          if(r.status === 403) setBlockedUI(true, data.error || 'Sua licença expirou ou está bloqueada.');
-          return;
-        }
-      } else {
-        if(login !== store.login || password !== store.password){
-          msg.textContent = 'Login ou senha incorretos.';
-          return;
-        }
-        const session = {
-  slug: slug,
-  storeId: store.id,
-  loginAt: Date.now()
-};
+    async function fazerLogin(){
 
-sessionStorage.setItem(
-  'dashboardStoreSessionLocal',
-  JSON.stringify(session)
-);
-        localStorage.setItem('lojaAtivaConfig', JSON.stringify({
-          name:store.name,
-          sub:store.sub,
-          logo:store.logo,
-          color:store.color,
-          status:store.status,
-          licenseStatus:store.licenseStatus,
-          expiresAt:store.expiresAt || ''
-        }));
-      }
-      location.href = `dashboard-loja.html?loja=${encodeURIComponent(slug)}`;
-    });
+  const slug =
+    new URLSearchParams(location.search).get('loja');
+
+  const login =
+    document.getElementById('usuario').value.trim();
+
+  const password =
+    document.getElementById('senha').value.trim();
+
+  const msg =
+    document.getElementById('msg');
+
+  try{
+
+    const r =
+      await fetch('/api/stores');
+
+    const stores =
+      await r.json();
+
+    const store =
+      stores.find(s =>
+        s.slug === slug &&
+        s.login === login &&
+        s.password === password
+      );
+
+    if(!store){
+      msg.textContent = 'Login inválido';
+      return;
+    }
+
+    sessionStorage.setItem(
+      'STORE_SESSION',
+      JSON.stringify({
+        id:store.id,
+        slug:store.slug
+      })
+    );
+
+    location.href =
+      'dashboard-loja.html?loja=' +
+      encodeURIComponent(store.slug);
+
+  }catch(err){
+
+    console.error(err);
+
+    msg.textContent =
+      'Erro ao conectar servidor';
+
+  }
+
+}
+
+document
+  .getElementById('entrarBtn')
+  .addEventListener('click', fazerLogin);
 
     loadStore();
   </script>

@@ -170,9 +170,7 @@ const store = LocalStoreManager.list().find(
 );
 
 if(!session || !store){
-  location.href =
-    'login-loja.html?loja=' +
-    encodeURIComponent(slug);
+ console.log('Sessão não encontrada');
   return;
 }
 

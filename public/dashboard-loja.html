@@ -232,9 +232,20 @@ applyStore(store, false);
         if(!response.ok) throw new Error(data.error || 'Não foi possível salvar a personalização.');
         return data.store || null;
       }
-      const updated = LocalStoreManager.update(currentStore.id, patch);
-      LocalStoreManager.setActive(currentStore.id);
-      return updated;
+     const response = await fetch('/api/public/store-branding', {
+  method:'PUT',
+  headers:{ 'Content-Type':'application/json' },
+  credentials:'include',
+  body:JSON.stringify(patch)
+});
+
+const data = await response.json().catch(() => ({}));
+
+if(!response.ok){
+  throw new Error(data.error || 'Não foi possível salvar a personalização.');
+}
+
+return data.store;
     }
 
     if(changeLogoBtn && clientLogoFile){

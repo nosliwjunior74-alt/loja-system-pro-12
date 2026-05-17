@@ -162,7 +162,14 @@ async function carregarLooksDaLoja(){
 
   await AppStore.ensureSeed();
 
-  let itens = await Estoque.visible();
+ let lojaAtual = params.get('loja') || params.get('slug') || '';
+let items = await Estoque.visible();
+
+if(lojaAtual){
+  items = items.filter(item =>
+    (item.storeSlug || item.loja || '') === lojaAtual
+  );
+}
 const params = new URLSearchParams(window.location.search);
 const lojaAtual = params.get('loja') || params.get('slug') || '';
 

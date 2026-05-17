@@ -163,7 +163,22 @@ async function carregarLooksDaLoja(){
   await AppStore.ensureSeed();
 
   let itens = await Estoque.visible();
+const params = new URLSearchParams(window.location.search);
+const lojaAtual = params.get('loja') || params.get('slug') || '';
 
+if(lojaAtual){
+  items = items.filter(item => {
+    const lojaItem = String(
+      item.loja ||
+      item.lojaSlug ||
+      item.storeSlug ||
+      item.slugLoja ||
+      ''
+    ).toLowerCase();
+
+    return !lojaItem || lojaItem === lojaAtual.toLowerCase();
+  });
+}
   const lista = document.getElementById('listaLooks');
   lista.innerHTML = '';
 

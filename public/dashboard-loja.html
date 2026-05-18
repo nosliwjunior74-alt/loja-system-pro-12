@@ -365,6 +365,51 @@ setInterval(async () => {
 
 }, 15000);
 window.addEventListener("load", montarLinkPublicoLoja);
+   setInterval(async () => {
+  try {
+
+    const params = new URLSearchParams(window.location.search);
+
+    const slug =
+      params.get('loja') ||
+      params.get('slug') ||
+      '';
+
+    if(!slug) return;
+
+    const r = await fetch(
+      `/api/public/store/${encodeURIComponent(slug)}`
+    );
+
+    const data = await r.json();
+
+    if(!r.ok || !data.store){
+      alert('Loja desativada.');
+      location.href =
+        `/login-loja.html?loja=${encodeURIComponent(slug)}`;
+      return;
+    }
+
+    const store = data.store;
+
+    if(
+      store.status !== 'ativo' &&
+      store.status !== 'degustacao'
+    ){
+      alert('Licença desativada.');
+
+      sessionStorage.clear();
+      localStorage.removeItem('STORE_SESSION');
+
+      location.href =
+        `/login-loja.html?loja=${encodeURIComponent(slug)}`;
+    }
+
+  } catch(err){
+    console.log(err);
+  }
+
+}, 5000);
 </script>
 </body>
 </html>

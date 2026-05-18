@@ -319,7 +319,51 @@ function enviarLinkWhatsApp(){
   const texto = encodeURIComponent("Olá! Acesse nossa loja online e teste os looks no provador virtual: " + link);
   window.open("https://wa.me/?text=" + texto, "_blank");
 }
+setInterval(async () => {
+  try {
 
+    const params = new URLSearchParams(location.search);
+
+    const slug =
+      params.get('loja') ||
+      params.get('slug');
+
+    if(!slug) return;
+
+    const r = await fetch(
+      `/api/public/store/${encodeURIComponent(slug)}`
+    );
+
+    const data = await r.json();
+
+    if(!r.ok || !data.store){
+
+      alert('Loja desativada.');
+
+      location.href =
+        `login-loja.html?loja=${encodeURIComponent(slug)}`;
+
+      return;
+    }
+
+    const store = data.store;
+
+    if(
+      store.status !== 'ativo' &&
+      store.status !== 'degustacao'
+    ){
+
+      alert('Licença desativada.');
+
+      location.href =
+        `login-loja.html?loja=${encodeURIComponent(slug)}`;
+    }
+
+  } catch(e){
+    console.log(e);
+  }
+
+}, 15000);
 window.addEventListener("load", montarLinkPublicoLoja);
 </script>
 </body>

@@ -309,6 +309,33 @@ function comprarWhatsApp(){
   const texto = encodeURIComponent("Olá! Testei um look no provador virtual da loja " + loja + " e quero comprar.");
   window.open("https://wa.me/5531999999999?text=" + texto, "_blank");
 }
+    setInterval(async () => {
+  try {
+    const params = new URLSearchParams(location.search);
+    const slug = params.get('loja') || params.get('slug');
+
+    if(!slug) return;
+
+    const r = await fetch(`/api/public/store/${encodeURIComponent(slug)}`);
+    const data = await r.json();
+
+    if(!r.ok || !data.store){
+      alert('Loja desativada.');
+      location.href = `/login-loja.html?loja=${encodeURIComponent(slug)}`;
+      return;
+    }
+
+    const store = data.store;
+
+    if(store.status !== 'ativo' && store.status !== 'degustacao'){
+      alert('Licença desativada.');
+      location.href = `/login-loja.html?loja=${encodeURIComponent(slug)}`;
+    }
+
+  } catch(e){
+    console.log(e);
+  }
+}, 10000);
 </script>
 </body>
 </html>

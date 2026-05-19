@@ -58,9 +58,7 @@ button.danger{background:#76254d}
       <label>Logo por URL</label><input id='storeLogo' placeholder='https://...'>
       <label>Baixar logo do cliente do PC</label><input id='storeLogoFile' type='file' accept='image/*'>
       <div class='actions'>
-        <button id="saveBtn" class="primary">
-Salvar Loja
-</button>
+        <button id='saveBtn'>Salvar loja</button>
         <button class='secondary' id='clearBtn'>Nova loja</button>
       </div>
       <p class='muted' id='status'></p>
@@ -127,27 +125,8 @@ async function loadStores(){
 async function saveStore(){
   const payload={name:el('storeName').value.trim()||'Sua Loja',sub:el('storeSub').value.trim()||'Dashboard Integrado Multi-Loja',color:el('storeColor').value||'#e33d8f',slug:el('storeSlug').value.trim()||el('storeName').value.trim(),login:el('storeLogin').value.trim()||'admin',email:el('storeEmail').value.trim(),phone:el('storePhone').value.trim(),plan:el('storePlan').value||'premium',expiresAt:el('storeExpiresAt').value,status:el('storeStatus').value||'ativo',customDomain:el('storeCustomDomain').value.trim(),logo:uploadData||el('storeLogo').value.trim()||'assets/default-logo.svg'};
   if(!el('storeId').value && !el('storePassword').value.trim()){ throw new Error('Digite uma senha inicial para a loja.'); }
-  if(online){
-
-  if(el('storeId').value){
-
-    await api(`/api/admin/stores/${encodeURIComponent(el('storeId').value)}`,{
-      method:'PUT',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify(payload)
-    });
-
-  } else {
-
-    await api('/api/admin/stores',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify(payload)
-    });
-
-  }
-
-}
+  if(el('storePassword').value.trim()) payload.password=el('storePassword').value.trim();
+  if(online){ if(el('storeId').value) await api(`/api/admin/stores/${encodeURIComponent(el('storeId').value)}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}); else await api('/api/admin/stores',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}); }
   else{ if(el('storeId').value) LocalStoreManager.update(el('storeId').value,payload); else LocalStoreManager.create(payload); }
   el('status').textContent='Loja salva com segurança.'; await loadStores();
 }
@@ -160,65 +139,16 @@ el('clearBtn').addEventListener('click', resetForm);
 el('openProvadorBtn').addEventListener('click',()=> parent.postMessage({type:'open-url', url:'provador/provador.html'}, '*'));
 el('openProducerManual').addEventListener('click',()=> window.open('manual/manual-produtor.html', '_blank'));
 el('openClientManual').addEventListener('click',()=> window.open('manual/manual-cliente.html', '_blank'));
-  el('saveBtn').onclick = saveStore;
-el('storeList').addEventListener('click', async(e)=>{
-  const id=e.target.dataset.id,action=e.target.dataset.action;
-  if(!id||!action)return;
-
-  const store=stores.find(s=>s.id==id);
-  if(!store)return;
-
-  if(action==='select' || action==='edit'){
-    fillForm(store);
-    activeStoreId = store.id;
-
-    if(online){
-      await api('/api/admin/stores/activate', {
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({ id })
-      });
-    } else {
-      LocalStoreManager.setActive(id);
-    }
-
-    render();
-
-    el('status').textContent =
-      `Loja ${store.name} selecionada para edição.`;
-  }
-
-  if(action==='activate')
-    setStatus(id,'ativo')
-      .then(()=>el('status').textContent='Loja ativada.')
-      .catch(e=>el('status').textContent=e.message);
-
-  if(action==='deactivate')
-    setStatus(id,'inativo')
-      .then(()=>el('status').textContent='Loja desativada.')
-      .catch(e=>el('status').textContent=e.message);
-
-  if(action==='tasting')
-    setStatus(id,'degustacao')
-      .then(()=>el('status').textContent='Loja colocada em degustação.')
-      .catch(e=>el('status').textContent=e.message);
-
-  if(action==='open')
-    window.open(buildLink(store),'_blank');
-
-  if(action==='copy')
-    copyText(formatAccessMessage(store));
-
-  if(action==='wa')
-    openWhatsApp(store);
-
-  if(action==='mail')
-    openEmail(store);
-
-  if(action==='delete')
-    removeStore(id)
-      .catch(e=>el('status').textContent=e.message);
-});
+el('storeList').addEventListener('click',(e)=>{const id=e.target.dataset.id,action=e.target.dataset.action;if(!id||!action)return;const store=stores.find(s=>s.id===id);if(!store)return;
+  if(action==='select'||action==='edit') selectStore(id).catch(e=>el('status').textContent=e.message);
+  if(action==='activate') setStatus(id,'ativo').then(()=>el('status').textContent='Loja ativada.').catch(e=>el('status').textContent=e.message);
+  if(action==='deactivate') setStatus(id,'inativo').then(()=>el('status').textContent='Loja desativada.').catch(e=>el('status').textContent=e.message);
+  if(action==='tasting') setStatus(id,'degustacao').then(()=>el('status').textContent='Loja colocada em degustação.').catch(e=>el('status').textContent=e.message);
+  if(action==='open') window.open(buildLink(store),'_blank');
+  if(action==='copy') copyText(formatAccessMessage(store));
+  if(action==='wa') openWhatsApp(store);
+  if(action==='mail') openEmail(store);
+  if(action==='delete') removeStore(id).catch(e=>el('status').textContent=e.message);
 });
 loadStores();
 </script>

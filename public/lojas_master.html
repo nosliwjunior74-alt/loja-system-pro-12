@@ -127,8 +127,27 @@ async function loadStores(){
 async function saveStore(){
   const payload={name:el('storeName').value.trim()||'Sua Loja',sub:el('storeSub').value.trim()||'Dashboard Integrado Multi-Loja',color:el('storeColor').value||'#e33d8f',slug:el('storeSlug').value.trim()||el('storeName').value.trim(),login:el('storeLogin').value.trim()||'admin',email:el('storeEmail').value.trim(),phone:el('storePhone').value.trim(),plan:el('storePlan').value||'premium',expiresAt:el('storeExpiresAt').value,status:el('storeStatus').value||'ativo',customDomain:el('storeCustomDomain').value.trim(),logo:uploadData||el('storeLogo').value.trim()||'assets/default-logo.svg'};
   if(!el('storeId').value && !el('storePassword').value.trim()){ throw new Error('Digite uma senha inicial para a loja.'); }
-  if(el('storePassword').value.trim()) payload.password=el('storePassword').value.trim();
-  if(online){ if(el('storeId').value) await api(`/api/admin/stores/${encodeURIComponent(el('storeId').value)}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}); else await api('/api/admin/stores',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}); }
+  if(online){
+
+  if(el('storeId').value){
+
+    await api(`/api/admin/stores/${encodeURIComponent(el('storeId').value)}`,{
+      method:'PUT',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(payload)
+    });
+
+  } else {
+
+    await api('/api/admin/stores',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(payload)
+    });
+
+  }
+
+}
   else{ if(el('storeId').value) LocalStoreManager.update(el('storeId').value,payload); else LocalStoreManager.create(payload); }
   el('status').textContent='Loja salva com segurança.'; await loadStores();
 }

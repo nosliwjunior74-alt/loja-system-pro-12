@@ -338,63 +338,38 @@
       }
     }
 
-    async function fazerLogin(){
-
-  const slug =
-    new URLSearchParams(location.search).get('loja');
-
-  const login =
-    document.getElementById('usuario').value.trim();
-
-  const password =
-    document.getElementById('senha').value.trim();
-
-  const msg =
-    document.getElementById('msg');
+  async function fazerLogin(){
+  const slug = new URLSearchParams(location.search).get('loja');
+  const login = document.getElementById('usuario').value.trim();
+  const password = document.getElementById('senha').value.trim();
+  const msg = document.getElementById('msg');
 
   try{
+    const r = await fetch('/api/public/login', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({ slug, login, password })
+    });
 
-    const r =
-      await fetch('/api/stores');
+    const data = await r.json().catch(() => ({}));
 
-    const stores =
-      await r.json();
-
-    const store =
-      stores.find(s =>
-        s.slug === slug &&
-        s.login === login &&
-        s.password === password
-      );
-
-    if(!store){
-      msg.textContent = 'Login inválido';
+    if(!r.ok || !data.ok){
+      msg.textContent = data.error || 'Login inválido';
       return;
     }
 
-    sessionStorage.setItem(
-      'STORE_SESSION',
-      JSON.stringify({
-        id:store.id,
-        slug:store.slug
-      })
-    );
+    sessionStorage.setItem('STORE_SESSION', JSON.stringify({
+      id:data.store.id,
+      slug:data.store.slug
+    }));
 
-    location.href =
-      'dashboard-loja.html?loja=' +
-      encodeURIComponent(store.slug);
+    location.href = 'dashboard-loja.html?loja=' + encodeURIComponent(data.store.slug);
 
   }catch(err){
-
     console.error(err);
-
-    msg.textContent =
-      'Erro ao conectar servidor';
-
+    msg.textContent = 'Erro ao conectar servidor';
   }
-
-}
-
+}  
 document
   .getElementById('entrarBtn')
   .addEventListener('click', fazerLogin);

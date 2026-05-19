@@ -160,6 +160,7 @@ el('clearBtn').addEventListener('click', resetForm);
 el('openProvadorBtn').addEventListener('click',()=> parent.postMessage({type:'open-url', url:'provador/provador.html'}, '*'));
 el('openProducerManual').addEventListener('click',()=> window.open('manual/manual-produtor.html', '_blank'));
 el('openClientManual').addEventListener('click',()=> window.open('manual/manual-cliente.html', '_blank'));
+  el('saveBtn').onclick = saveStore;
 el('storeList').addEventListener('click', async(e)=>{
   const id=e.target.dataset.id,action=e.target.dataset.action;
   if(!id||!action)return;

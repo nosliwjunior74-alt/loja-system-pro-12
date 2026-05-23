@@ -82,113 +82,73 @@ button.danger{background:#76254d}
 <script src="js/local-store.js"></script>
 <script>
 const el=id=>document.getElementById(id);
-let uploadData=''; let stores=[]; let activeStoreId=''; let online=false;
+let uploadData='', stores=[], activeStoreId='', online=false;
 function esc(v){return String(v||'').replace(/[&<>"']/g,s=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s]));}
-function statusTag(store){
-  const st = store.status || 'ativo';
-  if(st==='degustacao') return "<span class='tag tasting'>Em degustação</span>";
-  if(st==='inativo') return "<span class='tag inactive'>Bloqueada</span>";
-  return "<span class='tag active'>Ativa</span>";
-}
-function fillForm(store){
-  el('storeId').value=store?.id||'';
-  el('storeName').value=store?.name||'';
-  el('storeSub').value=store?.sub||'';
-  el('storeColor').value=store?.color||'#e33d8f';
-  el('storeSlug').value=store?.slug||'';
-  el('storeLogin').value=store?.login||'admin';
-  el('storePassword').value='';
-  el('storeEmail').value=store?.email||'';
-  el('storePhone').value=store?.phone||'';
-  el('storePlan').value=store?.plan||'premium';
-  el('storeExpiresAt').value=store?.expiresAt||'';
-  el('storeStatus').value=store?.status||'ativo';
-  el('storeCustomDomain').value=store?.customDomain||'';
-  el('storeLogo').value=(store?.logo&&!String(store.logo).startsWith('data:'))?store.logo:'';
-  uploadData=store?.logo&&String(store.logo).startsWith('data:')?store.logo:'';
-}
-function resetForm(){ fillForm(null); el('status').textContent='Pronto para cadastrar uma nova loja.'; }
-function buildLink(store){ return store.customDomain ? `https://${store.customDomain}` : (store.publicLink||`${location.origin}${location.pathname.replace(/\/[^/]*$/,'')}/login-loja.html?loja=${encodeURIComponent(store.slug)}`); }
-function copyText(value){ navigator.clipboard?.writeText(value).then(()=>el('status').textContent='Mensagem copiada com sucesso.').catch(()=>prompt('Copie o texto abaixo:',value)); }
-function formatAccessMessage(store){
-  return `Olá, ${store.name}!\n\nSegue o acesso do painel da sua loja:\n\n🔗 ${buildLink(store)}\n👤 Login: ${store.login}\n🔒 Senha: ${store.password || 'definida no cadastro'}\n\nEsse acesso pode ser usado após a contratação ou durante a degustação.`;
-}
-function openWhatsApp(store){
-  const phone=(store.phone||'').replace(/\D+/g,'');
-  const url=`https://wa.me/${phone}?text=${encodeURIComponent(formatAccessMessage(store))}`;
-  window.open(url,'_blank');
-}
-function openEmail(store){
-  if(!store.email){ alert('Cadastre o e-mail do cliente nesta loja.'); return; }
-  const subject=encodeURIComponent(`Acesso ao painel da loja ${store.name}`);
-  const body=encodeURIComponent(formatAccessMessage(store).replace('Olá, '+store.name+'!','Olá, '+store.name+'.'));
-  window.location.href=`mailto:${encodeURIComponent(store.email)}?subject=${subject}&body=${body}`;
-}
-function render(){
-  el('storeList').innerHTML = stores.map(store => `
-    <div class='store'>
-      <img src='${esc(store.logo||'assets/default-logo.svg')}' alt='${esc(store.name)}'>
-      <div class='meta'>
-        <strong>${esc(store.name)}</strong>
-        <span>${esc(store.sub||'Dashboard Integrado Multi-Loja')}</span>
-        <div class='row'><span class='muted'>Plano: ${esc(store.plan||'premium')}</span><span class='muted'>•</span><span class='muted'>Licença: ${esc(store.licenseStatus||'ativa')}</span></div>
-        <div class='muted'>Login: <strong>${esc(store.login||'admin')}</strong> • E-mail: ${esc(store.email||'-')}</div>
-        <div class='code'>${esc(buildLink(store))}</div>
-        <div class='row'>${statusTag(store)} ${activeStoreId===store.id?"<span class='tag'>Selecionada para edição</span>":""}</div>
-      </div>
-      <div class='actions'>
-        <button class='secondary' data-action='select' data-id='${esc(store.id)}'>Selecionar loja</button>
-        <button data-action='activate' data-id='${esc(store.id)}'>Ativar</button>
-        <button class='danger' data-action='deactivate' data-id='${esc(store.id)}'>Desativar</button>
-        <button class='secondary' data-action='tasting' data-id='${esc(store.id)}'>Degustação</button>
-        <button class='secondary' data-action='open' data-id='${esc(store.id)}'>Abrir link</button>
-        <button class='secondary' data-action='copy' data-id='${esc(store.id)}'>Copiar acesso</button>
-        <button class='secondary' data-action='wa' data-id='${esc(store.id)}'>WhatsApp</button>
-        <button class='secondary' data-action='mail' data-id='${esc(store.id)}'>E-mail</button>
-        <button class='secondary' data-action='edit' data-id='${esc(store.id)}'>Editar</button>
-        <button class='danger' data-action='delete' data-id='${esc(store.id)}'>Excluir</button>
-      </div>
-    </div>`).join('');
-}
+function statusTag(store){const st=String(store.status||'ativo').toLowerCase(); if(st==='degustacao'||st==='em degustação')return "<span class='tag tasting'>Em degustação</span>"; if(st==='inativo'||st==='bloqueada')return "<span class='tag inactive'>Bloqueada</span>"; return "<span class='tag active'>Ativa</span>";}
+function fillForm(store){el('storeId').value=store?.id||''; el('storeName').value=store?.name||''; el('storeSub').value=store?.sub||''; el('storeColor').value=store?.color||'#e33d8f'; el('storeSlug').value=store?.slug||''; el('storeLogin').value=store?.login||'admin'; el('storePassword').value=''; el('storeEmail').value=store?.email||''; el('storePhone').value=store?.phone||''; el('storePlan').value=store?.plan||'premium'; el('storeExpiresAt').value=store?.expiresAt||''; el('storeStatus').value=store?.status||'ativo'; el('storeCustomDomain').value=store?.customDomain||''; el('storeLogo').value=(store?.logo&&!String(store.logo).startsWith('data:'))?store.logo:''; uploadData=store?.logo&&String(store.logo).startsWith('data:')?store.logo:'';}
+function resetForm(){fillForm(null); el('status').textContent='Pronto para cadastrar uma nova loja.';}
+function buildLink(store){return store.customDomain ? `https://${store.customDomain}` : (store.publicLink || `${location.origin}/s/${encodeURIComponent(store.slug)}`);}
+function copyText(value){navigator.clipboard?.writeText(value).then(()=>el('status').textContent='Mensagem copiada com sucesso.').catch(()=>prompt('Copie o texto abaixo:', value));}
+function formatAccessMessage(store){return `Olá, ${store.name}!\n\nSegue o acesso seguro do painel da sua loja:\n\n🔗 ${buildLink(store)}\n👤 Login: ${store.login}\n🔒 Senha: definida no cadastro\n\nSe precisar trocar a senha, peça ao produtor para gerar uma nova no painel.`;}
+function openWhatsApp(store){const phone=(store.phone||'').replace(/\D+/g,''); if(!phone){alert('Cadastre o WhatsApp do cliente nesta loja.');return;} window.open(`https://wa.me/${phone}?text=${encodeURIComponent(formatAccessMessage(store))}`,'_blank');}
+function openEmail(store){if(!store.email){alert('Cadastre o e-mail do cliente nesta loja.');return;} const subject=encodeURIComponent(`Acesso ao painel da loja ${store.name}`); const body=encodeURIComponent(formatAccessMessage(store)); window.location.href=`mailto:${encodeURIComponent(store.email)}?subject=${subject}&body=${body}`;}
+function render(){el('storeList').innerHTML=stores.map(store=>`
+  <div class='store'>
+    <img src='${esc(store.logo||'assets/default-logo.svg')}' alt='${esc(store.name)}'>
+    <div class='meta'>
+      <strong>${esc(store.name)}</strong>
+      <span>${esc(store.sub||'Dashboard Integrado Multi-Loja')}</span>
+      <div class='row'><span class='muted'>Plano: ${esc(store.plan||'premium')}</span><span class='muted'>•</span><span class='muted'>Licença: ${esc(store.licenseStatus||'ativa')}</span></div>
+      <div class='muted'>Login: <strong>${esc(store.login||'admin')}</strong> • E-mail: ${esc(store.email||'-')}</div>
+      <div class='code'>${esc(buildLink(store))}</div>
+      <div class='row'>${statusTag(store)} ${activeStoreId===store.id?"<span class='tag'>Selecionada para edição</span>":""}</div>
+    </div>
+    <div class='actions'>
+      <button class='secondary' data-action='select' data-id='${esc(store.id)}'>Selecionar loja</button>
+      <button data-action='activate' data-id='${esc(store.id)}'>Ativar</button>
+      <button class='danger' data-action='deactivate' data-id='${esc(store.id)}'>Desativar</button>
+      <button class='secondary' data-action='tasting' data-id='${esc(store.id)}'>Degustação</button>
+      <button class='secondary' data-action='open' data-id='${esc(store.id)}'>Abrir link</button>
+      <button class='secondary' data-action='copy' data-id='${esc(store.id)}'>Copiar acesso</button>
+      <button class='secondary' data-action='wa' data-id='${esc(store.id)}'>WhatsApp</button>
+      <button class='secondary' data-action='mail' data-id='${esc(store.id)}'>E-mail</button>
+      <button class='secondary' data-action='edit' data-id='${esc(store.id)}'>Editar</button>
+      <button class='danger' data-action='delete' data-id='${esc(store.id)}'>Excluir</button>
+    </div>
+  </div>`).join('');}
+async function api(url, options={}){const r=await fetch(url, options); const data=await r.json().catch(()=>({})); if(!r.ok)throw new Error(data.error||'Erro na solicitação.'); return data;}
 async function loadStores(){
-  LocalStoreManager.ensureSeed();
-  stores = LocalStoreManager.list();
-  activeStoreId = LocalStoreManager.getActiveId();
-  render();
-  fillForm(stores.find(s=>s.id===activeStoreId)||stores[0]||null);
+  try{const data=await api('/api/admin/stores'); stores=Array.isArray(data.stores)?data.stores:[]; activeStoreId=data.activeStoreId||stores[0]?.id||''; online=true;}
+  catch(e){LocalStoreManager.ensureSeed(); stores=LocalStoreManager.list(); activeStoreId=LocalStoreManager.getActiveId(); online=false; el('status').textContent='Modo local: faça login novamente se estiver online no Railway.';}
+  render(); fillForm(stores.find(s=>s.id===activeStoreId)||stores[0]||null);
 }
-el('storeLogoFile').addEventListener('change',()=>{
-  const file=el('storeLogoFile').files&&el('storeLogoFile').files[0];
-  if(!file) return;
-  const reader=new FileReader();
-  reader.onload=()=>{ uploadData=reader.result; el('status').textContent='Logo carregada. Salve a loja para aplicar.'; };
-  reader.readAsDataURL(file);
-});
-el('saveBtn').addEventListener('click',()=>{
+async function saveStore(){
   const payload={name:el('storeName').value.trim()||'Sua Loja',sub:el('storeSub').value.trim()||'Dashboard Integrado Multi-Loja',color:el('storeColor').value||'#e33d8f',slug:el('storeSlug').value.trim()||el('storeName').value.trim(),login:el('storeLogin').value.trim()||'admin',email:el('storeEmail').value.trim(),phone:el('storePhone').value.trim(),plan:el('storePlan').value||'premium',expiresAt:el('storeExpiresAt').value,status:el('storeStatus').value||'ativo',customDomain:el('storeCustomDomain').value.trim(),logo:uploadData||el('storeLogo').value.trim()||'assets/default-logo.svg'};
+  if(!el('storeId').value && !el('storePassword').value.trim()){ throw new Error('Digite uma senha inicial para a loja.'); }
   if(el('storePassword').value.trim()) payload.password=el('storePassword').value.trim();
-  if(el('storeId').value) LocalStoreManager.update(el('storeId').value,payload); else LocalStoreManager.create(payload);
-  el('status').textContent='Loja salva com sucesso.';
-  loadStores();
-});
+  if(online){ if(el('storeId').value) await api(`/api/admin/stores/${encodeURIComponent(el('storeId').value)}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}); else await api('/api/admin/stores',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}); }
+  else{ if(el('storeId').value) LocalStoreManager.update(el('storeId').value,payload); else LocalStoreManager.create(payload); }
+  el('status').textContent='Loja salva com segurança.'; await loadStores();
+}
+async function setStatus(id,status){ if(online) await api(`/api/admin/stores/${encodeURIComponent(id)}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({status})}); else LocalStoreManager.updateStatus(id,status); await loadStores();}
+async function selectStore(id){ if(online) await api(`/api/admin/stores/${encodeURIComponent(id)}/select`,{method:'POST'}); else LocalStoreManager.setActive(id); activeStoreId=id; fillForm(stores.find(s=>s.id===id)||null); render(); el('status').textContent='Loja selecionada para edição.';}
+async function removeStore(id){ if(!confirm('Excluir esta loja?'))return; if(online) await api(`/api/admin/stores/${encodeURIComponent(id)}`,{method:'DELETE'}); else LocalStoreManager.remove(id); el('status').textContent='Loja removida.'; await loadStores();}
+el('storeLogoFile').addEventListener('change',()=>{const file=el('storeLogoFile').files&&el('storeLogoFile').files[0]; if(!file)return; const reader=new FileReader(); reader.onload=()=>{uploadData=reader.result; el('status').textContent='Logo carregada. Salve a loja para aplicar.';}; reader.readAsDataURL(file);});
+el('saveBtn').addEventListener('click',()=>saveStore().catch(e=>el('status').textContent=e.message));
 el('clearBtn').addEventListener('click', resetForm);
 el('openProvadorBtn').addEventListener('click',()=> parent.postMessage({type:'open-url', url:'provador/provador.html'}, '*'));
 el('openProducerManual').addEventListener('click',()=> window.open('manual/manual-produtor.html', '_blank'));
 el('openClientManual').addEventListener('click',()=> window.open('manual/manual-cliente.html', '_blank'));
-el('storeList').addEventListener('click',(e)=>{
-  const id=e.target.dataset.id, action=e.target.dataset.action;
-  if(!id || !action) return;
-  const store=stores.find(s=>s.id===id); if(!store) return;
-  if(action==='select'){ LocalStoreManager.setActive(id); activeStoreId=id; fillForm(store); render(); el('status').textContent='Loja selecionada para edição.'; }
-  if(action==='activate'){ LocalStoreManager.updateStatus(id,'ativo'); el('status').textContent='Loja ativada.'; loadStores(); }
-  if(action==='deactivate'){ LocalStoreManager.updateStatus(id,'inativo'); el('status').textContent='Loja desativada.'; loadStores(); }
-  if(action==='tasting'){ LocalStoreManager.updateStatus(id,'degustacao'); el('status').textContent='Loja colocada em degustação.'; loadStores(); }
-  if(action==='open'){ window.open(buildLink(store), '_blank'); }
-  if(action==='copy'){ copyText(formatAccessMessage(store)); }
-  if(action==='wa'){ openWhatsApp(store); }
-  if(action==='mail'){ openEmail(store); }
-  if(action==='edit'){ LocalStoreManager.setActive(id); activeStoreId=id; fillForm(store); render(); el('status').textContent='Editando loja selecionada.'; }
-  if(action==='delete'){ if(!confirm('Excluir esta loja?')) return; LocalStoreManager.remove(id); el('status').textContent='Loja removida.'; loadStores(); }
+el('storeList').addEventListener('click',(e)=>{const id=e.target.dataset.id,action=e.target.dataset.action;if(!id||!action)return;const store=stores.find(s=>s.id===id);if(!store)return;
+  if(action==='select'||action==='edit') selectStore(id).catch(e=>el('status').textContent=e.message);
+  if(action==='activate') setStatus(id,'ativo').then(()=>el('status').textContent='Loja ativada.').catch(e=>el('status').textContent=e.message);
+  if(action==='deactivate') setStatus(id,'inativo').then(()=>el('status').textContent='Loja desativada.').catch(e=>el('status').textContent=e.message);
+  if(action==='tasting') setStatus(id,'degustacao').then(()=>el('status').textContent='Loja colocada em degustação.').catch(e=>el('status').textContent=e.message);
+  if(action==='open') window.open(buildLink(store),'_blank');
+  if(action==='copy') copyText(formatAccessMessage(store));
+  if(action==='wa') openWhatsApp(store);
+  if(action==='mail') openEmail(store);
+  if(action==='delete') removeStore(id).catch(e=>el('status').textContent=e.message);
 });
 loadStores();
 </script>

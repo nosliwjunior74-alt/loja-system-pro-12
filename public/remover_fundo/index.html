@@ -133,12 +133,21 @@
         const w = Math.max(1, Math.round(img.width * scale));
         const h = Math.max(1, Math.round(img.height * scale));
         const canvas = document.createElement('canvas');
-       canvas.width = img.naturalWidth;
-canvas.height = img.naturalHeight;
+     const upscale = 2;
+
+canvas.width = img.naturalWidth * upscale;
+canvas.height = img.naturalHeight * upscale;
+
+ctx.imageSmoothingEnabled = true;
+ctx.imageSmoothingQuality = 'high';
         const ctx = canvas.getContext('2d', { willReadFrequently: true });
         ctx.imageSmoothingEnabled = true;
 ctx.imageSmoothingQuality = 'high';
-        ctx.drawImage(img,0,0,w,h);
+       ctx.scale(upscale, upscale);
+ctx.drawImage(img,0,0,w,h);
+
+ctx.imageSmoothingEnabled = true;
+ctx.imageSmoothingQuality = 'high';
         const imageData = ctx.getImageData(0,0,w,h);
         const d = imageData.data;
         for(let p=0;p<d.length;p+=4){
@@ -148,7 +157,7 @@ ctx.imageSmoothingQuality = 'high';
           if(nearWhite || nearLightGray){ d[p+3]=0; }
         }
         ctx.putImageData(imageData,0,0);
-        entry.result = canvas.toDataURL('image/png');
+        entry.result = canvas.toDataURL('image/png', 1.0);
       } catch(err){
         console.error(err);
         setStatus('Erro ao processar uma das imagens.', 'err');

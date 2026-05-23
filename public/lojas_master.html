@@ -166,7 +166,7 @@ el('openProvadorBtn').addEventListener('click',()=> parent.postMessage({type:'op
 el('openProducerManual').addEventListener('click',()=> window.open('manual/manual-produtor.html', '_blank'));
 el('openClientManual').addEventListener('click',()=> window.open('manual/manual-cliente.html', '_blank'));
 el('storeList').addEventListener('click',(e)=>{const id=e.target.dataset.id,action=e.target.dataset.action;if(!id||!action)return;const store=stores.find(s=>s.id===id);if(!store)return;
-  if(action==='select' || action==='edit'){
+ if(action==='select' || action==='edit') selectStore(id).catch(e=>el('status').textContent=e.message);
   fillForm(store);
   activeStoreId = store.id;
 

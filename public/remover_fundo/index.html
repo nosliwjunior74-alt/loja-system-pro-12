@@ -133,18 +133,34 @@
         const w = Math.max(1, Math.round(img.width * scale));
         const h = Math.max(1, Math.round(img.height * scale));
         const canvas = document.createElement('canvas');
-     const upscale = 2;
+   const upscale = 2;
 
 canvas.width = img.naturalWidth * upscale;
 canvas.height = img.naturalHeight * upscale;
 
+const ctx = canvas.getContext('2d', {
+  willReadFrequently: true
+});
+
+ctx.imageSmoothingEnabled = true;
+ctx.imageSmoothingQuality = 'high';
+
+ctx.scale(upscale, upscale);
+
+ctx.drawImage(
+  img,
+  0,
+  0,
+  img.naturalWidth,
+  img.naturalHeight
+); 
 ctx.imageSmoothingEnabled = true;
 ctx.imageSmoothingQuality = 'high';
         const ctx = canvas.getContext('2d', { willReadFrequently: true });
         ctx.imageSmoothingEnabled = true;
 ctx.imageSmoothingQuality = 'high';
        ctx.scale(upscale, upscale);
-ctx.drawImage(img,0,0,w,h);
+
 
 ctx.imageSmoothingEnabled = true;
 ctx.imageSmoothingQuality = 'high';
@@ -178,7 +194,7 @@ ctx.imageSmoothingQuality = 'high';
     ready.forEach((e) => {
       const a = document.createElement('a');
       a.href = e.result;
-      a.download = e.name;
+      a.download = 'HD_' + entry.name.replace(/\.[^/.]+$/, "") + '.png';
       document.body.appendChild(a);
       a.click();
       a.remove();

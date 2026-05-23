@@ -134,7 +134,11 @@ async function setStatus(id,status){ if(online) await api(`/api/admin/stores/${e
 async function selectStore(id){ if(online) await api(`/api/admin/stores/${encodeURIComponent(id)}/select`,{method:'POST'}); else LocalStoreManager.setActive(id); activeStoreId=id; fillForm(stores.find(s=>s.id===id)||null); render(); el('status').textContent='Loja selecionada para edição.';}
 async function removeStore(id){ if(!confirm('Excluir esta loja?'))return; if(online) await api(`/api/admin/stores/${encodeURIComponent(id)}`,{method:'DELETE'}); else LocalStoreManager.remove(id); el('status').textContent='Loja removida.'; await loadStores();}
 el('storeLogoFile').addEventListener('change',()=>{const file=el('storeLogoFile').files&&el('storeLogoFile').files[0]; if(!file)return; const reader=new FileReader(); reader.onload=()=>{uploadData=reader.result; el('status').textContent='Logo carregada. Salve a loja para aplicar.';}; reader.readAsDataURL(file);});
-el('saveBtn').addEventListener('click',()=>saveStore().catch(e=>el('status').textContent=e.message));
+document.getElementById('saveBtn').onclick = function(){
+  saveStore().catch(function(e){
+    document.getElementById('status').textContent = e.message;
+  });
+};
 el('clearBtn').addEventListener('click', resetForm);
 el('openProvadorBtn').addEventListener('click',()=> parent.postMessage({type:'open-url', url:'provador/provador.html'}, '*'));
 el('openProducerManual').addEventListener('click',()=> window.open('manual/manual-produtor.html', '_blank'));

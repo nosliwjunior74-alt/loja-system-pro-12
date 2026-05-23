@@ -139,32 +139,64 @@ el('clearBtn').addEventListener('click', resetForm);
 el('openProvadorBtn').addEventListener('click',()=> parent.postMessage({type:'open-url', url:'provador/provador.html'}, '*'));
 el('openProducerManual').addEventListener('click',()=> window.open('manual/manual-produtor.html', '_blank'));
 el('openClientManual').addEventListener('click',()=> window.open('manual/manual-cliente.html', '_blank'));
-el('storeList').addEventListener('click',(e)=>{const id=e.target.dataset.id,action=e.target.dataset.action;if(!id||!action)return;const store=stores.find(s=>s.id===id);if(!store)return;
-  if(action==='select' || action==='edit'){
-  fillForm(store);
-  activeStoreId = store.id;
+el('storeList').addEventListener('click', async(e)=>{
+  const id=e.target.dataset.id,action=e.target.dataset.action;
+  if(!id||!action)return;
 
-  if(online){
-    await api('/api/admin/stores/activate', {
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({ id })
-    });
-  } else {
-    LocalStoreManager.setActive(id);
+  const store=stores.find(s=>s.id==id);
+  if(!store)return;
+
+  if(action==='select' || action==='edit'){
+    fillForm(store);
+    activeStoreId = store.id;
+
+    if(online){
+      await api('/api/admin/stores/activate', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({ id })
+      });
+    } else {
+      LocalStoreManager.setActive(id);
+    }
+
+    render();
+
+    el('status').textContent =
+      `Loja ${store.name} selecionada para edição.`;
   }
 
-  render();
-  el('status').textContent = `Loja ${store.name} selecionada para edição.`;
-}
-  if(action==='activate') setStatus(id,'ativo').then(()=>el('status').textContent='Loja ativada.').catch(e=>el('status').textContent=e.message);
-  if(action==='deactivate') setStatus(id,'inativo').then(()=>el('status').textContent='Loja desativada.').catch(e=>el('status').textContent=e.message);
-  if(action==='tasting') setStatus(id,'degustacao').then(()=>el('status').textContent='Loja colocada em degustação.').catch(e=>el('status').textContent=e.message);
-  if(action==='open') window.open(buildLink(store),'_blank');
-  if(action==='copy') copyText(formatAccessMessage(store));
-  if(action==='wa') openWhatsApp(store);
-  if(action==='mail') openEmail(store);
-  if(action==='delete') removeStore(id).catch(e=>el('status').textContent=e.message);
+  if(action==='activate')
+    setStatus(id,'ativo')
+      .then(()=>el('status').textContent='Loja ativada.')
+      .catch(e=>el('status').textContent=e.message);
+
+  if(action==='deactivate')
+    setStatus(id,'inativo')
+      .then(()=>el('status').textContent='Loja desativada.')
+      .catch(e=>el('status').textContent=e.message);
+
+  if(action==='tasting')
+    setStatus(id,'degustacao')
+      .then(()=>el('status').textContent='Loja colocada em degustação.')
+      .catch(e=>el('status').textContent=e.message);
+
+  if(action==='open')
+    window.open(buildLink(store),'_blank');
+
+  if(action==='copy')
+    copyText(formatAccessMessage(store));
+
+  if(action==='wa')
+    openWhatsApp(store);
+
+  if(action==='mail')
+    openEmail(store);
+
+  if(action==='delete')
+    removeStore(id)
+      .catch(e=>el('status').textContent=e.message);
+});
 });
 loadStores();
 </script>

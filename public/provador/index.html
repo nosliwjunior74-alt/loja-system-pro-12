@@ -282,9 +282,8 @@ const camera = new Camera(video, {
   onFrame: async () => {
     await pose.send({ image: video });
   },
-  width: 640,
-  height: 480,
-  facingMode: 'user'
+  width: 720,
+  height: 1280
 });
 
 camera.start();
@@ -318,15 +317,8 @@ function comprarWhatsApp(){
     if(!slug) return;
 
     const r = await fetch(`/api/public/store/${encodeURIComponent(slug)}`);
-   let data = {};
+    const data = await r.json();
 
-try{
-  const txt = await r.text();
-  data = txt ? JSON.parse(txt) : {};
-}catch(e){
-  console.error('Erro JSON:', e);
-  return;
-}
     if(!r.ok || !data.store){
       alert('Loja desativada.');
       location.href = `/login-loja.html?loja=${encodeURIComponent(slug)}`;

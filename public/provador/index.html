@@ -318,7 +318,14 @@ function comprarWhatsApp(){
     if(!slug) return;
 
     const r = await fetch(`/api/public/store/${encodeURIComponent(slug)}`);
-    const data = await r.json();
+    let data = {};
+
+try{
+  data = await r.json();
+}catch(e){
+  console.error('Erro JSON:', e);
+  return;
+}
 
     if(!r.ok || !data.store){
       alert('Loja desativada.');

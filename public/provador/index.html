@@ -163,7 +163,21 @@ async function carregarLooksDaLoja(){
   await AppStore.ensureSeed();
 
  let lojaAtual = params.get('loja') || params.get('slug') || '';
-let items = await Estoque.visible();
+let items = [];
+
+try{
+  const r = await fetch(`/api/public/store/${encodeURIComponent(lojaAtual)}`);
+  const data = await r.json();
+
+  items =
+    data.store?.estoque ||
+    data.store?.looks ||
+    data.store?.products ||
+    [];
+
+}catch(e){
+  console.error(e);
+}
 
 if(lojaAtual){
   items = items.filter(item =>
@@ -174,10 +188,10 @@ if(lojaAtual){
   const lista = document.getElementById('listaLooks');
   lista.innerHTML = '';
 
-  if (!itens || itens.length === 0) {
-    lista.innerHTML = '<div class="look">Nenhuma roupa cadastrada</div>';
-    return;
-  }
+  if(!items || items.length === 0){
+  lista.innerHTML = '<div class="look">Nenhum look encontrado nesta loja</div>';
+  return;
+}
 
   itens.forEach(item => {
     const img = item.image || item.imagem || item.foto || item.logo || '';

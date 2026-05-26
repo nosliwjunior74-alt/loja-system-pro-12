@@ -158,25 +158,59 @@ function limparLook(){
 }
   
 async function carregarLooksDaLoja(){
-  console.log('LOOKS CARREGANDO...');
+  const lista = document.getElementById('listaLooks');
+  if(!lista) return;
 
-  await AppStore.ensureSeed();
+  lista.innerHTML = '<div class="look">Carregando looks...</div>';
 
- let lojaAtual = params.get('loja') || params.get('slug') || '';
-let items = [];
+  const params = new URLSearchParams(window.location.search);
+  const lojaAtual = params.get('loja') || params.get('slug') || '';
 
-try{
-  const r = await fetch(`/api/public/store/${encodeURIComponent(lojaAtual)}`);
-  const data = await r.json();
+  let items = [];
 
-  items =
-    data.store?.estoque ||
-    data.store?.looks ||
-    data.store?.products ||
-    [];
+  try{
+    const r = await fetch(`/api/public/store/${encodeURIComponent(lojaAtual)}`);
+    const data = await r.json();
 
-}catch(e){
-  console.error(e);
+    items =
+      data.store?.estoque ||
+      data.store?.looks ||
+      data.store?.products ||
+      data.store?.roupas ||
+      [];
+  }catch(e){
+    console.error('Erro ao carregar looks:', e);
+  }
+
+  if(!items || items.length === 0){
+    lista.innerHTML = '<div class="look">Nenhuma roupa cadastrada nesta loja</div>';
+    return;
+  }
+
+  lista.innerHTML = '';
+
+  items.forEach(item=>{
+    const imgSrc =
+      item.image ||
+      item.imagem ||
+      item.foto ||
+      item.logo ||
+      item.url ||
+      '';
+
+    if(!imgSrc) return;
+
+    const div = document.createElement('div');
+    div.className = 'look';
+    div.innerHTML = `
+      <img src="${imgSrc}">
+      <span>${item.name || item.nome || 'Look'}</span>
+    `;
+
+    div.onclick = () => trocarLook(imgSrc);
+    lista.appendChild(div);
+  });
+}
 }
 if(lojaAtual){
   items = items.filter(item =>

@@ -166,7 +166,7 @@
   sessionStorage.getItem('dashboardStoreSessionLocal') || 'null'
 );
 
-const store = LocalStoreManager.list().find(
+const store = (LocalStoreManager.list() || []).find(
   s => s.slug === slug
 );
 

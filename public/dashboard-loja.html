@@ -90,7 +90,7 @@
           <span id='topbarSub'>Painel da loja</span>
         </div>
       </header>
-      <iframe id='appFrame' src='provador/index.html' title='Aplicativo'></iframe>
+      <iframe id="appFrame" src="" title="Aplicativo"></iframe>
       <div class="card">
   <h2>🔗 Link público da loja</h2>
   <p>Use este link para enviar ao cliente comprador pelo WhatsApp, Instagram ou QR Code.</p>
@@ -180,6 +180,7 @@ applyStore(store, false);
 
     function applyStore(store, online){
       currentStore = store;
+      frame.src = 'provador/index.html?loja=' + encodeURIComponent(store.slug);
       currentOnline = !!online;
       document.getElementById('brandName').textContent = store.name || 'Sua Loja';
       document.getElementById('brandSub').textContent = store.sub || 'Painel administrativo da loja';

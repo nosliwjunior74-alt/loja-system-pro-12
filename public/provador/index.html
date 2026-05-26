@@ -156,85 +156,57 @@ function trocarLook(src){
 function limparLook(){
   roupa.style.display = 'none';
 }
-  async function carregarLooksDaLoja(){
- 
-function capturarFoto(){
-  const link = document.createElement('a');
-  link.download = 'provador-ia.png';
-  link.href = canvas.toDataURL('image/png');
-  fotoCapturada = link.href;
-  link.click();
-}
+async function carregarLooksDaLoja(){
+  const lista = document.getElementById('listaLooks');
+  if(!lista) return;
 
-function enviarWhatsApp(){
-  const texto = encodeURIComponent('Olá! Gostei deste look no provador virtual.');
-  window.open('https://wa.me/?text=' + texto, '_blank');
-}
+  lista.innerHTML = '<div class="look">Carregando looks...</div>';
 
-const pose = new Pose({
-  locateFile: file => `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`
-});
+  const params = new URLSearchParams(window.location.search);
+  const lojaAtual = params.get('loja') || params.get('slug') || '';
 
-pose.setOptions({
-  modelComplexity: 1,
-  smoothLandmarks: true,
-  enableSegmentation: false,
-  minDetectionConfidence: 0.6,
-  minTrackingConfidence: 0.6
-});
+  if(!lojaAtual){
+    lista.innerHTML = '<div class="look">Loja não informada no link</div>';
+    return;
+  }
 
-pose.onResults(results => {
-  if(!video.videoWidth) return;
+  let items = [];
 
-  canvas.width = video.videoWidth;
-  canvas.height = video.videoHeight;
+  try{
+    const r = await fetch(`/api/public/store/${encodeURIComponent(lojaAtual)}`);
+    const txt = await r.text();
+    const data = txt ? JSON.parse(txt) : {};
 
-  ctx.save();
-  ctx.scale(-1,1);
-  ctx.drawImage(video, -canvas.width, 0, canvas.width, canvas.height);
-  ctx.restore();
+    items =
+      data.store?.estoque ||
+      data.store?.looks ||
+      data.store?.products ||
+      data.store?.roupas ||
+      [];
+  }catch(e){
+    console.error('Erro ao carregar looks:', e);
+    lista.innerHTML = '<div class="look">Erro ao carregar looks</div>';
+    return;
+  }
 
-  if(!results.poseLandmarks) return;
+  if(!items || items.length === 0){
+    lista.innerHTML = '<div class="look">Nenhuma roupa cadastrada nesta loja</div>';
+    return;
+  }
 
-  const p = results.poseLandmarks;
+  lista.innerHTML = '';
 
-  const ombroE = p[11];
-  const ombroD = p[12];
-  const quadrilE = p[23];
-  const quadrilD = p[24];
+  items.forEach(item=>{
+    const imgSrc = item.image || item.imagem || item.foto || item.logo || item.url || '';
+    if(!imgSrc) return;
 
-  if(!ombroE || !ombroD || !quadrilE || !quadrilD) return;
-
-  const centroX = (ombroE.x + ombroD.x) / 2 * canvas.width;
-  const centroY = (ombroE.y + ombroD.y) / 2 * canvas.height;
-
-  const larguraOmbros = Math.abs(ombroD.x - ombroE.x) * canvas.width;
-  const alturaCorpo = Math.abs(((quadrilE.y + quadrilD.y)/2) - ((ombroE.y + ombroD.y)/2)) * canvas.height;
-
-  const alvoX = canvas.width - centroX;
-  const alvoY = centroY - alturaCorpo * 0.08;
-  const alvoLargura = larguraOmbros * 2.05;
-
-  ultimoX = suavizar(ultimoX || alvoX, alvoX);
-  ultimoY = suavizar(ultimoY || alvoY, alvoY);
-  ultimaLargura = suavizar(ultimaLargura || alvoLargura, alvoLargura);
-
-  roupa.style.left = ultimoX + 'px';
-  roupa.style.top = ultimoY + 'px';
-  roupa.style.width = ultimaLargura + 'px';
-});
-
-const camera = new Camera(video, {
-  onFrame: async () => {
-    await pose.send({ image: video });
-  },
-  width: 640,
-  height: 480,
-  facingMode: 'user'
-});
-
-camera.start();
-  window.onload = () => {
+    const div = document.createElement('div');
+    div.className = 'look';
+    div.innerHTML = `<img src="${imgSrc}"><span>${item.name || item.nome || 'Look'}</span>`;
+    div.onclick = () => trocarLook(imgSrc);
+    lista.appendChild(div);
+  });
+} 
   carregarLooksDaLoja();
 };
 </script>

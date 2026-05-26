@@ -178,11 +178,23 @@ try{
 }catch(e){
   console.error(e);
 }
+let items = await Estoque.visible();
+
+const params = new URLSearchParams(window.location.search);
+const lojaAtual = params.get('loja') || params.get('slug') || '';
 
 if(lojaAtual){
-  items = items.filter(item =>
-    (item.storeSlug || item.loja || '') === lojaAtual
-  );
+  items = items.filter(item => {
+    const lojaItem = String(
+      item.loja ||
+      item.lojaSlug ||
+      item.storeSlug ||
+      item.slugLoja ||
+      ''
+    ).toLowerCase();
+
+    return !lojaItem || lojaItem === lojaAtual.toLowerCase();
+  });
 }
 
   const lista = document.getElementById('listaLooks');

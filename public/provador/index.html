@@ -169,8 +169,14 @@ async function carregarLooksDaLoja(){
   let items = [];
 
   try{
-    const r = await fetch(`/api/public/store/${encodeURIComponent(lojaAtual)}`);
-    const data = await r.json();
+ if(!lojaAtual){
+  lista.innerHTML = '<div class="look">Loja não informada no link</div>';
+  return;
+}
+
+const r = await fetch(`/api/public/store/${encodeURIComponent(lojaAtual)}`);
+const txt = await r.text();
+const data = txt ? JSON.parse(txt) : {};  
 
     items =
       data.store?.estoque ||

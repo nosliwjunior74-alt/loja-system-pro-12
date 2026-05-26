@@ -156,8 +156,7 @@ function trocarLook(src){
 function limparLook(){
   roupa.style.display = 'none';
 }
-  
-async function carregarLooksDaLoja(){
+  async function carregarLooksDaLoja(){
   const lista = document.getElementById('listaLooks');
   if(!lista) return;
 
@@ -166,18 +165,17 @@ async function carregarLooksDaLoja(){
   const params = new URLSearchParams(window.location.search);
   const lojaAtual = params.get('loja') || params.get('slug') || '';
 
+  if(!lojaAtual){
+    lista.innerHTML = '<div class="look">Loja não informada no link</div>';
+    return;
+  }
+
   let items = [];
 
   try{
- if(!lojaAtual){
-  lista.innerHTML = '<div class="look">Loja não informada no link</div>';
-  return;
-}
-}
-
-const r = await fetch(`/api/public/store/${encodeURIComponent(lojaAtual)}`);
-const txt = await r.text();
-const data = txt ? JSON.parse(txt) : {};  
+    const r = await fetch(`/api/public/store/${encodeURIComponent(lojaAtual)}`);
+    const txt = await r.text();
+    const data = txt ? JSON.parse(txt) : {};
 
     items =
       data.store?.estoque ||
@@ -187,6 +185,8 @@ const data = txt ? JSON.parse(txt) : {};
       [];
   }catch(e){
     console.error('Erro ao carregar looks:', e);
+    lista.innerHTML = '<div class="look">Erro ao carregar looks</div>';
+    return;
   }
 
   if(!items || items.length === 0){
@@ -197,27 +197,15 @@ const data = txt ? JSON.parse(txt) : {};
   lista.innerHTML = '';
 
   items.forEach(item=>{
-    const imgSrc =
-      item.image ||
-      item.imagem ||
-      item.foto ||
-      item.logo ||
-      item.url ||
-      '';
-
+    const imgSrc = item.image || item.imagem || item.foto || item.logo || item.url || '';
     if(!imgSrc) return;
 
     const div = document.createElement('div');
     div.className = 'look';
-    div.innerHTML = `
-      <img src="${imgSrc}">
-      <span>${item.name || item.nome || 'Look'}</span>
-    `;
-
+    div.innerHTML = `<img src="${imgSrc}"><span>${item.name || item.nome || 'Look'}</span>`;
     div.onclick = () => trocarLook(imgSrc);
     lista.appendChild(div);
   });
-}
 }
 if(lojaAtual){
   items = items.filter(item =>

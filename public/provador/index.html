@@ -254,6 +254,40 @@ function comprarWhatsApp(){
     console.log(e);
   }
 }, 10000);
+    const video = document.getElementById('camera');
+
+async function iniciarCamera() {
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: true,
+      audio: false
+    });
+
+    video.srcObject = stream;
+
+  } catch (erro) {
+    console.error('Erro ao abrir câmera:', erro);
+  }
+}
+
+iniciarCamera();
+  async function iniciarCamera() {
+  try {
+    const video = document.getElementById('video');
+
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: true,
+      audio: false
+    });
+
+    video.srcObject = stream;
+
+  } catch (erro) {
+    console.error('Erro ao abrir câmera:', erro);
+  }
+}
+
+iniciarCamera();  
 </script>
 </body>
 </html>

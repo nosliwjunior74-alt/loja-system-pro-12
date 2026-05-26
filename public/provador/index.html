@@ -158,20 +158,26 @@ function limparLook(){
 }
   
 async function carregarLooksDaLoja(){
-  const lista = document.getElementById('listaLooks');
-  if(!lista) return;
+  console.log('LOOKS CARREGANDO...');
 
-  lista.innerHTML = '<div class="look">Carregando looks...</div>';
+  await AppStore.ensureSeed();
 
-  const params = new URLSearchParams(window.location.search);
-  const lojaAtual = params.get('loja') || params.get('slug') || '';
+ let lojaAtual = params.get('loja') || params.get('slug') || '';
+let items = [];
 
-  let items = [];
+try{
+  const r = await fetch(/api/public/store/${encodeURIComponent(lojaAtual)});
+  const data = await r.json();
 
-  try{
- if(!lojaAtual){
-  lista.innerHTML = '<div class="look">Loja não informada no link</div>';
-  return;
+  items =
+    data.store?.estoque ||
+    data.store?.looks ||
+    data.store?.products ||
+    [];
+
+}catch(e){
+  console.error(e);
+}
 }
 
 const r = await fetch(`/api/public/store/${encodeURIComponent(lojaAtual)}`);

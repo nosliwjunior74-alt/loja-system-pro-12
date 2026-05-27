@@ -177,12 +177,15 @@ async function carregarLooksDaLoja(){
     const txt = await r.text();
     const data = txt ? JSON.parse(txt) : {};
 console.log(data);
-    items =
+    items = Array.isArray(data.store)
+  ? data.store
+  : (
       data.store?.estoque ||
       data.store?.looks ||
       data.store?.products ||
       data.store?.roupas ||
-      [];
+      []
+    );
     items = items.filter(item => {
   const dono =
     item.storeSlug ||

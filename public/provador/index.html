@@ -183,6 +183,16 @@ console.log(data);
       data.store?.products ||
       data.store?.roupas ||
       [];
+    items = items.filter(item => {
+  const dono =
+    item.storeSlug ||
+    item.loja ||
+    item.slug ||
+    item.storeId ||
+    lojaAtual;
+
+  return String(dono).toLowerCase() === String(lojaAtual).toLowerCase();
+});
   }catch(e){
     console.error('Erro ao carregar looks:', e);
     lista.innerHTML = '<div class="look">Erro ao carregar looks</div>';

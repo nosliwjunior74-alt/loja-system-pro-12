@@ -236,8 +236,16 @@ app.get('/api/public/store/:slug', (req, res) => {
     return res.status(404).json({ error: 'Loja não encontrada', slug });
   }
 
-  res.json({ store });
+res.json({
+  store: {
+    ...store,
+    estoque: store.estoque || [],
+    looks: store.looks || [],
+    products: store.products || [],
+    roupas: store.roupas || []
+  }
 });
+
 app.get('/api/public/session-store', (req,res)=>{ const store = req.session?.clientStoreId ? getStoreById(req.session.clientStoreId, baseUrl(req)) : null; if(!store) return res.status(401).json({ error:'unauthorized' }); res.json({ store }); });
 app.put('/api/public/store-branding', requireClientApi, (req,res)=>{
   const current = getStoreById(req.session.clientStoreId, baseUrl(req));

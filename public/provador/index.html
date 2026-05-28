@@ -183,25 +183,17 @@ const lojaAtual = params.get('loja') || params.get('slug') || '';
     const txt = await r.text();
     const data = txt ? JSON.parse(txt) : {};
 console.log(data);
-    items = Array.isArray(data.store)
-  ? data.store
-  : (
-      data.store?.estoque ||
-      data.store?.looks ||
-      data.store?.products ||
-      data.store?.roupas ||
-      []
-    );
-    items = items.filter(item => {
-  const dono =
-    item.storeSlug ||
-    item.loja ||
-    item.slug ||
-    item.storeId ||
-    lojaAtual;
-
-  return String(dono).toLowerCase() === String(lojaAtual).toLowerCase();
-});
+   items =
+  data.store?.estoque ||
+  data.store?.products ||
+  data.store?.roupas ||
+  data.store?.looks ||
+  data.estoque ||
+  data.products ||
+  data.roupas ||
+  data.looks ||
+  [];
+   
   }catch(e){
     console.error('Erro ao carregar looks:', e);
     lista.innerHTML = '<div class="look">Erro ao carregar looks</div>';

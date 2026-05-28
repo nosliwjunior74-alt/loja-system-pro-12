@@ -193,7 +193,16 @@ console.log(data);
   data.roupas ||
   data.looks ||
   [];
-   
+   items = items.filter(item => {
+  const dono =
+    item.storeSlug ||
+    item.loja ||
+    item.slug ||
+    item.storeId ||
+    lojaAtual;
+
+  return String(dono).toLowerCase() === String(lojaAtual).toLowerCase();
+});
   }catch(e){
     console.error('Erro ao carregar looks:', e);
     lista.innerHTML = '<div class="look">Erro ao carregar looks</div>';

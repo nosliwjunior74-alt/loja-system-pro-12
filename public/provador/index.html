@@ -162,10 +162,16 @@ async function carregarLooksDaLoja(){
 
   lista.innerHTML = '<div class="look">Carregando looks...</div>';
 
-  const params = new URLSearchParams(window.location.search);
-  const lojaAtual = params.get('loja') || params.get('slug') || '';
+let search = window.location.search;
 
-  if(!lojaAtual){
+try {
+  if ((!search || search === '') && window.parent && window.parent.location) {
+    search = window.parent.location.search;
+  }
+} catch(e) {}
+
+const params = new URLSearchParams(search);
+const lojaAtual = params.get('loja') || params.get('slug') || '';
     lista.innerHTML = '<div class="look">Loja não informada no link</div>';
     return;
   }

@@ -139,7 +139,22 @@ function paymentRowToView(row){
 }
 function listStores(baseUrl=''){ return db.prepare('SELECT * FROM stores ORDER BY created_at DESC').all().map(r=>rowToStore(r, baseUrl)); }
 function getStoreById(id, baseUrl=''){ return rowToStore(db.prepare('SELECT * FROM stores WHERE id = ?').get(id), baseUrl); }
-function getStoreBySlug(slug, baseUrl=''){ return rowToStore(db.prepare('SELECT * FROM stores WHERE slug = ?').get(slug), baseUrl); }
+function getStoreBySlug(slug, baseUrl=''){
+  const row = db.prepare(
+    'SELECT * FROM stores WHERE slug = ?'
+  ).get(slug);
+
+  if(!row) return null;
+
+  const store = rowToStore(row, baseUrl);
+
+  store.estoque = JSON.parse(row.estoque || '[]');
+  store.looks = JSON.parse(row.looks || '[]');
+  store.products = JSON.parse(row.products || '[]');
+  store.roupas = JSON.parse(row.roupas || '[]');
+
+  return store;
+}
 function getStoreRowBySlug(slug){ const row = db.prepare('SELECT * FROM stores WHERE slug = ?').get(slug); return row ? (syncStoreLicense(row.id), db.prepare('SELECT * FROM stores WHERE id = ?').get(row.id)) : null; }
 function getStoreRowById(id){ const row = db.prepare('SELECT * FROM stores WHERE id = ?').get(id); return row ? (syncStoreLicense(row.id), db.prepare('SELECT * FROM stores WHERE id = ?').get(row.id)) : null; }
 function createStore(payload, baseUrl=''){

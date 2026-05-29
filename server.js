@@ -250,9 +250,25 @@ app.get('/api/public/session-store', (req,res)=>{ const store = req.session?.cli
 app.put('/api/public/store-branding', requireClientApi, (req,res)=>{
   const current = getStoreById(req.session.clientStoreId, baseUrl(req));
   if(!current) return res.status(404).json({ error:'Loja não encontrada' });
-  const payload = {};
-  if(typeof req.body?.color === 'string' && /^#[0-9a-fA-F]{6}$/.test(req.body.color)) payload.color = req.body.color;
-  if(typeof req.body?.logo === 'string' && req.body.logo.trim()) payload.logo = req.body.logo.trim();
+ const payload = {};
+
+if(typeof req.body?.color === 'string')
+  payload.color = req.body.color;
+
+if(typeof req.body?.logo === 'string')
+  payload.logo = req.body.logo.trim();
+
+if(Array.isArray(req.body?.estoque))
+  payload.estoque = req.body.estoque;
+
+if(Array.isArray(req.body?.products))
+  payload.products = req.body.products;
+
+if(Array.isArray(req.body?.looks))
+  payload.looks = req.body.looks;
+
+if(Array.isArray(req.body?.roupas))
+  payload.roupas = req.body.roupas;
   if(!Object.keys(payload).length) return res.status(400).json({ error:'Nenhuma alteração visual enviada.' });
   const store = updateStore(current.id, payload, baseUrl(req));
   res.json({ ok:true, store });

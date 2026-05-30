@@ -175,7 +175,9 @@ try {
   session = null;
 }
 
-const store = (LocalStoreManager.list() || []).find(
+const stores = await LocalStorageManager.list();
+
+const store = (stores || []).find(
   s => s.slug === slug
 );
 

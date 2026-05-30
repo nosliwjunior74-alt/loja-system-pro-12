@@ -46,7 +46,8 @@ try {
       ...estoqueAtual.filter(i => i.id !== item.id),
       item
     ];
-
+console.log('LOJA ATUAL:', lojaAtual);
+console.log('ESTOQUE ENVIADO:', novoEstoque);
     await fetch('/api/public/store-branding', {
       method:'PUT',
       headers:{

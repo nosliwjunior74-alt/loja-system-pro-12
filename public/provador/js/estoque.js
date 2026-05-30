@@ -41,8 +41,8 @@ window.Estoque={
     console.error('Erro sincronizando estoque online',e);
   }
 
-  return item;
-}
+ return item;
+},
   async remove(id){await DB.delete(DB.STORES.ESTOQUE,id);},
   async adjust(id,delta){const item=await this.byId(id);if(!item)return;item.quantidade=Math.max(0,Number(item.quantidade||0)+delta);await this.save(item);},
   async restoreSeed(){await DB.clear(DB.STORES.ESTOQUE);for(const item of LOJA_SEED) await DB.put(DB.STORES.ESTOQUE,item);},

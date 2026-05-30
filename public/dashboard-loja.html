@@ -162,9 +162,18 @@
 
     async function loadSession(){
       const slug = new URLSearchParams(location.search).get('loja') || '';
-    const session = JSON.parse(
-  sessionStorage.getItem('dashboardStoreSessionLocal') || 'null'
-);
+  const rawSession = sessionStorage.getItem('dashboardStoreSessionLocal');
+
+let session = null;
+
+try {
+  session = rawSession && rawSession !== 'undefined'
+    ? JSON.parse(rawSession)
+    : null;
+} catch(e) {
+  console.error('Sessão inválida:', e);
+  session = null;
+}
 
 const store = (LocalStoreManager.list() || []).find(
   s => s.slug === slug

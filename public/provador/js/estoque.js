@@ -1,5 +1,13 @@
 
 window.Estoque={
+  safeParse(valor, padrao = []) {
+  try {
+    return valor ? JSON.parse(valor) : padrao;
+  } catch(e) {
+    console.error('Erro JSON:', e);
+    return padrao;
+  }
+},
   async all(){await AppStore.ensureSeed();return await DB.getAll(DB.STORES.ESTOQUE);},
   async visible(){const items=await this.all();return items.filter(i=>Number(i.quantidade)>0);},
   async byId(id){const items=await this.all();return items.find(i=>i.id===id)||null;},
@@ -16,7 +24,19 @@ window.Estoque={
 
     const r = await fetch(`/api/public/store/${encodeURIComponent(lojaAtual)}`);
 
-    const data = await r.json();
+    const texto = await r.text();
+
+console.log("RETORNO API:", texto);
+
+let data = {};
+
+try {
+    data = JSON.parse(texto);
+} catch(e) {
+    console.error("ERRO JSON API:", e);
+    console.log("CONTEÚDO RECEBIDO:", texto);
+    return;
+}
 
     const store = data.store || {};
 

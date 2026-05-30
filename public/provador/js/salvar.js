@@ -24,5 +24,18 @@ window.AppStore={
   },
   uid(name){return String(name||'item').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'')+'-'+Date.now();},
   setSelected(item){localStorage.setItem(this.selectedKey,JSON.stringify(item));},
-  getSelected(){try{return JSON.parse(localStorage.getItem(this.selectedKey)||'null')}catch(e){return null}}
+  getSelected(){
+  try{
+    const valor = localStorage.getItem(this.selectedKey);
+
+    if(!valor || valor === 'undefined'){
+      return null;
+    }
+
+    return JSON.parse(valor);
+  }catch(e){
+    console.error('Erro ao ler localStorage:',e);
+    return null;
+  }
+}
 };

@@ -9,7 +9,7 @@ async function renderCatalogo(){await AppStore.ensureSeed(); const items=await E
 async function abrirProvadorItem(id){const item=await Estoque.byId(id); if(item){AppStore.setSelected(item); location.href='provador.html';}}
 async function nextCatalog(){const items=await Estoque.visible(); const max=Math.max(0,Math.ceil(items.length/UI.pageSize)-1); UI.page=Math.min(max,UI.page+1); await renderCatalogo();}
 async function prevCatalog(){UI.page=Math.max(0,UI.page-1); await renderCatalogo();}
-async function initProvador(){await AppStore.ensureSeed(); const items=await Estoque.visible(); UI.page=Math.min(UI.page,Math.max(0,Math.ceil(items.length/UI.pageSize)-1)); await UI.renderTrack('provadorTrack',items,'selecionarLook'); const selected=AppStore.getSelected()||items[0]; if(selected) await selecionarLook(selected.id); await CameraModule.start(); await carregarClientesSelect();}
+async function initProvador(){await AppStore.ensureSeed(); const items = await carregarLooksOnline(); UI.page=Math.min(UI.page,Math.max(0,Math.ceil(items.length/UI.pageSize)-1)); await UI.renderTrack('provadorTrack',items,'selecionarLook'); const selected=AppStore.getSelected()||items[0]; if(selected) await selecionarLook(selected.id); await CameraModule.start(); await carregarClientesSelect();}
 async function selecionarLook(id){const item=await Estoque.byId(id); if(!item)return; AppStore.setSelected(item); const title=document.getElementById('provadorTitle'); const badge=document.getElementById('provadorBadge'); if(title) title.textContent=item.nome; if(badge) badge.textContent=item.nome; CameraModule.setLook(item.imagem);}
 async function nextProvador(){const items=await Estoque.visible(); const max=Math.max(0,Math.ceil(items.length/UI.pageSize)-1); UI.page=Math.min(max,UI.page+1); await UI.renderTrack('provadorTrack',items,'selecionarLook');}
 async function prevProvador(){UI.page=Math.max(0,UI.page-1); const items=await Estoque.visible(); await UI.renderTrack('provadorTrack',items,'selecionarLook');}
@@ -17,3 +17,33 @@ async function carregarClientesSelect(){const sel=document.getElementById('clien
 function fotoLook(){CameraModule.savePhoto(); alert('Foto salva no computador.');}
 function enviarWhats(){const phone=(document.getElementById('clienteSelect')||{}).value||''; WhatsAppModule.saveAndOpen(phone);}
 async function renderDescanso(){await AppStore.ensureSeed(); const holder=document.getElementById('restHolder'); const label=document.getElementById('restLabel'); if(!holder)return; const meta=await DB.getKV('rest_meta'); if(label&&meta) label.textContent=meta.name||'Sua Loja'; const file=await DB.getKV('rest_file'); if(meta&&meta.mode==='custom'&&file){const url=URL.createObjectURL(file); holder.innerHTML=meta.type==='video'?`<video src="${url}" autoplay muted loop playsinline controls></video>`:`<img src="${url}" alt="${meta.name||''}">`;} else {holder.innerHTML=`<img src="imagens/logo.png" alt="Sua Loja">`;}}
+async function carregarLooksOnline() {
+
+    try {
+
+        const slug =
+            new URLSearchParams(location.search).get('loja') ||
+            localStorage.getItem('loja_slug') ||
+            'leandro';
+
+        const resp = await fetch(`/api/public/store/${slug}`);
+
+        const data = await resp.json();
+
+        console.log('API LOJA:', data);
+
+        const looks = data.store?.estoque || [];
+
+        console.log('LOOKS:', looks);
+
+        return looks;
+
+    } catch(e){
+
+        console.error('Erro carregando looks:', e);
+
+        return [];
+
+    }
+
+}

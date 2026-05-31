@@ -23,33 +23,36 @@ async function carregarLooksOnline() {
 
         const slug =
             new URLSearchParams(location.search).get('loja') ||
-            localStorage.getItem('loja_slug') ||
-            'leandro';
+            localStorage.getItem('loja_slug');
 
-        console.log('LOJA:', slug);
+        if (!slug) {
+            console.error('Slug não encontrado');
+            return [];
+        }
 
-        const resp = await fetch(`/api/public/store/${slug}`);
+        const response = await fetch(`/api/public/store/${slug}`);
 
-        const data = await resp.json();
-alert(JSON.stringify(data));
-  
+        if (!response.ok) {
+            console.error('Erro API', response.status);
+            return [];
+        }
 
-        const looks =
-    data.store?.estoque ||
-    data.store?.looks ||
-    data.store?.products ||
-    data.store?.roupas ||
-    [];
+        const result = await response.json();
 
-        console.log('LOOKS:', looks);
+        if (!result.store) {
+            console.error('Store não encontrada');
+            return [];
+        }
 
-        alert('Quantidade de itens: ' + looks.length);
+        const looks = result.store.estoque || [];
+
+        console.log('LOOKS CARREGADOS:', looks);
 
         return looks;
 
-    } catch (e) {
+    } catch (err) {
 
-        console.error('Erro carregando looks:', e);
+        console.error('Erro Provador:', err);
 
         return [];
     }

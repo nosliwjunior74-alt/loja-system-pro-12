@@ -22,6 +22,7 @@ async function carregarLooksOnline() {
     try {
 
         const slug =
+            alert('LOOKS ONLINE: ' + JSON.stringify(looks));
             new URLSearchParams(location.search).get('loja') ||
             localStorage.getItem('loja_slug') ||
             'leandro';

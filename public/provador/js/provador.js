@@ -22,38 +22,35 @@ async function carregarLooksOnline() {
     try {
 
         const slug =
-            alert('LOOKS ONLINE: ' + JSON.stringify(looks));
             new URLSearchParams(location.search).get('loja') ||
             localStorage.getItem('loja_slug') ||
             'leandro';
 
+        console.log('LOJA:', slug);
+
         const resp = await fetch(`/api/public/store/${slug}`);
 
-       const data = await resp.json();
+        const data = await resp.json();
 
-console.log('API LOJA:', data);
+        console.log('API LOJA:', data);
 
-const looks =
-    data.store?.looks ||
-    data.store?.estoque ||
-    data.store?.products ||
-    data.store?.roupas ||
-    [];
+        const looks =
+            data.store?.looks ||
+            data.store?.estoque ||
+            data.store?.products ||
+            data.store?.roupas ||
+            [];
 
-console.log('LOOKS:', looks);
-alert('Quantidade de itens: ' + looks.length);
+        console.log('LOOKS:', looks);
 
-return looks;
-ngth);
+        alert('Quantidade de itens: ' + looks.length);
 
         return looks;
 
-    } catch(e){
+    } catch (e) {
 
         console.error('Erro carregando looks:', e);
 
         return [];
-
     }
-
 }

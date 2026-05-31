@@ -34,7 +34,8 @@ async function carregarLooksOnline() {
 
         const looks = data.store?.estoque || [];
 
-        console.log('LOOKS:', looks);
+       alert('ARQUIVO NOVO CARREGADO');
+console.log('LOOKS:', looks);
         alert('Quantidade de itens: ' + looks.length);
 
         return looks;

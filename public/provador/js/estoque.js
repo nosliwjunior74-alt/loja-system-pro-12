@@ -2,7 +2,8 @@
 window.Estoque={
   safeParse(valor, padrao = []) {
   try {
-    return valor ? JSON.parse(valor) : padrao;
+if (!valor || valor === "undefined") return padrao;
+return typeof valor === "string" ? JSON.parse(valor) : valor;   
   } catch(e) {
     console.error('Erro JSON:', e);
     return padrao;

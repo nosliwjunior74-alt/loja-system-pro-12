@@ -31,15 +31,15 @@ async function carregarLooksOnline() {
         const resp = await fetch(`/api/public/store/${slug}`);
 
         const data = await resp.json();
-
-        console.log('API LOJA:', data);
+alert(JSON.stringify(data));
+  
 
         const looks =
-            data.store?.looks ||
-            data.store?.estoque ||
-            data.store?.products ||
-            data.store?.roupas ||
-            [];
+    data.store?.estoque ||
+    data.store?.looks ||
+    data.store?.products ||
+    data.store?.roupas ||
+    [];
 
         console.log('LOOKS:', looks);
 

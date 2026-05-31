@@ -138,7 +138,22 @@ function paymentRowToView(row){
   };
 }
 function listStores(baseUrl=''){ return db.prepare('SELECT * FROM stores ORDER BY created_at DESC').all().map(r=>rowToStore(r, baseUrl)); }
-function getStoreById(id, baseUrl=''){ return rowToStore(db.prepare('SELECT * FROM stores WHERE id = ?').get(id), baseUrl); }
+function getStoreById(id, baseUrl=''){
+  const row = db.prepare(
+    'SELECT * FROM stores WHERE id = ?'
+  ).get(id);
+
+  if(!row) return null;
+
+  const store = rowToStore(row, baseUrl);
+
+  store.estoque = JSON.parse(row.estoque || '[]');
+  store.looks = JSON.parse(row.looks || '[]');
+  store.products = JSON.parse(row.products || '[]');
+  store.roupas = JSON.parse(row.roupas || '[]');
+
+  return store;
+}
 function getStoreBySlug(slug, baseUrl=''){
   const row = db.prepare(
     'SELECT * FROM stores WHERE slug = ?'

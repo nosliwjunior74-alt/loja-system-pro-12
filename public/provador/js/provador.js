@@ -28,15 +28,22 @@ async function carregarLooksOnline() {
 
         const resp = await fetch(`/api/public/store/${slug}`);
 
-        const data = await resp.json();
+       const data = await resp.json();
 
-        console.log('API LOJA:', data);
+console.log('API LOJA:', data);
 
-        const looks = data.store?.estoque || [];
+const looks =
+    data.store?.looks ||
+    data.store?.estoque ||
+    data.store?.products ||
+    data.store?.roupas ||
+    [];
 
-       alert('ARQUIVO NOVO CARREGADO');
 console.log('LOOKS:', looks);
-        alert('Quantidade de itens: ' + looks.length);
+alert('Quantidade de itens: ' + looks.length);
+
+return looks;
+ngth);
 
         return looks;
 

@@ -9,7 +9,24 @@ async function renderCatalogo(){await AppStore.ensureSeed(); const items=await E
 async function abrirProvadorItem(id){const item=await Estoque.byId(id); if(item){AppStore.setSelected(item); location.href='provador.html';}}
 async function nextCatalog(){const items=await Estoque.visible(); const max=Math.max(0,Math.ceil(items.length/UI.pageSize)-1); UI.page=Math.min(max,UI.page+1); await renderCatalogo();}
 async function prevCatalog(){UI.page=Math.max(0,UI.page-1); await renderCatalogo();}
-async function initProvador(){await AppStore.ensureSeed(); const items = await carregarLooksOnline(); UI.page=Math.min(UI.page,Math.max(0,Math.ceil(items.length/UI.pageSize)-1)); await UI.renderTrack('provadorTrack',items,'selecionarLook'); const selected=AppStore.getSelected()||items[0]; if(selected) await selecionarLook(selected.id); await CameraModule.start(); await carregarClientesSelect();}
+async function initProvador(){await AppStore.ensureSeed(); const items = await carregarLooksOnline();
+
+console.log('ITENS DO PROVADOR:', items);
+
+if (!items || items.length === 0) {
+    alert('NENHUM LOOK ENCONTRADO');
+}
+UI.page=Math.min(
+    UI.page,
+    Math.max(0,Math.ceil(items.length/UI.pageSize)-1));
+                              await UI.renderTrack(
+   'provadorTrack',
+   items,
+   'selecionarLook'
+);
+
+alert('LOOKS CARREGADOS: ' + items.length);
+                              const selected=AppStore.getSelected()||items[0]; if(selected) await selecionarLook(selected.id); await CameraModule.start(); await carregarClientesSelect();}
 async function selecionarLook(id){const item=await Estoque.byId(id); if(!item)return; AppStore.setSelected(item); const title=document.getElementById('provadorTitle'); const badge=document.getElementById('provadorBadge'); if(title) title.textContent=item.nome; if(badge) badge.textContent=item.nome; CameraModule.setLook(item.imagem);}
 async function nextProvador(){const items=await Estoque.visible(); const max=Math.max(0,Math.ceil(items.length/UI.pageSize)-1); UI.page=Math.min(max,UI.page+1); await UI.renderTrack('provadorTrack',items,'selecionarLook');}
 async function prevProvador(){UI.page=Math.max(0,UI.page-1); const items=await Estoque.visible(); await UI.renderTrack('provadorTrack',items,'selecionarLook');}

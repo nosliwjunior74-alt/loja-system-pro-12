@@ -205,12 +205,12 @@
         itens = await Estoque.visible();
       }
 
-      if(slug){
-        itens = itens.filter(item => {
-          const lojaItem = normalizar(item.storeSlug || item.lojaSlug || item.slugLoja || item.loja || item.store || "");
-          return !lojaItem || lojaItem === normalizar(slug);
-        });
-      }
+     if(slug){
+
+   console.log('SLUG DA LOJA:', slug);
+
+   console.log('TODOS OS ITENS:', items);
+
 
       listaProdutos.innerHTML = "";
 

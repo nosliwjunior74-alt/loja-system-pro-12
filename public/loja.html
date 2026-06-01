@@ -192,6 +192,7 @@
 
   async function carregarLojaPublica(){
     try{
+      alert('PASSOU ETAPA 1');
       nomeLoja.textContent = slug ? "Loja " + slug : "Loja Online";
 
       btnProvador.href = "provador/index.html?loja=" + encodeURIComponent(slug);
@@ -199,10 +200,12 @@
       whatsFixo.href = btnWhats.href;
 
       let itens = [];
+      alert('PASSOU ETAPA 2');
 
       if(window.AppStore && window.Estoque){
         await AppStore.ensureSeed();
         itens = await Estoque.visible();
+        alert('PASSOU ETAPA 3 - ITENS: ' + items.length);
       }
 
      if(slug){
@@ -211,7 +214,7 @@
 
    console.log('TODOS OS ITENS:', items);
 
-
+alert('PASSOU ETAPA 4');
       listaProdutos.innerHTML = "";
 
       if(!itens || itens.length === 0){

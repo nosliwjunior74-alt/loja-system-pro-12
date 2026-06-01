@@ -189,67 +189,53 @@
     );
     return "https://wa.me/" + whatsappPadrao + "?text=" + texto;
   }
+async function carregarLojaPublica(){
+  try{
+    const params = new URLSearchParams(location.search);
+    const slug = params.get('loja') || params.get('slug') || '';
 
-  async function carregarLojaPublica(){
-    try{
-      alert('PASSOU ETAPA 1');
-      nomeLoja.textContent = slug ? "Loja " + slug : "Loja Online";
+    nomeLoja.textContent = slug ? 'Loja ' + slug : 'Loja Online';
+    btnProvador.href = 'provador/provador.html?loja=' + encodeURIComponent(slug);
 
-      btnProvador.href = "provador/index.html?loja=" + encodeURIComponent(slug);
-      btnWhats.href = "https://wa.me/" + whatsappPadrao + "?text=" + encodeURIComponent("Olá! Vim pela loja online e quero atendimento.");
-      whatsFixo.href = btnWhats.href;
+    const resp = await fetch('/api/public/store/' + encodeURIComponent(slug));
+    const data = await resp.json();
 
-      let itens = [];
-      alert('PASSOU ETAPA 2');
+    const store = data.store || {};
+    const items = store.estoque || store.looks || store.products || store.roupas || [];
 
-      if(window.AppStore && window.Estoque){
-        await AppStore.ensureSeed();
-        itens = await Estoque.visible();
-        alert('PASSOU ETAPA 3 - ITENS: ' + items.length);
-      }
+    listaProdutos.innerHTML = '';
 
-     if(slug){
-
-   console.log('SLUG DA LOJA:', slug);
-
-   console.log('TODOS OS ITENS:', items);
-
-alert('PASSOU ETAPA 4');
-      listaProdutos.innerHTML = "";
-
-      if(!itens || itens.length === 0){
-        mensagem.innerHTML = "Nenhum produto encontrado para esta loja.";
-        return;
-      }
-
-      itens.forEach(item => {
-        const img = item.imagem || item.image || item.foto || item.logo || "";
-        const nome = item.nome || item.name || "Produto";
-        const categoria = item.categoria || item.category || "Look";
-        const preco = item.preco || item.price || "";
-
-        const card = document.createElement("div");
-        card.className = "card";
-
-        card.innerHTML = `
-          <img src="${img}" alt="${nome}">
-          <h3>${nome}</h3>
-          <p>${categoria}</p>
-          <p class="preco">${preco ? "R$ " + preco : "Consulte o preço"}</p>
-          <div class="acoes">
-            <a class="btn btn-purple" href="provador/index.html?loja=${encodeURIComponent(slug)}">👗 Testar</a>
-            <a class="btn btn-green" target="_blank" href="${abrirWhatsProduto(nome)}">💬 Comprar</a>
-          </div>
-        `;
-
-        listaProdutos.appendChild(card);
-      });
-
-    }catch(e){
-      console.error(e);
-      mensagem.innerHTML = "Erro ao carregar loja pública.";
+    if(!items.length){
+      mensagem.innerHTML = 'Nenhum produto encontrado para esta loja.';
+      return;
     }
+
+    mensagem.innerHTML = '';
+
+    items.forEach(item => {
+      const nome = item.nome || item.name || item.titulo || 'Produto';
+      const img = item.imagem || item.image || item.foto || item.logo || '';
+      const preco = item.preco || item.price || '';
+
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.innerHTML = `
+        <img src="${img}" alt="${nome}">
+        <h3>${nome}</h3>
+        <p>${preco ? 'R$ ' + preco : 'Consulte o preço'}</p>
+        <div class="acoes">
+          <a class="btn btn-purple" href="provador/provador.html?loja=${encodeURIComponent(slug)}">👗 Testar</a>
+          <a class="btn btn-green" target="_blank" href="https://wa.me/5531999999999?text=${encodeURIComponent('Olá! Tenho interesse no produto: ' + nome)}">💬 Comprar</a>
+        </div>
+      `;
+      listaProdutos.appendChild(card);
+    });
+
+  }catch(e){
+    console.error(e);
+    mensagem.innerHTML = 'Erro ao carregar loja pública.';
   }
+}  }
 
   carregarLojaPublica();
   setInterval(async () => {

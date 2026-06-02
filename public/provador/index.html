@@ -105,16 +105,7 @@ button{
     💬 Comprar no WhatsApp
   </button>
 </div>
-<div class="stage">
-  <video id="video" autoplay playsinline muted></video>
-  <canvas id="canvas"></canvas>
-
- <img id="roupa" src="" style="display:none">
-
-  <div class="badge">
-    <strong>Provador IA</strong><br>
-    Detector de corpo ativo
-  </div>
+<div id="listaLooks"></div>
 
   <div class="panel">
     <h2>Looks</h2>
@@ -249,21 +240,29 @@ function comprarWhatsApp(){
 }
    
     
-  async function iniciarCamera() {
-  try {
-    const video = document.getElementById('video');
+  async function carregarLooksDaLoja(){
+  await AppStore.ensureSeed();
+  const itens = await Estoque.visible();
 
-    const stream = await navigator.mediaDevices.getUserMedia({
-      video: true,
-      audio: false
-    });
+  const lista = document.getElementById('listaLooks');
+  lista.innerHTML = '';
 
-    video.srcObject = stream;
+  itens.forEach(item => {
+    const img = item.image || item.foto || item.logo || '';
+    if(!img) return;
 
-  } catch (erro) {
-    console.error('Erro ao abrir câmera:', erro);
-  }
+    const div = document.createElement('div');
+    div.className = 'look';
+    div.onclick = () => trocarLook(img);
+    div.innerHTML = `
+      <img src="${img}">
+      <span>${item.name || item.nome || 'Look'}</span>
+    `;
+    lista.appendChild(div);
+  });
 }
+
+carregarLooksDaLoja();
 
 iniciarCamera();  
 </script>

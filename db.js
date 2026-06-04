@@ -191,11 +191,23 @@ function updateStore(id, payload, baseUrl=''){
   const expiresAt = payload.expiresAt !== undefined ? payload.expiresAt : (current.expires_at || '');
   const licenseKey = generateLicenseKey(id, slug, expiresAt);
   const passwordHash = payload.password ? hashPassword(payload.password) : current.password_hash;
-  db.prepare(`UPDATE stores SET slug=@slug,name=@name,sub=@sub,color=@color,logo=@logo,email=@email,phone=@phone,login=@login,password_hash=@password_hash,status=@status,plan=@plan,expires_at=@expires_at,license_key=@license_key,custom_domain=@custom_domain,updated_at=@updated_at WHERE id=@id`).run({
+  db.prepare(`UPDATE stores SET slug=@slug,name=@name,sub=@sub,color=@color,logo=@logo,email=@email,phone=@phone,login=@login,password_hash=@password_hash,status=@status,plan=@plan,expires_at=@expires_at,license_key=@license_key,custom_domain=@custom_domain,
+estoque=@estoque,
+products=@products,
+looks=@looks,
+roupas=@roupas,
+updated_at=@updated_at WHERE id=@id`).run({
     id, slug, name: payload.name ?? current.name, sub: payload.sub ?? current.sub, color: payload.color ?? current.color, logo: payload.logo ?? current.logo,
     email: payload.email ?? current.email, phone: payload.phone ?? current.phone, login: payload.login ?? current.login, password_hash: passwordHash,
     status: payload.status === 'inativo' ? 'inativo' : (payload.status === 'degustacao' ? 'degustacao' : (payload.status ?? current.status)), plan: payload.plan ?? current.plan,
-    expires_at: expiresAt || null, license_key: licenseKey, custom_domain: payload.customDomain ?? current.custom_domain, updated_at: new Date().toISOString()
+    expires_at: expiresAt || null, license_key: licenseKey, custom_domain: payload.customDomain ?? current.custom_domain,
+estoque: JSON.stringify(payload.estoque ?? current.estoque ?? []),
+products: JSON.stringify(payload.products ?? current.products ?? []),
+looks: JSON.stringify(payload.looks ?? current.looks ?? []),
+roupas: JSON.stringify(payload.roupas ?? current.roupas ?? []),
+updated_at: new Date().toISOString(),
+id,
+baseUrl
   });
   return getStoreById(id, baseUrl);
 }

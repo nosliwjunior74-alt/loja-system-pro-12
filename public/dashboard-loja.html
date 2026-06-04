@@ -425,5 +425,29 @@ window.addEventListener("load", montarLinkPublicoLoja);
 
 }, 5000);
 </script>
+  <script>
+async function iniciarCamera() {
+  const video = document.getElementById("camera");
+
+  if (!video) {
+    alert("Erro: área da câmera não encontrada.");
+    return;
+  }
+
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: true,
+      audio: false
+    });
+
+    video.srcObject = stream;
+  } catch (erro) {
+    alert("Não foi possível abrir a câmera. Verifique se a permissão da câmera está liberada no navegador.");
+    console.error("Erro ao abrir câmera:", erro);
+  }
+}
+
+window.addEventListener("load", iniciarCamera);
+</script>
 </body>
 </html>

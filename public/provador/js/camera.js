@@ -54,3 +54,10 @@ window.iniciarCamera = async function () {
     tipId: 'cameraTip'
   });
 };
+window.iniciarCamera = async function () {
+  return CameraModule.init({
+    videoId: 'video',
+    canvasId: 'poseCanvas',
+    tipId: 'cameraTip'
+  });
+};

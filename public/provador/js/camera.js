@@ -47,3 +47,10 @@ window.CameraModule={
   },
   savePhoto(canvasId='poseCanvas'){const canvas=document.getElementById(canvasId); if(!canvas){alert('Tela do provador não encontrada.');return;} const a=document.createElement('a'); a.href=canvas.toDataURL('image/png'); a.download='foto-look.png'; a.click();}
 };
+window.iniciarCamera = async function () {
+  await CameraModule.init({
+    videoId: 'video',
+    canvasId: 'poseCanvas',
+    tipId: 'cameraTip'
+  });
+};

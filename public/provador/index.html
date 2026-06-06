@@ -282,5 +282,45 @@ carregarLooksDaLoja();
 console.log('Provador iniciado');
  
 </script>
+  <video
+  id="camera"
+  autoplay
+  playsinline
+  muted
+  style="
+    width:100%;
+    max-width:700px;
+    height:auto;
+    border-radius:12px;
+    display:block;
+    margin:20px auto;
+    background:#000;
+  ">
+</video>
+
+<script>
+async function iniciarCamera() {
+  const video = document.getElementById('camera');
+
+  if (!video) {
+    console.log('Elemento camera não encontrado');
+    return;
+  }
+
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: true,
+      audio: false
+    });
+
+    video.srcObject = stream;
+
+  } catch (erro) {
+    console.error('Erro ao abrir câmera:', erro);
+  }
+}
+
+window.addEventListener('load', iniciarCamera);
+</script>
 </body>
 </html>

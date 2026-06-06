@@ -195,7 +195,7 @@ async function carregarLojaPublica(){
     const slug = params.get('loja') || params.get('slug') || '';
 
     nomeLoja.textContent = slug ? 'Loja ' + slug : 'Loja Online';
-    btnProvador.href = 'provador/provador.html?loja=' + encodeURIComponent(slug);
+    btnProvador.href = '/provador/index.html?loja=' + encodeURIComponent(slug);
 
     const resp = await fetch('/api/public/store/' + encodeURIComponent(slug));
     const data = await resp.json();

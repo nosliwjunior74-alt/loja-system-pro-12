@@ -91,6 +91,20 @@
         </div>
       </header>
       <iframe id="appFrame" src="" title="Aplicativo"></iframe>
+      <video
+  id="camera"
+  autoplay
+  playsinline
+  muted
+  style="
+    width:100%;
+    max-width:700px;
+    height:auto;
+    border-radius:12px;
+    display:block;
+    margin:20px auto;
+  ">
+</video>
       <div class="card">
   <h2>🔗 Link público da loja</h2>
   <p>Use este link para enviar ao cliente comprador pelo WhatsApp, Instagram ou QR Code.</p>
@@ -425,20 +439,7 @@ window.addEventListener("load", montarLinkPublicoLoja);
 
 }, 5000);
 </script>
-  <video
-  id="camera"
-  autoplay
-  playsinline
-  muted
-  style="
-    width: 100%;
-    max-width: 700px;
-    height: auto;
-    border-radius: 12px;
-    display: block;
-    margin: 20px auto;
-  ">
-</video>
+
   <script>
 async function iniciarCamera() {
   const video = document.getElementById("camera");

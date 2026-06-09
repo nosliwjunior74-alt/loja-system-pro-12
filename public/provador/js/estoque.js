@@ -21,7 +21,7 @@ return typeof valor === "string" ? JSON.parse(valor) : valor;
     const lojaAtual =
       new URLSearchParams(location.search).get('loja') ||
       localStorage.getItem('loja_slug') ||
-      'leandro';
+     ''; 
 
     const r = await fetch(`/api/public/store/${encodeURIComponent(lojaAtual)}`);
 

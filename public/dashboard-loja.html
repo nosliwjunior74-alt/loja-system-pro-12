@@ -442,7 +442,7 @@ window.addEventListener("load", montarLinkPublicoLoja);
 
   <script>
 async function iniciarCamera() {
-  const video = document.getElementById("camera");
+ const video = document.getElementById("video");
 
   if (!video) {
     alert("Erro: área da câmera não encontrada.");
@@ -463,6 +463,11 @@ async function iniciarCamera() {
 }
 
 window.addEventListener("load", iniciarCamera);
+    window.addEventListener("load", () => {
+  if (document.getElementById("video")) {
+    iniciarCamera();
+  }
+});
 </script>
 </body>
 </html>

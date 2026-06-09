@@ -233,15 +233,18 @@ applyStore(store, false);
         } catch(e) {}
       };
 
-      localStorage.setItem('lojaAtivaConfig', JSON.stringify({
-        name: store.name,
-        sub: store.sub,
-        logo: store.logo,
-        color: store.color,
-        status: store.status,
-        licenseStatus: store.licenseStatus,
-        expiresAt: store.expiresAt || ''
-      }));
+     localStorage.setItem('lojaAtivaConfig', JSON.stringify({
+  name: store.name,
+  sub: store.sub,
+  logo: store.logo,
+  slug: store.slug,
+  color: store.color,
+  status: store.status,
+  licenseStatus: store.licenseStatus,
+  expiresAt: store.expiresAt || ''
+}));
+
+localStorage.setItem('loja_slug', store.slug);
       document.body.dataset.online = online ? '1' : '0';
     }
 

@@ -61,7 +61,12 @@ async function carregarLooksOnline() {
             return [];
         }
 
-        const looks = result.store.estoque || [];
+        const looks =
+    result.store.estoque ||
+    result.store.looks ||
+    result.store.products ||
+    result.store.roupas ||
+    [];
 
         console.log('LOOKS CARREGADOS:', looks);
 

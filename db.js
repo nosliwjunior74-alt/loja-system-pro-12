@@ -54,10 +54,7 @@ function ensureTables(){
       created_at TEXT NOT NULL,
       updated_at TEXT
     );
-    try { db.exec("ALTER TABLE stores ADD COLUMN estoque TEXT"); } catch(e) {}
-try { db.exec("ALTER TABLE stores ADD COLUMN products TEXT"); } catch(e) {}
-try { db.exec("ALTER TABLE stores ADD COLUMN looks TEXT"); } catch(e) {}
-try { db.exec("ALTER TABLE stores ADD COLUMN roupas TEXT"); } catch(e) {}
+   
     CREATE TABLE IF NOT EXISTS payments (
       id TEXT PRIMARY KEY,
       store_id TEXT NOT NULL,
@@ -81,6 +78,10 @@ try { db.exec("ALTER TABLE stores ADD COLUMN roupas TEXT"); } catch(e) {}
     CREATE INDEX IF NOT EXISTS idx_payments_store_id ON payments(store_id);
     CREATE INDEX IF NOT EXISTS idx_payments_status ON payments(status);
   `);
+   try { db.exec("ALTER TABLE stores ADD COLUMN estoque TEXT"); } catch(e) {}
+try { db.exec("ALTER TABLE stores ADD COLUMN products TEXT"); } catch(e) {}
+try { db.exec("ALTER TABLE stores ADD COLUMN looks TEXT"); } catch(e) {}
+try { db.exec("ALTER TABLE stores ADD COLUMN roupas TEXT"); } catch(e) {}
 }
 ensureTables();
 function maybeAddColumn(table, column, typeDef){

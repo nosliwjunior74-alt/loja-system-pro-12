@@ -54,6 +54,10 @@ function ensureTables(){
       created_at TEXT NOT NULL,
       updated_at TEXT
     );
+    try { db.exec("ALTER TABLE stores ADD COLUMN estoque TEXT"); } catch(e) {}
+try { db.exec("ALTER TABLE stores ADD COLUMN products TEXT"); } catch(e) {}
+try { db.exec("ALTER TABLE stores ADD COLUMN looks TEXT"); } catch(e) {}
+try { db.exec("ALTER TABLE stores ADD COLUMN roupas TEXT"); } catch(e) {}
     CREATE TABLE IF NOT EXISTS payments (
       id TEXT PRIMARY KEY,
       store_id TEXT NOT NULL,

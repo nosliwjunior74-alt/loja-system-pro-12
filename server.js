@@ -255,8 +255,16 @@ app.put('/api/public/store-branding', requireClientApi, (req,res)=>{
 if(typeof req.body?.color === 'string')
   payload.color = req.body.color;
 
-if(typeof req.body?.logo === 'string')
-  payload.logo = req.body.logo.trim();
+if (typeof req.body?.logo === 'string') {
+    const logo = req.body.logo.trim();
+
+    if (
+        logo.startsWith('data:image/') &&
+        logo.length < 500000
+    ) {
+        payload.logo = logo;
+    }
+}
 
 if(Array.isArray(req.body?.estoque))
   payload.estoque = req.body.estoque;

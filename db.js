@@ -127,6 +127,10 @@ function rowToStore(row, baseUrl=''){
     email: synced.email || '', phone: synced.phone || '', login: synced.login, status: synced.status, plan: synced.plan || 'premium', expiresAt: synced.expires_at || '',
     licenseKey: synced.license_key || '', customDomain: synced.custom_domain || '', createdAt: synced.created_at, updatedAt: synced.updated_at || '',
   };
+  store.estoque = JSON.parse(synced.estoque || '[]');
+store.products = JSON.parse(synced.products || '[]');
+store.looks = JSON.parse(synced.looks || '[]');
+store.roupas = JSON.parse(synced.roupas || '[]');
   store.licenseStatus = rawLicenseStatus(synced);
   const origin = baseUrl || '';
   store.publicLink = store.customDomain ? `https://${store.customDomain}` : (origin ? `${origin}/s/${store.slug}` : `/s/${store.slug}`);

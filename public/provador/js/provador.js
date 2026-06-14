@@ -20,7 +20,7 @@ UI.page=Math.min(
     UI.page,
     Math.max(0,Math.ceil(items.length/UI.pageSize)-1));
                               await UI.renderTrack(
-   'provadorTrack',
+  'listaLooks',
    items,
    'selecionarLook'
 );
@@ -28,8 +28,8 @@ UI.page=Math.min(
 alert('LOOKS CARREGADOS: ' + items.length);
                               const selected=AppStore.getSelected()||items[0]; if(selected) await selecionarLook(selected.id); await CameraModule.start(); await carregarClientesSelect();}
 async function selecionarLook(id){const item=await Estoque.byId(id); if(!item)return; AppStore.setSelected(item); const title=document.getElementById('provadorTitle'); const badge=document.getElementById('provadorBadge'); if(title) title.textContent=item.nome; if(badge) badge.textContent=item.nome; CameraModule.setLook(item.imagem);}
-async function nextProvador(){const items=await Estoque.visible(); const max=Math.max(0,Math.ceil(items.length/UI.pageSize)-1); UI.page=Math.min(max,UI.page+1); await UI.renderTrack('provadorTrack',items,'selecionarLook');}
-async function prevProvador(){UI.page=Math.max(0,UI.page-1); const items=await Estoque.visible(); await UI.renderTrack('provadorTrack',items,'selecionarLook');}
+async function nextProvador(){const items=await Estoque.visible(); const max=Math.max(0,Math.ceil(items.length/UI.pageSize)-1); UI.page=Math.min(max,UI.page+1); awaitUI.renderTrack('listaLooks',items,'selecionarLook');}
+async function prevProvador(){UI.page=Math.max(0,UI.page-1); const items=await Estoque.visible(); awaitUI.renderTrack('listaLooks',items,'selecionarLook');}
 async function carregarClientesSelect(){const sel=document.getElementById('clienteSelect'); if(!sel)return; const customers=await Estoque.customers(); sel.innerHTML='<option value="">Sem cliente selecionada</option>'+customers.map(c=>`<option value="${c.telefone||''}">${c.nome}</option>`).join('');}
 function fotoLook(){CameraModule.savePhoto(); alert('Foto salva no computador.');}
 function enviarWhats(){const phone=(document.getElementById('clienteSelect')||{}).value||''; WhatsAppModule.saveAndOpen(phone);}

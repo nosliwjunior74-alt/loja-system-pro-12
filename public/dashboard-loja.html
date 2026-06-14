@@ -154,7 +154,13 @@ console.log('LocalStorageManager=', window.LocalStorageManager);
 
     buttons.forEach(btn => btn.addEventListener('click', () => {
       activateButtonForUrl(btn.dataset.url);
-      frame.src = btn.dataset.url;
+     const lojaSlug = new URLSearchParams(location.search).get('loja') || '';
+
+if (lojaSlug) {
+    frame.src = btn.dataset.url + '?loja=' + lojaSlug;
+} else {
+    frame.src = btn.dataset.url;
+}
       title.textContent = btn.textContent.trim();
     }));
 

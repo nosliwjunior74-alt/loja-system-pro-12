@@ -67,6 +67,7 @@ async function carregarLooksOnline() {
     result.store.products ||
     result.store.roupas ||
     [];
+        console.log('DADOS COMPLETOS:', looks);
 
         console.log('LOOKS CARREGADOS:', looks);
 

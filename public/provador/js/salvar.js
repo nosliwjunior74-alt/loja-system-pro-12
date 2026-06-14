@@ -16,7 +16,7 @@ window.AppStore={
   selectedKey:'loja_selected_item',
   async ensureSeed(){
     const inv=await DB.getAll(DB.STORES.ESTOQUE);
-    if(inv.length===0){for(const item of LOJA_SEED) await DB.put(DB.STORES.ESTOQUE,item);}
+  if(inv.length===0){ return; }
     const cli=await DB.getAll(DB.STORES.CLIENTES);
     if(cli.length===0){await DB.put(DB.STORES.CLIENTES,{id:'cliente-demo',nome:'Cliente Exemplo',telefone:'31999990000',obs:'Prefere looks sociais.'});}
     const rest=await DB.getKV('rest_meta');

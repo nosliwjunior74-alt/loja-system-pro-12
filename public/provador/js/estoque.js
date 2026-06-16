@@ -58,15 +58,16 @@ try {
     ];
 console.log('LOJA ATUAL:', lojaAtual);
 console.log('ESTOQUE ENVIADO:', novoEstoque);
-    await fetch('/api/public/store-branding', {
-      method:'PUT',
-      headers:{
-        'Content-Type':'application/json'
-      },
-      body:JSON.stringify({
-        estoque: novoEstoque
-      })
-    });
+   await fetch('/api/public/store-branding', {
+  method:'PUT',
+  credentials:'include',
+  headers:{
+    'Content-Type':'application/json'
+  },
+  body:JSON.stringify({
+    estoque: novoEstoque
+  })
+});
 
   }catch(e){
     console.error('Erro sincronizando estoque online',e);

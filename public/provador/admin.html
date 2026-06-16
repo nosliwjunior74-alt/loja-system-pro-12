@@ -97,7 +97,8 @@ imagemFile.onchange = ()=>{
   r.readAsDataURL(file);
 };
 saveBtn.onclick = async ()=>{
-  const item = {id:itemId.value||'', nome:nome.value.trim(), categoria:categoria.value.trim(), quantidade:Number(quantidade.value||0), preco:preco.value.trim(), imagem:imageData.value||''};
+ const item = {
+    id:itemId.value || ('look_' + Date.now()), nome:nome.value.trim(), categoria:categoria.value.trim(), quantidade:Number(quantidade.value||0), preco:preco.value.trim(), imagem:imageData.value||''};
   if(!item.nome || !item.categoria || !item.imagem){ alert('Preencha nome, categoria e imagem.'); return; }
   await Estoque.save(item);
 alert('SALVOU');

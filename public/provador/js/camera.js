@@ -50,7 +50,7 @@ window.CameraModule={
         ctx.clearRect(0,0,canvas.width,canvas.height);
         ctx.save(); ctx.scale(-1,1); ctx.drawImage(video,-canvas.width,0,canvas.width,canvas.height); ctx.restore();
         if(this.overlayImg&&this.overlayImg.complete){
-          const rect=this.lastRect||{x:canvas.width*0.29,y:canvas.height*0.18,w:canvas.width*0.42,h:canvas.height*0.46};
+          const rect={x:canvas.width*0.29,y:canvas.height*0.18,w:canvas.width*0.42,h:canvas.height*0.46};
           console.log('DESENHANDO LOOK', rect);
           ctx.drawImage(this.overlayImg,rect.x,rect.y,rect.w,rect.h);
         }

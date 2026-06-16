@@ -9,21 +9,18 @@ return typeof valor === "string" ? JSON.parse(valor) : valor;
     return padrao;
   }
 },
- async all(){
-  await AppStore.ensureSeed();
-  const lojaAtual = new URLSearchParams(location.search).get('loja') || localStorage.getItem('loja_slug') || '';
-  if(lojaAtual){
-    try{
-      const r = await fetch(`/api/public/store/${encodeURIComponent(lojaAtual)}`);
-      const data = await r.json();
-      const store = data.store || {};
-      return store.estoque || store.products || store.looks || store.roupas || [];
-    }catch(e){}
-  }
+async all(){
   return await DB.getAll(DB.STORES.ESTOQUE);
 },
-  async visible(){const items=await this.all();return items.filter(i=>Number(i.quantidade)>0);},
-  async byId(id){const items=await this.all();return items.find(i=>i.id===id)||null;},
+ async visible(){
+    const items = await this.all();
+    return items.filter(i => Number(i.quantidade) > 0);
+},
+async byId(id){
+    const items = await this.all();
+    return items.find(i => i.id == id) || null;
+},
+
  async save(item){
 
   await DB.put(DB.STORES.ESTOQUE,item);

@@ -99,7 +99,13 @@ imagemFile.onchange = ()=>{
 saveBtn.onclick = async ()=>{
   const item = {id:itemId.value||'', nome:nome.value.trim(), categoria:categoria.value.trim(), quantidade:Number(quantidade.value||0), preco:preco.value.trim(), imagem:imageData.value||''};
   if(!item.nome || !item.categoria || !item.imagem){ alert('Preencha nome, categoria e imagem.'); return; }
-  await Estoque.save(item); clearForm(); await renderInventory(); alert('Roupa salva e fica gravada offline.'); 
+  await Estoque.save(item);
+alert('SALVOU');
+  clearForm();
+  await renderInventory();
+alert('Roupa salva e fica gravada offline.');
+
+location.reload();
 };
 window.editItem = async (id)=>{
   const item = await Estoque.byId(id); if(!item) return;

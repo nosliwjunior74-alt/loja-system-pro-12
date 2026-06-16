@@ -21,7 +21,7 @@ return typeof valor === "string" ? JSON.parse(valor) : valor;
     }catch(e){}
   }
   return await DB.getAll(DB.STORES.ESTOQUE);
-}
+},
   async visible(){const items=await this.all();return items.filter(i=>Number(i.quantidade)>0);},
   async byId(id){const items=await this.all();return items.find(i=>i.id===id)||null;},
  async save(item){

@@ -65,7 +65,15 @@
           <span id="topbarSub">Sistema pronto para revenda com personalização de nome, subtítulo e logo</span>
         </div>
       </header>
-      <iframe id="appFrame" src="provador/index.html" title="Aplicativo"></iframe>
+      <iframe
+   id="appFrame"
+   src="provador/index.html"
+   onload="
+      if(this.contentWindow.initProvador){
+         this.contentWindow.initProvador();
+      }
+   ">
+</iframe>
     </main>
   </div>
   <script src="js/local-store.js"></script>

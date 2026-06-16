@@ -18,7 +18,19 @@ window.CameraModule={
     const pose=new Pose({locateFile:(file)=>`https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`});
     pose.setOptions({modelComplexity:0,smoothLandmarks:true,enableSegmentation:false,minDetectionConfidence:0.5,minTrackingConfidence:0.5});
     pose.onResults((results)=>{
-      if(!this.poseEnabled || !results.poseLandmarks || !results.poseLandmarks[11] || !results.poseLandmarks[12]){ this.lastRect=null; return; }
+      console.log('POSE RESULTS', results);
+    if(!this.poseEnabled || !results.poseLandmarks || !results.poseLandmarks[11] || !results.poseLandmarks[12]){
+  const canvas = document.getElementById('poseCanvas');
+  if(canvas){
+    this.lastRect = {
+      x: canvas.width * 0.29,
+      y: canvas.height * 0.18,
+      w: canvas.width * 0.42,
+      h: canvas.height * 0.46
+    };
+  }
+  return;
+}
       const canvas=document.getElementById('poseCanvas'); if(!canvas||!canvas.width) return;
       const ls=results.poseLandmarks[11], rs=results.poseLandmarks[12];
       const centerX=((1-ls.x)+(1-rs.x))/2 * canvas.width;

@@ -1,7 +1,8 @@
 
 window.CameraModule={
   overlayImg:null,lastRect:null,poseEnabled:true,
-  async start(videoId='video',canvasId='Canvas',tipId='cameraTip'){
+  
+  async start(videoId='video',canvasId='poseCanvas',tipId='cameraTip')
     const video=document.getElementById(videoId), canvas=document.getElementById(canvasId), tip=document.getElementById(tipId);
     if(!video||!canvas) return;
     try{
@@ -20,7 +21,7 @@ window.CameraModule={
     pose.onResults((results)=>{
       console.log('POSE RESULTS', results);
     if(!this.poseEnabled || !results.poseLandmarks || !results.poseLandmarks[11] || !results.poseLandmarks[12]){
-  const canvas = document.getElementById('Canvas');
+  document.getElementById('poseCanvas')
   if(canvas){
     this.lastRect = {
       x: canvas.width * 0.29,

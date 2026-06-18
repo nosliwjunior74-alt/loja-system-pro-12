@@ -20,7 +20,7 @@ UI.page=Math.min(
     UI.page,
     Math.max(0,Math.ceil(items.length/UI.pageSize)-1));
                               await UI.renderTrack(
-  'listaLooks',
+ 'provadorTrack',
    items,
    'selecionarLook'
 );

@@ -65,7 +65,7 @@ async function nextProvador(){
   UI.page = Math.min(max, UI.page + 1);
 
   await UI.renderTrack(
-      'listaLooks',
+     'provadorTrack',
       items,
       'selecionarLook'
   );
@@ -77,7 +77,7 @@ async function prevProvador(){
   const items = await carregarLooksOnline();
 
   await UI.renderTrack(
-      'listaLooks',
+     'provadorTrack',
       items,
       'selecionarLook'
   );

@@ -284,6 +284,14 @@ console.log('Provador iniciado');
  
 </script>
 
-
+<script>
+window.addEventListener('load', async () => {
+  try {
+    await CameraModule.start();
+  } catch (e) {
+    console.error('Erro ao iniciar câmera:', e);
+  }
+});
+</script>
 </body>
 </html>

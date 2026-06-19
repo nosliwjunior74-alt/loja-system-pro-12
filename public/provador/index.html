@@ -277,31 +277,7 @@ function comprarWhatsApp(){
 }
    
     
-  async function carregarLooksDaLoja(){
-  await AppStore.ensureSeed();
-  const itens = await Estoque.visible();
-
-  const lista = document.getElementById('listaLooks');
-  lista.innerHTML = '';
-
-  const img =
-    item.imagem ||
-    item.image ||
-    item.foto ||
-    item.logo || '';
-    const div = document.createElement('div');
-    div.className = 'look';
-    div.onclick = () => trocarLook(img);
-    div.innerHTML = `
-      <img src="${img}">
-      <span>${item.nome || item.name || 'Look'}</span>
-    `;
-    lista.appendChild(div);
-  });
-}
-
-carregarLooksDaLoja();
-console.log('Provador iniciado');
+  
  
 </script>
 

@@ -224,16 +224,36 @@ console.log(data);
 
   lista.innerHTML = '';
 
-  items.forEach(item=>{
-    const imgSrc = item.image || item.imagem || item.foto || item.logo || item.url || '';
-    if(!imgSrc) return;
+ items.forEach(item => {
 
-    const div = document.createElement('div');
-    div.className = 'look';
-    div.innerHTML = `<img src="${imgSrc}"><span>${item.name || item.nome || 'Look'}</span>`;
-    div.onclick = () => trocarLook(imgSrc);
-    lista.appendChild(div);
-  });
+  const img =
+      item.imagem ||
+      item.image ||
+      item.foto ||
+      item.logo ||
+      '';
+
+  console.log('ITEM:', item);
+
+  if (!img) return;
+
+  const div = document.createElement('div');
+
+  div.className = 'look';
+
+  div.innerHTML = `
+      <img src="${img}" style="width:80px;height:80px;object-fit:cover;border-radius:10px;">
+      <span>${item.nome || item.name || 'Look'}</span>
+  `;
+
+  div.onclick = () => {
+      document.getElementById('roupa').src = img;
+      document.getElementById('roupa').style.display = 'block';
+  };
+
+  lista.appendChild(div);
+
+});
 } 
   carregarLooksDaLoja();
 };
@@ -264,16 +284,17 @@ function comprarWhatsApp(){
   const lista = document.getElementById('listaLooks');
   lista.innerHTML = '';
 
-  itens.forEach(item => {
-    const img = item.image || item.foto || item.logo || '';
-    if(!img) return;
-
+  const img =
+    item.imagem ||
+    item.image ||
+    item.foto ||
+    item.logo || '';
     const div = document.createElement('div');
     div.className = 'look';
     div.onclick = () => trocarLook(img);
     div.innerHTML = `
       <img src="${img}">
-      <span>${item.name || item.nome || 'Look'}</span>
+      <span>${item.nome || item.name || 'Look'}</span>
     `;
     lista.appendChild(div);
   });

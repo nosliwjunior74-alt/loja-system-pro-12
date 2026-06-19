@@ -157,12 +157,24 @@ function suavizar(atual, novo, peso=0.25){
 }
 
 function trocarLook(src){
+
+  if(window.CameraModule){
+      CameraModule.setLook(src);
+  }
+
   roupa.src = src;
-  roupa.style.display = 'block';
+  roupa.style.display = 'none';
+
 }
 
 function limparLook(){
+
   roupa.style.display = 'none';
+
+  if(window.CameraModule){
+      CameraModule.overlayImg = null;
+  }
+
 }
 async function carregarLooksDaLoja() {
 

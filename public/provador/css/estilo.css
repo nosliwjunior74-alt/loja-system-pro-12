@@ -91,9 +91,15 @@ height:min(980px,96dvh);
   background:rgba(255,255,255,.10);padding:9px 11px;border-radius:12px;border:1px solid rgba(255,255,255,.14);backdrop-filter:blur(4px)
 }
 .hero,.camera-area{
-  position:relative;
-  overflow:hidden;
-  display:flex;align-items:flex-end;justify-content:center;
+    position:relative;
+    overflow:hidden;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    min-height:100dvh;
+}
+.camera-area{
+    height:100dvh;
 }
 .hero::after,.camera-area::after{
   content:"";

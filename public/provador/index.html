@@ -146,7 +146,9 @@ button{
     💬 Comprar no WhatsApp
   </button>
 </div>
-
+<button id="btnLooks" class="btn-looks" onclick="toggleLooks()">
+👗 LOOKS
+</button>
   <div class="panel">
     <h2>Looks</h2>
 <div id="listaLooks"></div>
@@ -273,6 +275,17 @@ window.addEventListener('load', async () => {
     console.error('Erro ao iniciar câmera:', e);
   }
 });
+</script>
+  <script>
+function toggleLooks(){
+    const painel = document.querySelector('.panel');
+
+    if(painel.style.display === 'none' || painel.style.display === ''){
+        painel.style.display = 'block';
+    } else {
+        painel.style.display = 'none';
+    }
+}
 </script>
 </body>
 </html>

@@ -18,12 +18,12 @@
 <canvas id="poseCanvas" class="overlay-canvas"></canvas>
 <div class="hint" id="cameraTip">Abrindo câmera...</div>
 </section>
-<section class="carousel" style="display:none">
+<section id="looksPanel" class="carousel" style="display:none;">
 <button class="arrow" onclick="prevProvador()">‹</button>
 <div class="track" id="provadorTrack"></div>
 <button class="arrow" onclick="nextProvador()">›</button>
 </section>
-  <button id="btnLooks" class="btn-looks">
+  <button id="btnLooks" class="btn-looks" onclick="toggleLooks()">
 👕 LOOKS
 </button>
 <section class="actions">
@@ -37,5 +37,19 @@
 <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
 <script src="js/salvar.js"></script><script src="js/estoque.js"></script><script src="js/camera.js"></script><script src="js/whatsapp.js"></script><script src="js/provador.js"></script>
 <script>initProvador();</script><script src="../shared/brand-sync.js"></script>
+ <script>
+function toggleLooks() {
+    const painel = document.getElementById('looksPanel');
+
+    if (
+        painel.style.display === 'none' ||
+        painel.style.display === ''
+    ) {
+        painel.style.display = 'grid';
+    } else {
+        painel.style.display = 'none';
+    }
+}
+</script>
 <script src="js/client-neutral-brand.js"></script>
 </body></html>

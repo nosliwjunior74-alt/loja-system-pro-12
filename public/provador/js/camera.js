@@ -14,8 +14,11 @@ window.CameraModule = {
     }
 
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { width: { ideal: 720 }, height: { ideal: 1280 }, facingMode: 'user' },
+     const stream = await navigator.mediaDevices.getUserMedia({
+  video: {
+    facingMode: 'user'
+  },
+ 
         audio: false
       });
 

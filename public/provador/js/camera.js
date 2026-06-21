@@ -92,8 +92,8 @@ window.CameraModule = {
           await pose.send({ image: video });
         } catch (e) {}
       },
-      width: 720,
-      height: 1280
+     width: 640,
+height: 480
     });
 
     mpCamera.start();

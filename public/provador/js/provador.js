@@ -54,6 +54,8 @@ async function selecionarLook(id){
   if(badge) badge.textContent = item.nome;
 
   console.log('LOOK SELECIONADO:', item);
+    const painel = document.getElementById('looksPanel');
+if (painel) painel.style.display = 'none';
 
   CameraModule.setLook(item.imagem);
 }
@@ -73,6 +75,7 @@ async function nextProvador(){
       items,
       'selecionarLook'
   );
+    document.getElementById('looksPanel').style.display = 'none';
 }
 async function prevProvador(){
 

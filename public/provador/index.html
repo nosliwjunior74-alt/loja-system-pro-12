@@ -37,16 +37,40 @@ video,canvas{
   filter:drop-shadow(0 15px 30px rgba(0,0,0,.45));
 }
 .panel{
-  position:absolute;
-  right:24px;
-  top:24px;
-  width:280px;
-  z-index:20;
-  background:rgba(0,0,0,.55);
-  border:1px solid rgba(255,255,255,.25);
-  border-radius:22px;
-  padding:18px;
-  backdrop-filter:blur(12px);
+    position:absolute;
+    right:24px;
+    top:24px;
+    width:280px;
+    z-index:20;
+
+    background:rgba(0,0,0,.55);
+    border:1px solid rgba(255,255,255,.25);
+    border-radius:22px;
+    padding:18px;
+
+    backdrop-filter:blur(12px);
+
+    display:none;
+}
+  .btn-looks{
+    position:fixed;
+    right:20px;
+    bottom:20px;
+    z-index:9999;
+
+    background:#ff3ea5;
+    color:#fff;
+
+    border:none;
+    border-radius:999px;
+
+    padding:14px 20px;
+    font-size:16px;
+    font-weight:700;
+
+    cursor:pointer;
+
+    box-shadow:0 6px 20px rgba(0,0,0,.35);
 }
 .panel h2{
   margin:0 0 12px;

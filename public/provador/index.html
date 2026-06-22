@@ -212,9 +212,87 @@ async function carregarLooksDaLoja() {
 
   if (!lista) return;
 
-  lista.innerHTML = '';
+ lista.innerHTML = '';
 
-  items.forEach(item => {
+const categorias = {};
+
+items.forEach(item => {
+
+    const categoria =
+        item.categoria ||
+        item.category ||
+        'Outros';
+
+    if (!categorias[categoria]) {
+        categorias[categoria] = [];
+    }
+
+    categorias[categoria].push(item);
+});
+
+Object.keys(categorias).forEach(categoria => {
+
+    const titulo = document.createElement('h3');
+
+    titulo.innerText = categoria;
+
+    titulo.style.color = '#fff';
+    titulo.style.margin = '10px 0';
+
+    lista.appendChild(titulo);
+
+    const carrossel = document.createElement('div');
+
+    carrossel.style.display = 'flex';
+    carrossel.style.gap = '10px';
+    carrossel.style.overflowX = 'auto';
+    carrossel.style.paddingBottom = '10px';
+
+    categorias[categoria].forEach(item => {
+
+        const img =
+            item.imagem ||
+            item.image ||
+            item.foto ||
+            item.logo ||
+            '';
+
+        if (!img) return;
+
+        const card = document.createElement('div');
+
+        card.style.minWidth = '90px';
+        card.style.cursor = 'pointer';
+
+        card.innerHTML = `
+            <img src="${img}"
+                 style="
+                 width:80px;
+                 height:80px;
+                 object-fit:cover;
+                 border-radius:10px;
+                 border:2px solid white;">
+        `;
+
+        card.onclick = () => {
+
+            trocarLook(img);
+
+            const painel =
+                document.querySelector('.panel');
+
+            if (painel) {
+                painel.style.display = 'none';
+            }
+        };
+
+        carrossel.appendChild(card);
+
+    });
+
+    lista.appendChild(carrossel);
+
+});
 
     const img =
       item.imagem ||

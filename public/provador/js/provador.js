@@ -30,7 +30,7 @@ alert('LOOKS CARREGADOS: ' + items.length);
 if (window.CameraModule) {
     CameraModule.start();
 }
-await carregarClientesSelect();}
+carregarClientesSelect();
 async function selecionarLook(id){
 
   const looks = await carregarLooksOnline();

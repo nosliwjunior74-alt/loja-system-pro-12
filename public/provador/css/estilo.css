@@ -177,10 +177,11 @@ margin:0 auto;background:rgba(22,15,22,.94);border:1px solid var(--line);border-
 }
 .grid{
   display:grid;
-  grid-template-columns:500px 1fr;
+  grid-template-columns:600px 600px;
   gap:32px;
-   margin-top:18px;
+  margin-top:18px;
   align-items:start;
+}
 
 .panel{background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:18px;padding:16px}
 .panel{

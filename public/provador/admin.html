@@ -11,7 +11,50 @@
 <h2 style="margin-top:0">Cadastro de roupas</h2>
 <input type="hidden" id="itemId"><input type="hidden" id="imageData">
 <label>Nome da roupa</label><input id="nome" placeholder="Ex.: Camisa Branca Social">
-<div class="row"><div><label>Categoria</label><input id="categoria" placeholder="Ex.: Camisas"></div><div><label>Quantidade</label><input id="quantidade" type="number" min="0" value="1"></div></div>
+<div class="row"><div><label>Categoria</label>
+<select id="categoria">
+    <option value="Camisas">Camisas</option>
+    <option value="Blusas">Blusas</option>
+    <option value="Camisetas">Camisetas</option>
+    <option value="Vestidos">Vestidos</option>
+    <option value="Saias">Saias</option>
+    <option value="Shorts">Shorts</option>
+    <option value="Calças">Calças</option>
+    <option value="Conjuntos">Conjuntos</option>
+    <option value="Jaquetas">Jaquetas</option>
+    <option value="Casacos">Casacos</option>
+    <option value="Polos">Polos</option>
+    <option value="Jalecos">Jalecos</option>
+    <option value="Uniformes">Uniformes</option>
+    <option value="Infantil">Infantil</option>
+    <option value="Acessórios">Acessórios</option>
+    <option value="Outros">Outros</option>
+</select>
+
+<label>Subcategoria</label>
+<input id="subcategoria" placeholder="Ex.: Social, Polo, Festa">
+
+<label>Cor</label>
+<input id="cor" placeholder="Ex.: Branco, Preto, Azul">
+
+<label>Tamanho</label>
+<select id="tamanho">
+    <option>P</option>
+    <option>M</option>
+    <option>G</option>
+    <option>GG</option>
+</select>
+
+<label>Marca</label>
+<div>
+<label>Marca</label>
+<input id="marca" placeholder="Marca da peça">
+</div>
+
+<div>
+<label>Quantidade</label>
+<input id="quantidade" type="number" min="0" value="1">
+</div>
 <label>Preço</label><input id="preco" placeholder="Ex.: 99,90">
 <label>Imagem da roupa</label><input id="imagemFile" type="file" accept="image/*">
 <div style="margin-top:12px"><img id="previewImg" class="preview" src="" alt=""></div>

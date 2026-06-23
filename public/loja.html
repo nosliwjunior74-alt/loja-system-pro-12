@@ -201,7 +201,15 @@ async function carregarLojaPublica(){
     const data = await resp.json();
 
     const store = data.store || {};
-    const items = store.estoque || store.looks || store.products || store.roupas || [];
+ let items = store.estoque || store.looks || store.products || store.roupas || [];
+
+if (typeof items === 'string') {
+  try {
+    items = JSON.parse(items);
+  } catch (e) {
+    items = [];
+  }
+}
 
     listaProdutos.innerHTML = '';
 

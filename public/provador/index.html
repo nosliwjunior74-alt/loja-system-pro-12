@@ -294,7 +294,7 @@ async function carregarLooksDaLoja() {
     lista.innerHTML = '<div style="color:white">Erro ao carregar looks</div>';
   }
 }
-  carregarLooksDaLoja();
+  
 
 </script>
   
@@ -324,6 +324,7 @@ function comprarWhatsApp(){
 window.addEventListener('load', async () => {
   try {
     await CameraModule.start();
+    carregarLooksDaLoja();
   } catch (e) {
     console.error('Erro ao iniciar câmera:', e);
   }

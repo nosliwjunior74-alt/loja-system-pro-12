@@ -63,7 +63,7 @@ window.CameraModule = {
     });
 
     pose.onResults(results => {
-      console.log('POSE:', results.poseLandmarks);
+     // console.log('POSE:', results.poseLandmarks);
       if (!this.poseEnabled || !results.poseLandmarks || !results.poseLandmarks[11] || !results.poseLandmarks[12]) {
         return;
       }

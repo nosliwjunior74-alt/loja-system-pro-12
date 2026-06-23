@@ -201,15 +201,36 @@ async function carregarLojaPublica(){
     const data = await resp.json();
 
     const store = data.store || {};
- let items = store.estoque || store.looks || store.products || store.roupas || [];
+let items = [];
 
-if (typeof items === 'string') {
-  try {
-    items = JSON.parse(items);
-  } catch (e) {
-    items = [];
+try {
+  const campos = [
+    store.estoque,
+    store.looks,
+    store.products,
+    store.roupas
+  ];
+
+  for (const campo of campos) {
+    if (!campo) continue;
+
+    let valor = campo;
+
+    if (typeof valor === 'string') {
+      valor = JSON.parse(valor);
+    }
+
+    if (Array.isArray(valor)) {
+      items = valor;
+      break;
+    }
   }
+} catch (e) {
+  console.error('Erro ao converter itens:', e);
+  items = [];
 }
+
+console.log('ITEMS FINAL:', items, Array.isArray(items)); 
 console.log("ESTOQUE:", store.estoque, typeof store.estoque);
 console.log("LOOKS:", store.looks, typeof store.looks);
 console.log("PRODUCTS:", store.products, typeof store.products);

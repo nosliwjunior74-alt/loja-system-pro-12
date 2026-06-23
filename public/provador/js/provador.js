@@ -28,7 +28,7 @@ UI.page=Math.min(
 alert('LOOKS CARREGADOS: ' + items.length);
                               const selected=AppStore.getSelected()||items[0]; if(selected) await selecionarLook(selected.id); }
 if (window.CameraModule) {
-    await CameraModule.start();
+    CameraModule.start();
 }
 await carregarClientesSelect();}
 async function selecionarLook(id){

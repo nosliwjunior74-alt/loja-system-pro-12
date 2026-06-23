@@ -203,71 +203,93 @@ function limparLook(){
 
 }
 async function carregarLooksDaLoja() {
-  await AppStore.ensureSeed();
-
-  const items = await Estoque.visible();
+  const loja = pegarLojaAtual();
   const lista = document.getElementById('listaLooks');
-
   if (!lista) return;
 
   lista.innerHTML = '';
 
-  if (!items || items.length === 0) {
-    lista.innerHTML = '<div style="color:white">Nenhum look encontrado</div>';
-    return;
-  }
+  try {
+    const resp = await fetch('/api/public/store/' + encodeURIComponent(loja));
+    const data = await resp.json();
+    const store = data.store || {};
 
-  const categorias = {};
+    let items = [];
 
-  items.forEach(item => {
-    const categoria = item.categoria || 'Outros';
+    const campos = [store.estoque, store.looks, store.products, store.roupas];
 
-    if (!categorias[categoria]) categorias[categoria] = [];
+    for (const campo of campos) {
+      if (!campo) continue;
 
-    categorias[categoria].push(item);
-  });
+      let valor = campo;
 
-  Object.keys(categorias).forEach(categoria => {
-    const bloco = document.createElement('div');
+      if (typeof valor === 'string') {
+        valor = JSON.parse(valor);
+      }
 
-    bloco.innerHTML = `
-      <h3 style="color:#ff4da6;margin:12px 0 8px;font-size:15px;">
-        ${categoria}
-      </h3>
-      <div style="display:flex;gap:10px;overflow-x:auto;padding-bottom:10px;" id="cat-${categoria}"></div>
-    `;
+      if (Array.isArray(valor)) {
+        items = valor;
+        break;
+      }
+    }
 
-    lista.appendChild(bloco);
+    if (!items.length) {
+      lista.innerHTML = '<div style="color:white">Nenhum look encontrado</div>';
+      return;
+    }
 
-    const carrossel = bloco.querySelector('div');
+    const categorias = {};
 
-    categorias[categoria].forEach(item => {
-      const img = item.imagem || item.image || item.foto || item.logo || '';
+    items.forEach(item => {
+      const categoria = item.categoria || item.category || 'Outros';
+      if (!categorias[categoria]) categorias[categoria] = [];
+      categorias[categoria].push(item);
+    });
 
-      if (!img) return;
+    Object.keys(categorias).forEach(categoria => {
+      const bloco = document.createElement('div');
 
-      const card = document.createElement('div');
-      card.style.minWidth = '80px';
-      card.style.cursor = 'pointer';
-      card.style.textAlign = 'center';
-      card.style.color = 'white';
-      card.style.fontSize = '12px';
-
-      card.innerHTML = `
-        <img src="${img}" style="width:70px;height:70px;object-fit:cover;border-radius:12px;background:white;">
-        <div>${item.nome || item.name || 'Look'}</div>
+      bloco.innerHTML = `
+        <h3 style="color:#ff4da6;margin:12px 0 8px;font-size:15px;">
+          ${categoria}
+        </h3>
+        <div style="display:flex;gap:10px;overflow-x:auto;padding-bottom:10px;"></div>
       `;
 
-      card.onclick = () => {
-        trocarLook(img);
+      lista.appendChild(bloco);
 
-        const painel = document.querySelector('.panel');
-        if (painel) painel.style.display = 'none';
-      };
+      const carrossel = bloco.querySelector('div');
 
-      carrossel.appendChild(card);
+      categorias[categoria].forEach(item => {
+        const img = item.imagem || item.image || item.foto || item.logo || '';
+        if (!img) return;
+
+        const card = document.createElement('div');
+        card.style.minWidth = '80px';
+        card.style.cursor = 'pointer';
+        card.style.textAlign = 'center';
+        card.style.color = 'white';
+        card.style.fontSize = '12px';
+
+        card.innerHTML = `
+          <img src="${img}" style="width:70px;height:70px;object-fit:cover;border-radius:12px;background:white;">
+          <div>${item.nome || item.name || item.titulo || 'Look'}</div>
+        `;
+
+        card.onclick = () => {
+          trocarLook(img);
+          const painel = document.querySelector('.panel');
+          if (painel) painel.style.display = 'none';
+        };
+
+        carrossel.appendChild(card);
+      });
     });
-  });
+
+  } catch (e) {
+    console.error('Erro ao carregar looks da loja:', e);
+    lista.innerHTML = '<div style="color:white">Erro ao carregar looks</div>';
+  }
 }
   carregarLooksDaLoja();
 

@@ -169,8 +169,8 @@ height:min(980px,96dvh);
 }
 .grid{
   display:grid;
-  grid-template-columns:minmax(360px,420px) minmax(520px,1fr);
-  gap:28px;
+  grid-template-columns:420px 1fr;
+  gap:32px;
   margin-top:18px;
   align-items:start;
 }
@@ -179,8 +179,12 @@ height:min(980px,96dvh);
   min-width:0;
 }
 
+
 .inventory{
   width:100%;
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(260px,1fr));
+  gap:16px;
 }
 label{display:block;font-size:14px;color:var(--muted);margin:10px 0 6px}
 input,textarea,select{

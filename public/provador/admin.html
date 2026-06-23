@@ -97,21 +97,35 @@
 <script src="js/salvar.js"></script><script src="js/estoque.js"></script>
 <script>
 async function renderInventory(){
-  await AppStore.ensureSeed();
   const inv = document.getElementById('inventory');
   const items = await Estoque.all();
+
   inv.innerHTML = items.map(i=>`
     <div class="item">
       <img src="${i.imagem}" alt="${i.nome}">
+
       <h3 style="margin:10px 0 4px">${i.nome}</h3>
-      <div class="muted">${i.categoria}</div>
-      <div class="badge2">Estoque: ${i.quantidade}</div> ${i.preco?`<div class="badge2">R$ ${i.preco}</div>`:''}
+
+      <div class="muted">${i.categoria || ''}</div>
+
+      <div class="muted">
+        ${i.subcategoria || ''}
+        ${i.cor ? ' • ' + i.cor : ''}
+        ${i.tamanho ? ' • ' + i.tamanho : ''}
+      </div>
+
+      <div class="muted">${i.marca || ''}</div>
+
+      <div class="badge2">Estoque: ${i.quantidade}</div>
+      ${i.preco ? `<div class="badge2">R$ ${i.preco}</div>` : ''}
+
       <div class="item-actions">
         <button class="small-btn" onclick="editItem('${i.id}')">Editar</button>
         <button class="small-btn danger" onclick="removeItem('${i.id}')">Excluir</button>
       </div>
-    </div>`).join('');
-}
+    </div>
+  `).join('');
+}    
 async function renderCustomers(){
   const list = document.getElementById('customers');
   const customers = await Estoque.customers();
@@ -140,8 +154,20 @@ imagemFile.onchange = ()=>{
   r.readAsDataURL(file);
 };
 saveBtn.onclick = async ()=>{
- const item = {
-    id:itemId.value || ('look_' + Date.now()), nome:nome.value.trim(), categoria:categoria.value.trim(), quantidade:Number(quantidade.value||0), preco:preco.value.trim(), imagem:imageData.value||''};
+const item = {
+  id: itemId.value || ('look_' + Date.now()),
+  nome: nome.value.trim(),
+
+  categoria: categoria.value,
+  subcategoria: subcategoria.value.trim(),
+  cor: cor.value.trim(),
+  tamanho: tamanho.value,
+  marca: marca.value.trim(),
+
+  quantidade: Number(quantidade.value || 0),
+  preco: preco.value.trim(),
+  imagem: imageData.value || ''
+};
   if(!item.nome || !item.categoria || !item.imagem){ alert('Preencha nome, categoria e imagem.'); return; }
   await Estoque.save(item);
 alert('SALVOU');
@@ -153,7 +179,22 @@ location.reload();
 };
 window.editItem = async (id)=>{
   const item = await Estoque.byId(id); if(!item) return;
-  itemId.value=item.id; nome.value=item.nome; categoria.value=item.categoria; quantidade.value=item.quantidade; preco.value=item.preco||''; imageData.value=item.imagem; previewImg.src=item.imagem; saveBtn.textContent='Atualizar roupa';
+itemId.value = item.id;
+nome.value = item.nome;
+
+categoria.value = item.categoria || '';
+subcategoria.value = item.subcategoria || '';
+cor.value = item.cor || '';
+tamanho.value = item.tamanho || 'M';
+marca.value = item.marca || '';
+
+quantidade.value = item.quantidade;
+preco.value = item.preco || '';
+
+imageData.value = item.imagem;
+previewImg.src = item.imagem;
+
+saveBtn.textContent = 'Atualizar roupa';
 };
 window.removeItem = async (id)=>{ if(!confirm('Excluir esta roupa?')) return; await Estoque.remove(id); await renderInventory(); };
 

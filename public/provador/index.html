@@ -204,6 +204,7 @@ function limparLook(){
 }
 async function carregarLooksDaLoja() {
   const loja = pegarLojaAtual();
+  console.log('LOJA ATUAL:', loja);
   const lista = document.getElementById('listaLooks');
   if (!lista) return;
 
@@ -211,7 +212,9 @@ async function carregarLooksDaLoja() {
 
   try {
     const resp = await fetch('/api/public/store/' + encodeURIComponent(loja));
+    console.log('STATUS API:', resp.status);
     const data = await resp.json();
+    console.log('DATA API:', data);
     const store = data.store || {};
 
     let items = [];

@@ -226,9 +226,13 @@ async function carregarLooksDaLoja() {
 
       let valor = campo;
 
-      if (typeof valor === 'string') {
-        valor = JSON.parse(valor);
-      }
+     if (
+   typeof valor === 'string' &&
+   valor !== 'undefined' &&
+   valor.trim() !== ''
+) {
+   valor = JSON.parse(valor);
+}
 
       if (Array.isArray(valor)) {
         items = valor;

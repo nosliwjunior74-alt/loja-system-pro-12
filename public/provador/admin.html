@@ -11,7 +11,8 @@
 <h2 style="margin-top:0">Cadastro de roupas</h2>
 <input type="hidden" id="itemId"><input type="hidden" id="imageData">
 <label>Nome da roupa</label><input id="nome" placeholder="Ex.: Camisa Branca Social">
-<div class="row"><div><label>Categoria</label>
+<div class="row"><div>
+    <label>Categoria</label>
 <select id="categoria">
     <option value="Camisas">Camisas</option>
     <option value="Blusas">Blusas</option>
@@ -46,15 +47,10 @@
 </select>
 
 <label>Marca</label>
-<div>
-<label>Marca</label>
 <input id="marca" placeholder="Marca da peça">
-</div>
 
-<div>
 <label>Quantidade</label>
 <input id="quantidade" type="number" min="0" value="1">
-</div>
 <label>Preço</label><input id="preco" placeholder="Ex.: 99,90">
 <label>Imagem da roupa</label><input id="imagemFile" type="file" accept="image/*">
 <div style="margin-top:12px"><img id="previewImg" class="preview" src="" alt=""></div>

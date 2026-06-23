@@ -176,13 +176,11 @@ margin:0 auto;background:rgba(22,15,22,.94);border:1px solid var(--line);border-
   border:1px solid rgba(255,255,255,.10)
 }
 .grid{
-  display:grid;
-  grid-template-columns:600px 600px;
-  gap:32px;
-  margin-top:18px;
-  align-items:start;
+    display:grid;
+    grid-template-columns:550px 1fr;
+    gap:24px;
+    align-items:start;
 }
-
 .panel{background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:18px;padding:16px}
 .panel{
   min-width:0;
@@ -190,11 +188,12 @@ margin:0 auto;background:rgba(22,15,22,.94);border:1px solid var(--line);border-
 
 
 .inventory{
-  width:100%;
-  display:grid;
-  grid-template-columns:repeat(auto-fill,minmax(260px,1fr));
-  gap:16px;
+    width:100%;
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(220px,1fr));
+    gap:12px;
 }
+
 label{display:block;font-size:14px;color:var(--muted);margin:10px 0 6px}
 input,textarea,select{
   width:100%;padding:12px;border-radius:12px;border:1px solid rgba(255,255,255,.12);background:#2b2230;color:#fff

@@ -31,6 +31,10 @@ async byId(id){
       new URLSearchParams(location.search).get('loja') ||
       localStorage.getItem('loja_slug') ||
      ''; 
+    if (!lojaAtual) {
+  console.error('Nenhuma loja detectada.');
+  return;
+}
 console.log('LOJA DETECTADA:', lojaAtual);
     const r = await fetch(`/api/public/store/${encodeURIComponent(lojaAtual)}`);
 

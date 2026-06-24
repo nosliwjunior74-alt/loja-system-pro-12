@@ -197,6 +197,22 @@ app.post('/api/admin/stores', requireAdminApi, (req,res)=>{ const store = create
 app.put('/api/admin/stores/:id', requireAdminApi, (req,res)=>{ const store = updateStore(req.params.id, req.body || {}, baseUrl(req)); if(!store) return res.status(404).json({ error:'Loja não encontrada' }); res.json({ store }); });
 app.delete('/api/admin/stores/:id', requireAdminApi, (req,res)=>{ deleteStore(req.params.id); const stores = listStores(baseUrl(req)); req.session.activeStoreId = stores[0]?.id || ''; res.json({ ok:true, activeStoreId:req.session.activeStoreId }); });
 app.post('/api/admin/stores/:id/activate', requireAdminApi, (req,res)=>{ const store = getStoreById(req.params.id, baseUrl(req)); if(!store) return res.status(404).json({ error:'Loja não encontrada' }); req.session.activeStoreId = store.id; res.json({ ok:true, activeStoreId:store.id, store }); });
+app.post('/api/admin/stores/:id/select', requireAdminApi, (req,res)=>{
+  const store = getStoreById(req.params.id, baseUrl(req));
+
+  if(!store){
+    return res.status(404).json({
+      error:'Loja não encontrada'
+    });
+  }
+
+  req.session.activeStoreId = store.id;
+
+  res.json({
+    ok:true,
+    activeStoreId: store.id
+  });
+});
 app.get('/api/admin/finance/summary', requireAdminApi, (req,res)=> res.json(getFinanceSummary()));
 app.get('/api/admin/finance/chart', requireAdminApi, (req,res)=> res.json(getFinanceChart(6)));
 app.get('/api/admin/payments', requireAdminApi, (req,res)=> res.json({ payments: listPayments({ storeId: req.query.storeId || '', status: req.query.status || '' }) }));

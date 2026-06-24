@@ -156,11 +156,24 @@ function getStoreById(id, baseUrl=''){
 
   const store = rowToStore(row, baseUrl);
 
-  store.estoque = JSON.parse(row.estoque || '[]');
-  store.looks = JSON.parse(row.looks || '[]');
-  store.products = JSON.parse(row.products || '[]');
-  store.roupas = JSON.parse(row.roupas || '[]');
+ function parseSafe(v){
+  try{
+    let r = JSON.parse(v || '[]');
 
+    if(typeof r === 'string'){
+      r = JSON.parse(r);
+    }
+
+    return Array.isArray(r) ? r : [];
+  }catch{
+    return [];
+  }
+}
+
+store.estoque = parseSafe(row.estoque);
+store.looks = parseSafe(row.looks);
+store.products = parseSafe(row.products);
+store.roupas = parseSafe(row.roupas);
   return store;
 }
 function getStoreBySlug(slug, baseUrl=''){
@@ -172,10 +185,10 @@ function getStoreBySlug(slug, baseUrl=''){
 
   const store = rowToStore(row, baseUrl);
 
-  store.estoque = JSON.parse(row.estoque || '[]');
-  store.looks = JSON.parse(row.looks || '[]');
-  store.products = JSON.parse(row.products || '[]');
-  store.roupas = JSON.parse(row.roupas || '[]');
+store.estoque = parseSafe(row.estoque);
+store.looks = parseSafe(row.looks);
+store.products = parseSafe(row.products);
+store.roupas = parseSafe(row.roupas);
 
   return store;
 }

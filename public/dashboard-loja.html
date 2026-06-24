@@ -194,13 +194,15 @@ try {
   session = null;
 }
 
-const stores = await LocalStorageManager.list();
+let store = null;
 
-const store = (stores || []).find(
-  s => s.slug === slug
-);
+if (slug) {
+  const resp = await fetch('/api/public/store/' + encodeURIComponent(slug));
+  const data = await resp.json();
+  store = data.store || null;
+}
 
-if(!session || !store){
+if(!store){
  console.log('Sessão não encontrada');
   return;
 }

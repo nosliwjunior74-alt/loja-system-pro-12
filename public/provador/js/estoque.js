@@ -64,7 +64,9 @@ if (typeof estoqueAtual === 'string') {
 if (!Array.isArray(estoqueAtual)) {
   estoqueAtual = [];
 }
-
+console.log('ITEM SALVO:', item);
+console.log('TIPO ITEM:', typeof item);
+console.log('ESTOQUE ATUAL:', estoqueAtual);
     const novoEstoque = [
       ...estoqueAtual.filter(i => i.id !== item.id),
       item

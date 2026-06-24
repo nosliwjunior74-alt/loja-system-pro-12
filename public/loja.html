@@ -192,8 +192,15 @@
 async function carregarLojaPublica(){
   try{
     const params = new URLSearchParams(location.search);
-    const slug = params.get('loja') || params.get('slug') || '';
-
+    const slug =
+  params.get('loja') ||
+  params.get('slug') ||
+  localStorage.getItem('loja_slug') ||
+  '';
+if (!slug) {
+  console.error('Nenhuma loja encontrada');
+  return;
+}
     nomeLoja.textContent = slug ? 'Loja ' + slug : 'Loja Online';
     btnProvador.href = '/provador/index.html?loja=' + encodeURIComponent(slug);
 

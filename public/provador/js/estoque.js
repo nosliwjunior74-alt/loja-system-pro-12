@@ -31,7 +31,7 @@ async byId(id){
       new URLSearchParams(location.search).get('loja') ||
       localStorage.getItem('loja_slug') ||
      ''; 
-
+console.log('LOJA DETECTADA:', lojaAtual);
     const r = await fetch(`/api/public/store/${encodeURIComponent(lojaAtual)}`);
 
     const texto = await r.text();

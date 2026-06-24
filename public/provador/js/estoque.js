@@ -50,7 +50,20 @@ try {
 
     const store = data.store || {};
 
-    const estoqueAtual = store.estoque || [];
+  let estoqueAtual = store.estoque || [];
+
+if (typeof estoqueAtual === 'string') {
+  try {
+    estoqueAtual = JSON.parse(estoqueAtual);
+  } catch (e) {
+    console.error('Erro ao converter estoque:', e);
+    estoqueAtual = [];
+  }
+}
+
+if (!Array.isArray(estoqueAtual)) {
+  estoqueAtual = [];
+}
 
     const novoEstoque = [
       ...estoqueAtual.filter(i => i.id !== item.id),

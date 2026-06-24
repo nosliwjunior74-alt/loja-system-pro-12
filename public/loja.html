@@ -217,8 +217,14 @@ try {
     let valor = campo;
 
     if (typeof valor === 'string') {
-      valor = JSON.parse(valor);
-    }
+  console.log('CAMPO:', valor, typeof valor);
+
+  try {
+    valor = JSON.parse(valor);
+  } catch {
+    continue;
+  }
+}
 
     if (Array.isArray(valor)) {
       items = valor;

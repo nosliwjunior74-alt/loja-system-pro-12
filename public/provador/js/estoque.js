@@ -73,6 +73,11 @@ console.log('ESTOQUE ATUAL:', estoqueAtual);
     ];
 console.log('LOJA ATUAL:', lojaAtual);
 console.log('ESTOQUE ENVIADO:', novoEstoque);
+    console.log('PAYLOAD FINAL:',
+  JSON.stringify({
+    estoque: novoEstoque
+  }, null, 2)
+);
    await fetch('/api/public/store-branding', {
   method:'PUT',
   credentials:'include',

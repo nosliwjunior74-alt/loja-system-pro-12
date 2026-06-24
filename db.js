@@ -224,14 +224,7 @@ updated_at=@updated_at WHERE id=@id`).run({
     email: payload.email ?? current.email, phone: payload.phone ?? current.phone, login: payload.login ?? current.login, password_hash: passwordHash,
     status: payload.status === 'inativo' ? 'inativo' : (payload.status === 'degustacao' ? 'degustacao' : (payload.status ?? current.status)), plan: payload.plan ?? current.plan,
     expires_at: expiresAt || null, license_key: licenseKey, custom_domain: payload.customDomain ?? current.custom_domain,
-    const fixArray = v => {
-  if (typeof v === 'string') {
-    try {
-      v = JSON.parse(v);
-    } catch(e){}
-  }
-  return Array.isArray(v) ? v : [];
-};
+   
 estoque: JSON.stringify(payload.estoque ?? current.estoque ?? []),
 products: JSON.stringify(payload.products ?? current.products ?? []),
 looks: JSON.stringify(payload.looks ?? current.looks ?? []),

@@ -120,12 +120,25 @@ async function carregarLooksOnline() {
             return [];
         }
 
-        const looks =
-    result.store.estoque ||
-    result.store.looks ||
-    result.store.products ||
-    result.store.roupas ||
-    [];
+      let looks =
+  result.store.looks ||
+  result.store.estoque ||
+  result.store.products ||
+  result.store.roupas ||
+  [];
+
+if (typeof looks === 'string') {
+  try {
+    looks = JSON.parse(looks);
+  } catch (e) {
+    console.error('Erro ao converter looks:', e);
+    looks = [];
+  }
+}
+
+if (!Array.isArray(looks)) {
+  looks = [];
+}
         console.log('DADOS COMPLETOS:', looks);
 
         console.log('LOOKS CARREGADOS:', looks);

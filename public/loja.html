@@ -226,13 +226,21 @@ try {
     if (typeof valor === 'string') {
   console.log('CAMPO:', valor, typeof valor);
 
+  if (
+    valor === 'undefined' ||
+    valor === 'null' ||
+    valor.trim() === ''
+  ) {
+    continue;
+  }
+
   try {
     valor = JSON.parse(valor);
-  } catch {
+  } catch (e) {
+    console.error('Erro JSON:', valor);
     continue;
   }
 }
-
     if (Array.isArray(valor)) {
       items = valor;
       break;

@@ -198,12 +198,47 @@ function getStoreRowById(id){ const row = db.prepare('SELECT * FROM stores WHERE
 function createStore(payload, baseUrl=''){
   const id = nanoid(); const now = new Date().toISOString(); const slug = uniqueSlug(payload.slug || payload.name || 'loja');
   const expiresAt = payload.expiresAt || addDays(todayStr(), 30); const licenseKey = generateLicenseKey(id, slug, expiresAt);
-  db.prepare(`INSERT INTO stores (id,slug,name,sub,color,logo,email,phone,login,password_hash,status,plan,expires_at,license_key,custom_domain,created_at,updated_at)
-  VALUES (@id,@slug,@name,@sub,@color,@logo,@email,@phone,@login,@password_hash,@status,@plan,@expires_at,@license_key,@custom_domain,@created_at,@updated_at)`).run({
+  db.prepare(`INSERT INTO stores (
+id,
+slug,
+name,
+sub,
+color,
+logo,
+email,
+phone,
+login,
+password_hash,
+status,
+plan,
+expires_at,
+license_key,
+custom_domain,
+estoque,
+products,
+looks,
+roupas,
+created_at,
+updated_at
+)
+  VALUES (
+@id,@slug,@name,@sub,@color,@logo,@email,@phone,@login,
+@password_hash,@status,@plan,@expires_at,@license_key,
+@custom_domain,
+@estoque,
+@products,
+@looks,
+@roupas,
+@created_at,
+@updated_at
+)`).run({
     id, slug, name: payload.name || 'Sua Loja', sub: payload.sub || 'Dashboard Integrado Multi-Loja', color: payload.color || '#e33d8f', logo: payload.logo || 'assets/default-logo.svg',
     email: payload.email || '', phone: payload.phone || '', login: payload.login || 'admin', password_hash: hashPassword(payload.password || crypto.randomBytes(12).toString('base64url')),
     status: payload.status === 'inativo' ? 'inativo' : (payload.status === 'degustacao' ? 'degustacao' : 'ativo'), plan: payload.plan || 'premium', expires_at: expiresAt || null, license_key: licenseKey,
-    custom_domain: payload.customDomain || '', created_at: now, updated_at: now
+    custom_domain: payload.customDomain || '',estoque: JSON.stringify(payload.estoque || []),
+products: JSON.stringify(payload.products || []),
+looks: JSON.stringify(payload.looks || []),
+roupas: JSON.stringify(payload.roupas || []), created_at: now, updated_at: now
   });
   createPayment({storeId:id, gateway:'manual', method:'pix', kind:'subscription', amountCents:cents(payload.amountCents || 9900), status:'pending', dueAt: payload.initialDueAt || todayStr(), notes:'Cobrança inicial automática'});
   return getStoreById(id, baseUrl);

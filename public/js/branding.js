@@ -6,12 +6,32 @@
     if (res.ok) {
       const data = await res.json();
       if (data.activeStore) cfg = { ...cfg, name:data.activeStore.name, sub:data.activeStore.sub, logo:data.activeStore.logo, color:data.activeStore.color };
-    } else if (window.LocalStoreManager) {
-      const st = LocalStoreManager.getActive(); if (st) cfg = { ...cfg, name:st.name, sub:st.sub, logo:st.logo, color:st.color };
+    } else if (window.LocalStorageManager) {
+     const st = typeof LocalStorageManager?.getActive === 'function'
+  ? LocalStorageManager.getActive()
+  : null; if (st) cfg = { ...cfg, name:st.name, sub:st.sub, logo:st.logo, color:st.color };
     }
-  } catch (e) {
-    if (window.LocalStoreManager) { const st = LocalStoreManager.getActive(); if (st) cfg = { ...cfg, name:st.name, sub:st.sub, logo:st.logo, color:st.color }; }
+ } catch (e) {
+
+  if (window.LocalStorageManager) {
+
+    const st = typeof LocalStorageManager?.getActive === 'function'
+      ? LocalStorageManager.getActive()
+      : null;
+
+    if (st) {
+      cfg = {
+        ...cfg,
+        name: st.name,
+        sub: st.sub,
+        logo: st.logo,
+        color: st.color
+      };
+    }
+
   }
+
+}
   const brandName = document.getElementById('brandName');
   const brandSub = document.getElementById('brandSub');
   const topbarSub = document.getElementById('topbarSub');

@@ -63,28 +63,59 @@ window.CameraModule = {
     });
 
     pose.onResults(results => {
-     // console.log('POSE:', results.poseLandmarks);
-      if (!this.poseEnabled || !results.poseLandmarks || !results.poseLandmarks[11] || !results.poseLandmarks[12]) {
-        return;
-      }
 
-      const ls = results.poseLandmarks[11];
-      const rs = results.poseLandmarks[12];
+    if (
+        !this.poseEnabled ||
+        !results.poseLandmarks ||
+        !results.poseLandmarks[11] ||
+        !results.poseLandmarks[12] ||
+        !results.poseLandmarks[23] ||
+        !results.poseLandmarks[24]
+    ) return;
 
-      const centerX = ((1 - ls.x) + (1 - rs.x)) / 2 * canvas.width;
-      const shoulderY = ((ls.y + rs.y) / 2) * canvas.height;
-      const shoulderSpan = Math.abs((1 - rs.x) - (1 - ls.x)) * canvas.width;
+    const ls = results.poseLandmarks[11];
+    const rs = results.poseLandmarks[12];
+    const lh = results.poseLandmarks[23];
+    const rh = results.poseLandmarks[24];
 
-      const w = Math.max(canvas.width * 0.25, shoulderSpan * 1.9);
-      const h = w * 1.28;
+    const leftShoulderX = (1 - ls.x) * canvas.width;
+    const rightShoulderX = (1 - rs.x) * canvas.width;
 
-      this.lastRect = {
-        x: centerX - w / 2,
-        y: shoulderY - h * 0.16,
-        w,
-        h
-      };
-    });
+    const shoulderCenterX = (leftShoulderX + rightShoulderX) / 2;
+
+    const shoulderCenterY =
+        ((ls.y + rs.y) / 2) * canvas.height;
+
+    const hipCenterY =
+        ((lh.y + rh.y) / 2) * canvas.height;
+
+    const shoulderWidth =
+        Math.abs(rightShoulderX - leftShoulderX);
+
+    const torsoHeight =
+        Math.abs(hipCenterY - shoulderCenterY);
+
+    const angle =
+        Math.atan2(
+            rs.y - ls.y,
+            (1 - rs.x) - (1 - ls.x)
+        );
+
+    this.lastRect = {
+
+    x: shoulderCenterX,
+
+    y: shoulderCenterY + torsoHeight * 0.18,
+
+    w: shoulderWidth * 2.15,
+
+    h: torsoHeight * 2.55,
+
+    angle: angle
+
+};
+});
+
 
     const mpCamera = new Camera(video, {
       onFrame: async () => {
@@ -122,7 +153,25 @@ height: 480
             h: canvas.height * 0.46
           };
 
-          ctx.drawImage(this.overlayImg, rect.x, rect.y, rect.w, rect.h);
+         ctx.save();
+
+ctx.translate(rect.x, rect.y);
+
+ctx.rotate((rect.angle || 0) * 0.45);
+ctx.drawImage(
+
+    this.overlayImg,
+
+    -rect.w / 2,
+
+    -rect.h * 0.20,
+
+    rect.w,
+
+    rect.h
+
+);
+ctx.restore();
         }
       }
 

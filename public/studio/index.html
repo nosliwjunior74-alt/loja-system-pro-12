@@ -1,1 +1,224 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
 
+<meta charset="UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Provador Pro Studio</title>
+
+<style>
+
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:Arial,Helvetica,sans-serif;
+}
+
+body{
+
+background:#f2f2f2;
+
+height:100vh;
+
+display:flex;
+
+flex-direction:column;
+
+}
+
+header{
+
+height:60px;
+
+background:#1e1e1e;
+
+color:white;
+
+display:flex;
+
+align-items:center;
+
+justify-content:space-between;
+
+padding:0 20px;
+
+}
+
+.logo{
+
+font-size:22px;
+
+font-weight:bold;
+
+}
+
+.menu{
+
+display:flex;
+
+gap:20px;
+
+}
+
+.menu button{
+
+background:none;
+
+border:none;
+
+color:white;
+
+cursor:pointer;
+
+font-size:15px;
+
+}
+
+.container{
+
+flex:1;
+
+display:flex;
+
+}
+
+.sidebar{
+
+width:240px;
+
+background:white;
+
+border-right:1px solid #ddd;
+
+padding:20px;
+
+}
+
+.sidebar button{
+
+width:100%;
+
+padding:14px;
+
+margin-bottom:10px;
+
+border:none;
+
+border-radius:10px;
+
+background:#f4f4f4;
+
+cursor:pointer;
+
+font-size:15px;
+
+text-align:left;
+
+}
+
+.workspace{
+
+flex:1;
+
+display:flex;
+
+align-items:center;
+
+justify-content:center;
+
+background:#d8d8d8;
+
+}
+
+.canvas{
+
+width:900px;
+
+height:650px;
+
+background:white;
+
+border-radius:15px;
+
+box-shadow:0 0 20px rgba(0,0,0,.15);
+
+display:flex;
+
+align-items:center;
+
+justify-content:center;
+
+color:#999;
+
+font-size:28px;
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+<header>
+
+<div class="logo">
+
+🎨 Provador Pro Studio
+
+</div>
+
+<div class="menu">
+
+<button>Arquivo</button>
+
+<button>Editar</button>
+
+<button>IA</button>
+
+<button>Biblioteca</button>
+
+<button>Exportar</button>
+
+</div>
+
+</header>
+
+<div class="container">
+
+<div class="sidebar">
+
+<button>📂 Upload</button>
+
+<button>✂ Recortar</button>
+
+<button>🧹 Remover Fundo</button>
+
+<button>🎯 Centralizar</button>
+
+<button>📏 Redimensionar</button>
+
+<button>🖌 Ferramentas</button>
+
+<button>💾 Exportar PNG</button>
+
+</div>
+
+<div class="workspace">
+
+<div class="canvas">
+
+Área de edição
+
+</div>
+
+</div>
+
+</div>
+
+</body>
+
+</html>

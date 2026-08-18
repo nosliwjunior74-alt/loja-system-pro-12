@@ -260,10 +260,10 @@ updated_at=@updated_at WHERE id=@id`).run({
     status: payload.status === 'inativo' ? 'inativo' : (payload.status === 'degustacao' ? 'degustacao' : (payload.status ?? current.status)), plan: payload.plan ?? current.plan,
     expires_at: expiresAt || null, license_key: licenseKey, custom_domain: payload.customDomain ?? current.custom_domain,
    
-estoque: JSON.stringify(payload.estoque ?? current.estoque ?? []),
-products: JSON.stringify(payload.products ?? current.products ?? []),
-looks: JSON.stringify(payload.looks ?? current.looks ?? []),
-roupas: JSON.stringify(payload.roupas ?? current.roupas ?? []),
+estoque: payload.estoque !== undefined ? JSON.stringify(payload.estoque) : (current.estoque ?? `[]`),
+products: payload.products !== undefined ? JSON.stringify(payload.products) : (current.products ?? `[]`),
+looks: payload.looks !== undefined ? JSON.stringify(payload.looks) : (current.looks ?? `[]`),
+roupas: payload.roupas !== undefined ? JSON.stringify(payload.roupas) : (current.roupas ?? `[]`),
 updated_at: new Date().toISOString(),
 id,
 baseUrl

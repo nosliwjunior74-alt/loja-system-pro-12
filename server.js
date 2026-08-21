@@ -297,7 +297,7 @@ if(Array.isArray(req.body?.roupas))
   const store = updateStore(current.id, payload, baseUrl(req));
   res.json({ ok:true, store });
 });
-app.get('/api/session/store-config', (req,res)=>{ let store = null; if(req.session?.clientStoreId) store = getStoreById(req.session.clientStoreId, baseUrl(req)); if(!store && req.session?.adminLoggedIn && req.session?.activeStoreId) store = getStoreById(req.session.activeStoreId, baseUrl(req)); if(!store) store = listStores(baseUrl(req))[0] || null; res.json({ store }); });
+app.get('/api/session/store-config', (req,res)=>{ let store = null; if(req.session?.adminLoggedIn && req.session?.activeStoreId) store = getStoreById(req.session.activeStoreId, baseUrl(req)); if(!store && req.session?.clientStoreId) store = getStoreById(req.session.clientStoreId, baseUrl(req)); if(!store) store = listStores(baseUrl(req))[0] || null; res.json({ store }); });
 app.use(['/index.html','/lojas_master.html','/configuracoes.html','/configuracao-cobranca.html','/financeiro.html','/seguranca.html'], requireAdmin);
 app.get('/s/:slug', (req, res) => {
   res.redirect(`/login-loja.html?loja=${encodeURIComponent(req.params.slug)}`);

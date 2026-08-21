@@ -232,10 +232,63 @@ async function renderRestPreview(){
     restPreview.innerHTML = `<img src="imagens/logo.png" alt="Sua Loja">`;
   }
 }
-(async()=>{ await AppStore.ensureSeed(); await renderInventory(); await renderCustomers(); await renderRestPreview(); })();
+async function prepararLojaSelecionada(){
+  try{
+    const response = await fetch('/api/session/store-config', { credentials:'same-origin', cache:'no-store' });
+    if(!response.ok) throw new Error('HTTP ' + response.status);
+
+    const data = await response.json();
+    const store = data && data.store ? data.store : null;
+
+    if(!store || !store.slug) throw new Error('Loja selecionada nao encontrada');
+
+    localStorage.setItem('loja_slug', store.slug);
+    localStorage.setItem('lojaAtivaConfig', JSON.stringify({
+      name: store.name || '',
+      sub: store.sub || '',
+      logo: store.logo || '',
+      slug: store.slug,
+      color: store.color || '',
+      status: store.status || '',
+      licenseStatus: store.licenseStatus || '',
+      expiresAt: store.expiresAt || ''
+    }));
+
+    let estoque = store.estoque || [];
+
+    while(typeof estoque === 'string'){
+      try{
+        estoque = JSON.parse(estoque);
+      }catch(e){
+        estoque = [];
+        break;
+      }
+    }
+
+    if(!Array.isArray(estoque)) estoque = [];
+
+    await DB.clear(DB.STORES.ESTOQUE);
+
+    for(const item of estoque){
+      await DB.put(DB.STORES.ESTOQUE, item);
+    }
+
+    console.log('LOJA ATIVA:', store.slug, 'ITENS:', estoque.length);
+    return store;
+  }catch(e){
+    console.error('Erro ao preparar loja selecionada:', e);
+    return null;
+  }
+}
+
+(async()=>{
+  await prepararLojaSelecionada();
+  await AppStore.ensureSeed();
+  await renderInventory();
+  await renderCustomers();
+  await renderRestPreview();
+})();
 </script><script src="../shared/brand-sync.js"></script>
 <script src="/provador/js/client-neutral-brand.js"></script>
-<script src="/provador/js/salvar.js"></script>
-<script src="/provador/js/estoque.js"></script>
-<script src="/provador/js/provador.js"></script>
+
 </body></html>

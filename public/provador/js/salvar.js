@@ -1,7 +1,11 @@
 
 const LOJA_SEED = [{"id": "look1", "nome": "Blusa Floral Preta", "categoria": "Blusas", "preco": "89,90", "quantidade": 5, "imagem": "imagens/roupas/look1.jpg", "destaque": true}, {"id": "look2", "nome": "Camisa Branca Social", "categoria": "Camisas", "preco": "99,90", "quantidade": 4, "imagem": "imagens/roupas/look2.jpg", "destaque": true}, {"id": "look3", "nome": "Camisa Branca Sua Loja", "categoria": "Camisas", "preco": "109,90", "quantidade": 3, "imagem": "imagens/roupas/look3.jpg", "destaque": false}, {"id": "look4", "nome": "Blazer Social Preto", "categoria": "Blazers", "preco": "189,90", "quantidade": 2, "imagem": "imagens/roupas/look4.jpg", "destaque": false}, {"id": "look5", "nome": "Camiseta Preta Básica", "categoria": "Básicos", "preco": "59,90", "quantidade": 6, "imagem": "imagens/roupas/look5.jpg", "destaque": false}];
 window.DB = {
-  NAME:'loja_dashboard_db',
+  BASE_NAME:'loja_dashboard_db',
+  get NAME(){
+    const slug=(new URLSearchParams(location.search).get('loja') || localStorage.getItem('loja_slug') || 'sem-loja').toLowerCase().replace(/[^a-z0-9_-]+/g,'-');
+    return this.BASE_NAME + '_' + slug;
+  },
   VERSION:1,
   STORES:{ESTOQUE:'estoque',CLIENTES:'clientes',CONFIG:'config'},
   async open(){return new Promise((resolve,reject)=>{const req=indexedDB.open(this.NAME,this.VERSION);req.onupgradeneeded=e=>{const db=e.target.result;if(!db.objectStoreNames.contains(this.STORES.ESTOQUE))db.createObjectStore(this.STORES.ESTOQUE,{keyPath:'id'});if(!db.objectStoreNames.contains(this.STORES.CLIENTES))db.createObjectStore(this.STORES.CLIENTES,{keyPath:'id'});if(!db.objectStoreNames.contains(this.STORES.CONFIG))db.createObjectStore(this.STORES.CONFIG);};req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error);})},

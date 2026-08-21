@@ -263,8 +263,15 @@ res.json({
 });
 });
 app.get('/api/public/session-store', (req,res)=>{ const store = req.session?.clientStoreId ? getStoreById(req.session.clientStoreId, baseUrl(req)) : null; if(!store) return res.status(401).json({ error:'unauthorized' }); res.json({ store }); });
-app.put('/api/public/store-branding', requireClientApi, (req,res)=>{
-  const current = getStoreById(req.session.clientStoreId, baseUrl(req));
+app.put('/api/public/store-branding', (req,res)=>{
+  const targetStoreId =
+    (req.session?.adminLoggedIn && req.session?.activeStoreId)
+      ? req.session.activeStoreId
+      : req.session?.clientStoreId;
+
+  if(!targetStoreId) return res.status(401).json({ error:'unauthorized' });
+
+  const current = getStoreById(targetStoreId, baseUrl(req));
   if(!current) return res.status(404).json({ error:'Loja não encontrada' });
  const payload = {};
 

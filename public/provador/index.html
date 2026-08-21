@@ -305,7 +305,12 @@ async function carregarLooksDaLoja() {
   <script>
 function pegarLojaAtual(){
   const params = new URLSearchParams(window.location.search);
-  return params.get("loja") || params.get("slug") || "";
+  return (
+    params.get("loja") ||
+    params.get("slug") ||
+    localStorage.getItem("loja_slug") ||
+    ""
+  );
 }
 
 function voltarLojaPublica(){

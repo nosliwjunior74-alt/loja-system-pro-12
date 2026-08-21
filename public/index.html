@@ -1,138 +1,432 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-br">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Dashboard Multi-Loja</title>
+
   <link rel="stylesheet" href="css/dashboard.css">
   <link rel="stylesheet" href="css/chatbot.css">
 </head>
+
 <body>
-  <div class="shell">
-    <aside class="sidebar">
-      <div class="brand">
-        <img src="assets/default-logo.svg" alt="Logo da loja" class="brand-logo" id="brandLogo">
-        <div>
-          <h1 id="brandName">Sua Loja</h1>
-          <p id="brandSub">Dashboard Integrado Multi-Loja</p>
-        </div>
-      </div>
-      <nav class="menu">
-        <button class="menu-btn active" data-url="provador/index.html">👗 Vitrine / Provador</button>
-        <button class="menu-btn" data-url="provador/admin.html">📦 Painel da Loja</button>
-        <button class="menu-btn" data-url="remover_fundo/index.html">🖼️ PNG sem Fundo</button>
-        <button class="menu-btn" data-url="display_pro/index.html">📲 Display Pro System</button>
-        <button class="menu-btn" data-url="display_pro/admin.html">⚙️ Admin Display Pro</button>
-        <button class="menu-btn" data-url="lojas_master.html">🏬 Painel Mestre das Lojas</button>
-        <button class="menu-btn" data-url="configuracoes.html">🏷️ Personalizar Loja</button>
-        <button class="menu-btn" data-url="configuracao-cobranca.html">💳 Cobrança</button>
-        <button class="menu-btn" data-url="financeiro.html">📊 Financeiro</button>
-        <button onclick="window.location.href='seguranca.html'">🔒 Segurança</button>
-        <button class="menu-btn" data-url="manual/manual.html">📘 Manual</button>
-        <button onclick="fazerBackup()" style="
-  background:#ff4da6;
-  color:white;
-  border:none;
-  padding:10px;
-  border-radius:8px;
-  margin-top:10px;
-  cursor:pointer;
-">
-💾 Backup agora
-</button>
-   <button type="button" onclick="listarBackups()" style="
-  background:#6c5ce7;
-  color:white;
-  border:none;
-  padding:10px;
-  border-radius:8px;
-  margin-top:10px;
-  cursor:pointer;
-">
-📂 Ver backups
-</button>
 
-<div id="listaBackups" style="margin-top:10px; color:#000; background:#fff; padding:8px;"></div>    
-      </nav>
-      <div class="actions">
-        <button class="action-btn" id="logoutAdminBtn" type="button">⎋ Sair</button>
+<div class="shell">
+
+  <aside class="sidebar">
+
+    <div class="brand">
+      <img
+        src="assets/default-logo.svg"
+        alt="Logo da loja"
+        class="brand-logo"
+        id="brandLogo"
+      >
+
+      <div class="brand-copy">
+        <span class="brand-kicker">Loja ativa</span>
+        <h1 id="brandName">Sua Loja</h1>
+        <p id="brandSub">Dashboard Integrado Multi-Loja</p>
       </div>
-    </aside>
-    <main class="main-area">
-      <header class="topbar">
-        <div>
-          <strong id="currentTitle">Vitrine / Provador</strong>
-          <span id="topbarSub">Sistema pronto para revenda com personalização de nome, subtítulo e logo</span>
-        </div>
-      </header>
-      <iframe
-   id="appFrame"
-   src="provador/index.html"
-   onload="
-      if(this.contentWindow.initProvador){
-         this.contentWindow.initProvador();
-      }
-   ">
-</iframe>
-    </main>
-  </div>
-  <script src="js/local-store.js"></script>
-  <script src="js/dashboard.js"></script>
-  <script src="js/branding.js"></script>
-  <script>
+    </div>
+
+
+    <nav class="menu" aria-label="Menu principal">
+
+      <div class="menu-group">
+
+        <span class="menu-label">Operação da loja</span>
+
+        <button
+          class="menu-btn active"
+          data-url="provador/index.html"
+          type="button">
+          <span class="menu-icon">&#128087;</span>
+          Vitrine / Provador
+        </button>
+
+        <button
+          class="menu-btn"
+          data-url="provador/admin.html"
+          type="button">
+          <span class="menu-icon">&#128230;</span>
+          Painel da Loja
+        </button>
+
+        <button
+          class="menu-btn"
+          data-url="configuracoes.html"
+          type="button">
+          <span class="menu-icon">&#127912;</span>
+          Personalizar Loja
+        </button>
+
+      </div>
+
+
+      <div class="menu-group">
+
+        <span class="menu-label">Conteúdo e exibição</span>
+
+        <button
+          class="menu-btn"
+          data-url="remover_fundo/index.html"
+          type="button">
+          <span class="menu-icon">&#128444;</span>
+          PNG sem Fundo
+        </button>
+
+        <button
+          class="menu-btn"
+          data-url="display_pro/index.html"
+          type="button">
+          <span class="menu-icon">&#128241;</span>
+          Display Pro System
+        </button>
+
+        <button
+          class="menu-btn"
+          data-url="display_pro/admin.html"
+          type="button">
+          <span class="menu-icon">&#9881;</span>
+          Admin Display Pro
+        </button>
+
+      </div>
+
+
+      <div class="menu-group">
+
+        <span class="menu-label">Administração</span>
+
+        <button
+          class="menu-btn"
+          data-url="lojas_master.html"
+          type="button">
+          <span class="menu-icon">&#127970;</span>
+          Painel Mestre das Lojas
+        </button>
+
+        <button
+          class="menu-btn"
+          data-url="configuracao-cobranca.html"
+          type="button">
+          <span class="menu-icon">&#128179;</span>
+          Cobrança
+        </button>
+
+        <button
+          class="menu-btn"
+          data-url="financeiro.html"
+          type="button">
+          <span class="menu-icon">&#128202;</span>
+          Financeiro
+        </button>
+
+        <button
+          class="menu-btn"
+          data-url="seguranca.html"
+          type="button">
+          <span class="menu-icon">&#128274;</span>
+          Segurança
+        </button>
+
+      </div>
+
+
+      <div class="menu-group">
+
+        <span class="menu-label">Suporte</span>
+
+        <button
+          class="menu-btn"
+          data-url="manual/manual.html"
+          type="button">
+          <span class="menu-icon">&#128214;</span>
+          Manual
+        </button>
+
+      </div>
+
+    </nav>
+
+
+    <div class="sidebar-tools">
+
+      <button
+        class="utility-btn"
+        type="button"
+        onclick="fazerBackup()">
+        <span class="menu-icon">&#128190;</span>
+        Backup agora
+      </button>
+
+      <button
+        class="utility-btn"
+        type="button"
+        onclick="listarBackups()">
+        <span class="menu-icon">&#128194;</span>
+        Ver backups
+      </button>
+
+      <div id="listaBackups" class="backup-list"></div>
+
+    </div>
+
+
+    <div class="actions">
+
+      <button
+        class="action-btn"
+        id="logoutAdminBtn"
+        type="button">
+        <span class="menu-icon">&#10140;</span>
+        Sair
+      </button>
+
+    </div>
+
+  </aside>
+
+
+  <main class="main-area">
+
+    <header class="topbar">
+
+      <div>
+        <strong id="currentTitle">Vitrine / Provador</strong>
+
+        <span id="topbarSub">
+          Dashboard Integrado Multi-Loja
+        </span>
+      </div>
+
+
+      <div
+        class="active-store-chip"
+        title="Loja atualmente selecionada">
+
+        <span class="active-store-dot"></span>
+
+        <span id="activeStoreName">
+          Sua Loja
+        </span>
+
+      </div>
+
+    </header>
+
+
+    <iframe
+      id="appFrame"
+      src="provador/index.html"
+      title="Área de trabalho"
+      onload="
+        if(
+          this.contentWindow &&
+          this.contentWindow.initProvador
+        ){
+          this.contentWindow.initProvador();
+        }
+      ">
+    </iframe>
+
+  </main>
+
+</div>
+
+
+<script src="js/local-store.js"></script>
+<script src="js/dashboard.js"></script>
+<script src="js/branding.js"></script>
+
+
+<script>
+
 async function fazerBackup(){
-  try {
-    const r = await fetch('/api/admin/backup', { method: 'POST' });
+
+  try{
+
+    const r = await fetch(
+      '/api/admin/backup',
+      {
+        method:'POST',
+        credentials:'same-origin'
+      }
+    );
+
     const j = await r.json();
-    alert(j.ok ? '✅ Backup realizado com sucesso!' : '❌ Erro no backup');
-  } catch(e){
-    alert('Erro ao conectar com servidor');
+
+    alert(
+      j.ok
+        ? 'Backup realizado com sucesso!'
+        : 'Erro no backup'
+    );
+
+  }catch(e){
+
+    alert(
+      'Erro ao conectar com servidor'
+    );
+
   }
+
 }
-</script>
- <script>
+
+
 window.listarBackups = async function(){
-  alert('Botão Ver backups clicou');
 
-  const r = await fetch('/api/admin/backups');
-  const j = await r.json();
+  try{
 
-  const div = document.getElementById('listaBackups');
-  div.innerHTML = '';
+    const r = await fetch(
+      '/api/admin/backups',
+      {
+        credentials:'same-origin',
+        cache:'no-store'
+      }
+    );
 
-  if (!j.backups || j.backups.length === 0) {
-    div.innerHTML = 'Nenhum backup encontrado';
+    const j = await r.json();
+
+    const div =
+      document.getElementById(
+        'listaBackups'
+      );
+
+    div.innerHTML = '';
+
+
+    if(
+      !j.backups ||
+      j.backups.length === 0
+    ){
+
+      div.textContent =
+        'Nenhum backup encontrado';
+
+      return;
+
+    }
+
+
+    j.backups.forEach(function(arquivo){
+
+      const row =
+        document.createElement('div');
+
+      row.className =
+        'backup-row';
+
+
+      const nome =
+        document.createElement('span');
+
+      nome.textContent =
+        arquivo;
+
+
+      const btn =
+        document.createElement('button');
+
+      btn.type =
+        'button';
+
+      btn.textContent =
+        'Restaurar';
+
+      btn.addEventListener(
+        'click',
+        function(){
+
+          restaurar(
+            arquivo
+          );
+
+        }
+      );
+
+
+      row.appendChild(
+        nome
+      );
+
+      row.appendChild(
+        btn
+      );
+
+      div.appendChild(
+        row
+      );
+
+    });
+
+  }catch(e){
+
+    alert(
+      'Erro ao listar backups'
+    );
+
+  }
+
+};
+
+
+window.restaurar =
+async function(arquivo){
+
+  if(
+    !confirm(
+      'Restaurar este backup?'
+    )
+  ){
     return;
   }
 
-  j.backups.forEach(b => {
-    const el = document.createElement('div');
-    el.innerHTML = `${b} <button onclick="restaurar('${b}')">Restaurar</button>`;
-    div.appendChild(el);
-  });
-}
 
-window.restaurar = async function(arquivo){
-  if (!confirm('Restaurar este backup?')) return;
+  try{
 
-  const r = await fetch('/api/admin/restore', {
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({ arquivo })
-  });
+    const r =
+      await fetch(
+        '/api/admin/restore',
+        {
+          method:'POST',
+          credentials:'same-origin',
+          headers:{
+            'Content-Type':
+              'application/json'
+          },
+          body:
+            JSON.stringify({
+              arquivo:arquivo
+            })
+        }
+      );
 
-  const j = await r.json();
-  alert(j.ok ? 'Restaurado com sucesso!' : 'Erro ao restaurar');
-}
+
+    const j =
+      await r.json();
+
+
+    alert(
+      j.ok
+        ? 'Restaurado com sucesso!'
+        : 'Erro ao restaurar'
+    );
+
+  }catch(e){
+
+    alert(
+      'Erro ao conectar com servidor'
+    );
+
+  }
+
+};
+
 </script>
-<script src="js/chatbot.js"></script>
-  <script src="provador/js/salvar.js"></script>
-<script src="provador/js/estoque.js"></script>
-<script src="provador/js/provador.js"></script>
+
 
 <script src="js/chatbot.js"></script>
+
 </body>
 </html>
-
-  alert('Tela de segurança ainda não implementada');
-}

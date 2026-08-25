@@ -331,12 +331,77 @@
     );
   }
 
-  function responder(pergunta) {
+  async function consultarIa(pergunta) {
+    try {
+      const resposta = await fetch(
+        "/api/public/ai-chat",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            slug: estado.slug,
+            message: String(pergunta || "").trim()
+          })
+        }
+      );
+
+      const dados = await resposta
+        .json()
+        .catch(() => ({}));
+
+      if (
+        resposta.ok &&
+        typeof dados.answer === "string" &&
+        dados.answer.trim()
+      ) {
+        return {
+          ok: true,
+          answer: dados.answer.trim()
+        };
+      }
+
+      return {
+        ok: false,
+        fallback: dados.fallback !== false,
+        error: String(dados.error || "")
+      };
+
+    } catch (erro) {
+      console.warn(
+        "[Atendimento IA] fallback:",
+        erro
+      );
+
+      return {
+        ok: false,
+        fallback: true,
+        error: String(
+          erro?.message || ""
+        )
+      };
+    }
+  }
+
+
+  async function responder(pergunta) {
     const texto = String(pergunta || "").trim();
 
     if (!texto) return;
 
     adicionarMensagem("user", texto);
+
+    const ia = await consultarIa(texto);
+
+    if (ia.ok) {
+      adicionarMensagem(
+        "bot",
+        ia.answer
+      );
+
+      return;
+    }
 
     const resposta = localizarResposta(texto);
 
@@ -373,7 +438,7 @@
 
     adicionarMensagem(
       "bot",
-      "Escolha uma das opções de atendimento abaixo ou fale conosco pelo WhatsApp."
+      "Escolha uma das opcoes de atendimento abaixo ou fale conosco pelo WhatsApp."
     );
   }
 

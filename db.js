@@ -77,6 +77,21 @@ function ensureTables(){
     );
     CREATE INDEX IF NOT EXISTS idx_payments_store_id ON payments(store_id);
     CREATE INDEX IF NOT EXISTS idx_payments_status ON payments(status);
+
+    CREATE TABLE IF NOT EXISTS ai_usage_monthly (
+      store_id TEXT NOT NULL,
+      period TEXT NOT NULL,
+      requests INTEGER NOT NULL DEFAULT 0,
+      input_tokens INTEGER NOT NULL DEFAULT 0,
+      output_tokens INTEGER NOT NULL DEFAULT 0,
+      total_tokens INTEGER NOT NULL DEFAULT 0,
+      updated_at TEXT NOT NULL,
+      PRIMARY KEY (store_id, period),
+      FOREIGN KEY(store_id) REFERENCES stores(id) ON DELETE CASCADE
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_ai_usage_period
+      ON ai_usage_monthly(period);
   `);
    try { db.exec("ALTER TABLE stores ADD COLUMN estoque TEXT"); } catch(e) {}
 try { db.exec("ALTER TABLE stores ADD COLUMN products TEXT"); } catch(e) {}
@@ -508,6 +523,125 @@ function getFinanceChart(months = 6){
   }
   return { labels, paid, pending, overdue };
 }
+
+function currentAiPeriod(){
+  return new Date().toISOString().slice(0, 7);
+}
+
+function getAiUsageMonthly(storeId, period = currentAiPeriod()){
+  const safeStoreId = String(storeId || '').trim();
+  const safePeriod = String(period || currentAiPeriod()).trim().slice(0, 7);
+
+  if(!safeStoreId){
+    return {
+      storeId:'',
+      period:safePeriod,
+      requests:0,
+      inputTokens:0,
+      outputTokens:0,
+      totalTokens:0
+    };
+  }
+
+  const row = db.prepare(`
+    SELECT
+      store_id,
+      period,
+      requests,
+      input_tokens,
+      output_tokens,
+      total_tokens,
+      updated_at
+    FROM ai_usage_monthly
+    WHERE store_id = ? AND period = ?
+  `).get(safeStoreId, safePeriod);
+
+  if(!row){
+    return {
+      storeId:safeStoreId,
+      period:safePeriod,
+      requests:0,
+      inputTokens:0,
+      outputTokens:0,
+      totalTokens:0,
+      updatedAt:''
+    };
+  }
+
+  return {
+    storeId:row.store_id,
+    period:row.period,
+    requests:Number(row.requests || 0),
+    inputTokens:Number(row.input_tokens || 0),
+    outputTokens:Number(row.output_tokens || 0),
+    totalTokens:Number(row.total_tokens || 0),
+    updatedAt:row.updated_at || ''
+  };
+}
+
+function recordAiUsage(
+  storeId,
+  {
+    period = currentAiPeriod(),
+    requests = 1,
+    inputTokens = 0,
+    outputTokens = 0,
+    totalTokens
+  } = {}
+){
+  const safeStoreId = String(storeId || '').trim();
+
+  if(!safeStoreId){
+    throw new Error('storeId obrigatorio para registrar consumo da IA.');
+  }
+
+  const safePeriod = String(period || currentAiPeriod()).trim().slice(0, 7);
+  const safeRequests = Math.max(0, Math.trunc(Number(requests) || 0));
+  const safeInput = Math.max(0, Math.trunc(Number(inputTokens) || 0));
+  const safeOutput = Math.max(0, Math.trunc(Number(outputTokens) || 0));
+  const safeTotal = Math.max(
+    0,
+    Math.trunc(
+      totalTokens !== undefined
+        ? Number(totalTokens) || 0
+        : safeInput + safeOutput
+    )
+  );
+
+  const now = new Date().toISOString();
+
+  db.prepare(`
+    INSERT INTO ai_usage_monthly (
+      store_id,
+      period,
+      requests,
+      input_tokens,
+      output_tokens,
+      total_tokens,
+      updated_at
+    )
+    VALUES (?, ?, ?, ?, ?, ?, ?)
+
+    ON CONFLICT(store_id, period)
+    DO UPDATE SET
+      requests = requests + excluded.requests,
+      input_tokens = input_tokens + excluded.input_tokens,
+      output_tokens = output_tokens + excluded.output_tokens,
+      total_tokens = total_tokens + excluded.total_tokens,
+      updated_at = excluded.updated_at
+  `).run(
+    safeStoreId,
+    safePeriod,
+    safeRequests,
+    safeInput,
+    safeOutput,
+    safeTotal,
+    now
+  );
+
+  return getAiUsageMonthly(safeStoreId, safePeriod);
+}
+
 function ensureSeedStore(){
   const count = db.prepare('SELECT COUNT(*) c FROM stores').get().c;
   if (!count && process.env.SEED_DEMO_STORE === 'true') {
@@ -515,4 +649,4 @@ function ensureSeedStore(){
   }
 }
 ensureSeedStore();
-module.exports = { db, slugify, uniqueSlug, listStores, getStoreById, getStoreBySlug, getStoreRowById, getStoreRowBySlug, createStore, updateStore, setStorePassword, deleteStore, verifyStoreLogin, licenseStatus: rawLicenseStatus, generateLicenseKey, createPayment, listPayments, updatePaymentStatus, getFinanceSummary, getFinanceChart, syncStoreLicense };
+module.exports = { db, slugify, uniqueSlug, listStores, getStoreById, getStoreBySlug, getStoreRowById, getStoreRowBySlug, createStore, updateStore, setStorePassword, deleteStore, verifyStoreLogin, licenseStatus: rawLicenseStatus, generateLicenseKey, createPayment, listPayments, updatePaymentStatus, getFinanceSummary, getFinanceChart, syncStoreLicense, currentAiPeriod, getAiUsageMonthly, recordAiUsage };

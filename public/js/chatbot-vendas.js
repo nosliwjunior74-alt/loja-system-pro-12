@@ -289,8 +289,17 @@
         #chatVendaBox {
           right: 10px;
           left: 10px;
+          top: 10px;
           bottom: 10px;
           width: auto;
+          height: auto;
+          max-height: none;
+        }
+
+        #chatVendaMensagens {
+          flex: 1 1 auto;
+          min-height: 0;
+          max-height: none;
         }
       }
     `;

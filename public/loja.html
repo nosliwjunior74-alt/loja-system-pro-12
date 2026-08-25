@@ -1,9 +1,15 @@
 <!DOCTYPE html>
 <html lang="pt-br">
+
 <head>
   <meta charset="UTF-8">
+
   <title>Loja Online - Provador Pro</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
 
   <style>
     body{
@@ -14,7 +20,12 @@
     }
 
     header{
-      background:linear-gradient(135deg,#e83e9f,#7c3aed);
+      background:linear-gradient(
+        135deg,
+        #e83e9f,
+        #7c3aed
+      );
+
       color:white;
       padding:22px;
       text-align:center;
@@ -71,7 +82,12 @@
 
     .grid{
       display:grid;
-      grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+      grid-template-columns:
+        repeat(
+          auto-fit,
+          minmax(220px,1fr)
+        );
+
       gap:18px;
     }
 
@@ -79,8 +95,12 @@
       background:white;
       border-radius:18px;
       padding:14px;
-      box-shadow:0 8px 25px #0001;
-      border:1px solid #f3cce3;
+
+      box-shadow:
+        0 8px 25px #0001;
+
+      border:
+        1px solid #f3cce3;
     }
 
     .card img{
@@ -119,21 +139,40 @@
       position:fixed;
       right:20px;
       bottom:20px;
+
       background:#16a34a;
       color:white;
+
       padding:15px 22px;
+
       border-radius:50px;
+
       text-decoration:none;
       font-weight:bold;
-      box-shadow:0 8px 25px #0004;
+
+      box-shadow:
+        0 8px 25px #0004;
+
       z-index:9999;
     }
 
     @media(max-width:600px){
-      header h1{font-size:22px}
-      .card img{height:210px}
-      .acoes{flex-direction:column}
-      .btn{text-align:center}
+
+      header h1{
+        font-size:22px;
+      }
+
+      .card img{
+        height:210px;
+      }
+
+      .acoes{
+        flex-direction:column;
+      }
+
+      .btn{
+        text-align:center;
+      }
     }
   </style>
 </head>
@@ -141,184 +180,734 @@
 <body>
 
 <header>
-  <h1 id="nomeLoja">Carregando loja...</h1>
-  <p>Catálogo online com provador virtual</p>
+
+  <h1 id="nomeLoja">
+    Carregando loja...
+  </h1>
+
+  <p>
+    Catálogo online com provador virtual
+  </p>
+
 </header>
+
 
 <div class="container">
 
   <div class="acoes">
-    <a id="btnProvador" class="btn btn-purple" href="#">👗 Testar no Provador</a>
-    <a id="btnWhats" class="btn btn-green" href="#" target="_blank">💬 Falar com Vendedor</a>
+
+    <a
+      id="btnProvador"
+      class="btn btn-purple"
+      href="#"
+    >
+      👗 Testar no Provador
+    </a>
+
+    <a
+      id="btnWhats"
+      class="btn btn-green"
+      href="#atendimento"
+    >
+      💬 Falar com Vendedor
+    </a>
+
   </div>
 
-  <h2>🛍 Looks disponíveis</h2>
 
-  <div id="listaProdutos" class="grid"></div>
+  <h2>
+    🛍 Looks disponíveis
+  </h2>
 
-  <div id="mensagem" class="erro"></div>
+
+  <div
+    id="listaProdutos"
+    class="grid"
+  ></div>
+
+
+  <div
+    id="mensagem"
+    class="erro"
+  ></div>
 
 </div>
 
-<a id="whatsFixo" class="whatsapp-fixo" href="#" target="_blank">💬 Comprar pelo WhatsApp</a>
+
+<a
+  id="whatsFixo"
+  class="whatsapp-fixo"
+  href="#"
+  target="_blank"
+  rel="noopener noreferrer"
+>
+  💬 Comprar pelo WhatsApp
+</a>
+
 
 <script src="js/local-store.js"></script>
 <script src="js/branding.js"></script>
 <script src="js/dashboard.js"></script>
 
+<!--
+  Atendimento profissional por loja.
+  Lê supportConfig e telefone
+  diretamente da API pública.
+-->
+<script src="js/chatbot-vendas.js"></script>
+
+
 <script>
-  const params = new URLSearchParams(window.location.search);
-  const slug = params.get("loja") || params.get("slug") || "";
+  "use strict";
 
-  const nomeLoja = document.getElementById("nomeLoja");
-  const listaProdutos = document.getElementById("listaProdutos");
-  const mensagem = document.getElementById("mensagem");
-  const btnProvador = document.getElementById("btnProvador");
-  const btnWhats = document.getElementById("btnWhats");
-  const whatsFixo = document.getElementById("whatsFixo");
 
-  const whatsappPadrao = "5531999999999";
-
-  function normalizar(txt){
-    return String(txt || "").toLowerCase().trim();
-  }
-
-  function abrirWhatsProduto(nome){
-    const texto = encodeURIComponent(
-      "Olá! Vim pelo catálogo online e tenho interesse no produto: " + nome
+  const nomeLoja =
+    document.getElementById(
+      "nomeLoja"
     );
-    return "https://wa.me/" + whatsappPadrao + "?text=" + texto;
-  }
-async function carregarLojaPublica(){
-  try{
-    const params = new URLSearchParams(location.search);
-    const slug =
-  params.get('loja') ||
-  params.get('slug') ||
-  localStorage.getItem('loja_slug') ||
-  '';
-if (!slug) {
-  console.error('Nenhuma loja encontrada');
-  return;
-}
-    nomeLoja.textContent = slug ? 'Loja ' + slug : 'Loja Online';
-    btnProvador.href = '/provador/index.html?loja=' + encodeURIComponent(slug);
 
-    const resp = await fetch('/api/public/store/' + encodeURIComponent(slug));
-    const data = await resp.json();
+  const listaProdutos =
+    document.getElementById(
+      "listaProdutos"
+    );
 
-    const store = data.store || {};
-let items = [];
+  const mensagem =
+    document.getElementById(
+      "mensagem"
+    );
 
-try {
-  const campos = [
-    store.estoque,
-    store.looks,
-    store.products,
-    store.roupas
-  ];
+  const btnProvador =
+    document.getElementById(
+      "btnProvador"
+    );
 
-  for (const campo of campos) {
-    if (!campo) continue;
+  const btnWhats =
+    document.getElementById(
+      "btnWhats"
+    );
 
-    let valor = campo;
+  const whatsFixo =
+    document.getElementById(
+      "whatsFixo"
+    );
 
-    if (typeof valor === 'string') {
-  console.log('CAMPO:', valor, typeof valor);
 
-  if (
-    valor === 'undefined' ||
-    valor === 'null' ||
-    valor.trim() === ''
-  ) {
-    continue;
+  function obterSlug(){
+
+    const params =
+      new URLSearchParams(
+        window.location.search
+      );
+
+    return (
+      params.get("loja") ||
+      params.get("slug") ||
+      localStorage.getItem(
+        "loja_slug"
+      ) ||
+      ""
+    );
   }
 
-  try {
-    valor = JSON.parse(valor);
-  } catch (e) {
-    console.error('Erro JSON:', valor);
-    continue;
+
+  function limparTelefone(valor){
+
+    return String(
+      valor || ""
+    ).replace(
+      /\D/g,
+      ""
+    );
   }
-}
-    if (Array.isArray(valor)) {
-      items = valor;
-      break;
+
+
+  function montarWhatsAppUrl(
+    telefone,
+    texto
+  ){
+
+    const numero =
+      limparTelefone(
+        telefone
+      );
+
+    const mensagemCodificada =
+      encodeURIComponent(
+        String(
+          texto || ""
+        )
+      );
+
+
+    if(numero){
+
+      return (
+        "https://wa.me/" +
+        numero +
+        "?text=" +
+        mensagemCodificada
+      );
+    }
+
+
+    return (
+      "https://wa.me/?text=" +
+      mensagemCodificada
+    );
+  }
+
+
+  function obterSupportConfig(store){
+
+    if(
+      store &&
+      store.supportConfig &&
+      typeof store.supportConfig
+        === "object"
+    ){
+
+      return store.supportConfig;
+    }
+
+
+    return {};
+  }
+
+
+  function converterCampoProdutos(
+    valor
+  ){
+
+    if(!valor){
+
+      return [];
+    }
+
+
+    if(
+      Array.isArray(valor)
+    ){
+
+      return valor;
+    }
+
+
+    if(
+      typeof valor
+        === "string"
+    ){
+
+      const texto =
+        valor.trim();
+
+
+      if(
+        !texto ||
+        texto === "undefined" ||
+        texto === "null"
+      ){
+
+        return [];
+      }
+
+
+      try{
+
+        const convertido =
+          JSON.parse(
+            texto
+          );
+
+
+        if(
+          Array.isArray(
+            convertido
+          )
+        ){
+
+          return convertido;
+        }
+
+      }catch(erro){
+
+        console.error(
+          "Erro ao converter produtos:",
+          valor,
+          erro
+        );
+      }
+    }
+
+
+    return [];
+  }
+
+
+  function encontrarProdutos(
+    store
+  ){
+
+    const campos = [
+
+      store.estoque,
+
+      store.looks,
+
+      store.products,
+
+      store.roupas
+
+    ];
+
+
+    let primeiroArrayVazio =
+      [];
+
+
+    for(
+      const campo
+      of campos
+    ){
+
+      const convertido =
+        converterCampoProdutos(
+          campo
+        );
+
+
+      if(
+        convertido.length > 0
+      ){
+
+        return convertido;
+      }
+
+
+      if(
+        Array.isArray(
+          convertido
+        )
+      ){
+
+        primeiroArrayVazio =
+          convertido;
+      }
+    }
+
+
+    return primeiroArrayVazio;
+  }
+
+
+  function formatarPreco(
+    valor
+  ){
+
+    if(
+      valor === undefined ||
+      valor === null ||
+      valor === ""
+    ){
+
+      return "Consulte o preço";
+    }
+
+
+    const texto =
+      String(valor);
+
+
+    if(
+      texto
+        .trim()
+        .toUpperCase()
+        .startsWith("R$")
+    ){
+
+      return texto;
+    }
+
+
+    return "R$ " + texto;
+  }
+
+
+  async function carregarLojaPublica(){
+
+    try{
+
+      const slug =
+        obterSlug();
+
+
+      if(!slug){
+
+        console.error(
+          "Nenhuma loja encontrada."
+        );
+
+        nomeLoja.textContent =
+          "Loja Online";
+
+        mensagem.innerHTML =
+          "Loja não encontrada.";
+
+        return;
+      }
+
+
+      btnProvador.href =
+        "/provador/index.html?loja=" +
+        encodeURIComponent(
+          slug
+        );
+
+
+      const resp =
+        await fetch(
+          "/api/public/store/" +
+          encodeURIComponent(
+            slug
+          ),
+          {
+            cache:"no-store"
+          }
+        );
+
+
+      const data =
+        await resp
+          .json()
+          .catch(
+            () => ({})
+          );
+
+
+      if(
+        !resp.ok ||
+        !data.store
+      ){
+
+        throw new Error(
+          data.error ||
+          "Loja não encontrada."
+        );
+      }
+
+
+      const store =
+        data.store;
+
+
+      const support =
+        obterSupportConfig(
+          store
+        );
+
+
+      const telefone =
+        limparTelefone(
+          store.phone
+        );
+
+
+      const nome =
+        String(
+          store.name || ""
+        ).trim();
+
+
+      nomeLoja.textContent =
+        nome ||
+        (
+          slug
+            ? "Loja " + slug
+            : "Loja Online"
+        );
+
+
+      const mensagemCompra =
+        String(
+          support.purchaseMessage ||
+          ""
+        ).trim() ||
+        "Olá! Tenho interesse em um produto da loja:";
+
+
+      const linkPublico =
+        String(
+          store.publicLink ||
+          window.location.href
+        )
+        .split("#")[0];
+
+
+      const mensagemWhatsFixo =
+        mensagemCompra +
+        "\n" +
+        linkPublico;
+
+
+      whatsFixo.href =
+        montarWhatsAppUrl(
+          telefone,
+          mensagemWhatsFixo
+        );
+
+
+      /*
+        O botão "Falar com Vendedor"
+        é controlado pelo
+        chatbot-vendas.js.
+      */
+      btnWhats.href =
+        "#atendimento";
+
+
+      const items =
+        encontrarProdutos(
+          store
+        );
+
+
+      console.log(
+        "LOJA:",
+        store
+      );
+
+      console.log(
+        "ATENDIMENTO:",
+        support
+      );
+
+      console.log(
+        "PRODUTOS:",
+        items
+      );
+
+
+      listaProdutos.innerHTML =
+        "";
+
+
+      if(
+        !items.length
+      ){
+
+        mensagem.innerHTML =
+          "Nenhum produto encontrado para esta loja.";
+
+        return;
+      }
+
+
+      mensagem.innerHTML =
+        "";
+
+
+      items.forEach(
+        item => {
+
+          const nomeProduto =
+            item.nome ||
+            item.name ||
+            item.titulo ||
+            "Produto";
+
+
+          const img =
+            item.imagem ||
+            item.image ||
+            item.foto ||
+            item.logo ||
+            "";
+
+
+          const preco =
+            item.preco ??
+            item.price ??
+            "";
+
+
+          const mensagemProduto =
+            mensagemCompra +
+            " " +
+            nomeProduto +
+            "\n" +
+            linkPublico;
+
+
+          const whatsappProduto =
+            montarWhatsAppUrl(
+              telefone,
+              mensagemProduto
+            );
+
+
+          const card =
+            document.createElement(
+              "div"
+            );
+
+
+          card.className =
+            "card";
+
+
+          card.innerHTML = `
+            <img
+              src="${img}"
+              alt="${nomeProduto}"
+            >
+
+            <h3>
+              ${nomeProduto}
+            </h3>
+
+            <p>
+              ${formatarPreco(preco)}
+            </p>
+
+            <div class="acoes">
+
+              <a
+                class="btn btn-purple"
+                href="provador/provador.html?loja=${encodeURIComponent(slug)}"
+              >
+                👗 Testar
+              </a>
+
+              <a
+                class="btn btn-green"
+                target="_blank"
+                rel="noopener noreferrer"
+                href="${whatsappProduto}"
+              >
+                💬 Comprar
+              </a>
+
+            </div>
+          `;
+
+
+          listaProdutos.appendChild(
+            card
+          );
+        }
+      );
+
+    }catch(erro){
+
+      console.error(
+        "Erro ao carregar loja pública:",
+        erro
+      );
+
+
+      mensagem.innerHTML =
+        "Erro ao carregar loja pública.";
     }
   }
-} catch (e) {
-  console.error('Erro ao converter itens:', e);
-  items = [];
-}
 
-console.log('ITEMS FINAL:', items, Array.isArray(items)); 
-console.log("ESTOQUE:", store.estoque, typeof store.estoque);
-console.log("LOOKS:", store.looks, typeof store.looks);
-console.log("PRODUCTS:", store.products, typeof store.products);
-console.log("ROUPAS:", store.roupas, typeof store.roupas);
-    listaProdutos.innerHTML = '';
-
-    if(!items.length){
-      mensagem.innerHTML = 'Nenhum produto encontrado para esta loja.';
-      return;
-    }
-
-    mensagem.innerHTML = '';
-
-    items.forEach(item => {
-      const nome = item.nome || item.name || item.titulo || 'Produto';
-      const img = item.imagem || item.image || item.foto || item.logo || '';
-      const preco = item.preco || item.price || '';
-
-      const card = document.createElement('div');
-      card.className = 'card';
-      card.innerHTML = `
-        <img src="${img}" alt="${nome}">
-        <h3>${nome}</h3>
-        <p>${preco ? 'R$ ' + preco : 'Consulte o preço'}</p>
-        <div class="acoes">
-          <a class="btn btn-purple" href="provador/provador.html?loja=${encodeURIComponent(slug)}">👗 Testar</a>
-          <a class="btn btn-green" target="_blank" href="https://wa.me/5531999999999?text=${encodeURIComponent('Olá! Tenho interesse no produto: ' + nome)}">💬 Comprar</a>
-        </div>
-      `;
-      listaProdutos.appendChild(card);
-    });
-
-  }catch(e){
-    console.error(e);
-    mensagem.innerHTML = 'Erro ao carregar loja pública.';
-  }
-  }
 
   carregarLojaPublica();
-  setInterval(async () => {
-  try {
-    const params = new URLSearchParams(location.search);
-    const slug = params.get('loja') || params.get('slug');
 
-    if(!slug) return;
 
-    const r = await fetch(`/api/public/store/${encodeURIComponent(slug)}`);
-    const data = await r.json();
+  /*
+    Confere periodicamente
+    se a loja continua ativa.
+  */
+  setInterval(
+    async () => {
 
-    if(!r.ok || !data.store){
-      alert('Loja desativada.');
-      location.href = `/login-loja.html?loja=${encodeURIComponent(slug)}`;
-      return;
-    }
+      try{
 
-    const store = data.store;
+        const slug =
+          obterSlug();
 
-    if(store.status !== 'ativo' && store.status !== 'degustacao'){
-      alert('Licença desativada.');
-      location.href = `/login-loja.html?loja=${encodeURIComponent(slug)}`;
-    }
 
-  } catch(e){
-    console.log(e);
-  }
-}, 10000);
+        if(!slug){
+
+          return;
+        }
+
+
+        const resposta =
+          await fetch(
+            "/api/public/store/" +
+            encodeURIComponent(
+              slug
+            ),
+            {
+              cache:"no-store"
+            }
+          );
+
+
+        const dados =
+          await resposta
+            .json()
+            .catch(
+              () => ({})
+            );
+
+
+        if(
+          !resposta.ok ||
+          !dados.store
+        ){
+
+          alert(
+            "Loja desativada."
+          );
+
+
+          location.href =
+            "/login-loja.html?loja=" +
+            encodeURIComponent(
+              slug
+            );
+
+
+          return;
+        }
+
+
+        const store =
+          dados.store;
+
+
+        if(
+          store.status !== "ativo" &&
+          store.status !== "degustacao"
+        ){
+
+          alert(
+            "Licença desativada."
+          );
+
+
+          location.href =
+            "/login-loja.html?loja=" +
+            encodeURIComponent(
+              slug
+            );
+        }
+
+      }catch(erro){
+
+        console.log(
+          "Erro ao verificar licença:",
+          erro
+        );
+      }
+
+    },
+
+    10000
+  );
 </script>
 
 </body>
+
 </html>

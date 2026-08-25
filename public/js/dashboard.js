@@ -1,4 +1,4 @@
-﻿const buttons =
+const buttons =
   Array.from(
     document.querySelectorAll('.menu-btn')
   );
@@ -90,6 +90,43 @@ buttons.forEach(function(btn){
   );
 
 });
+
+
+/* INITIAL VIEW PRO */
+(function(){
+
+  const view =
+    new URLSearchParams(
+      location.search
+    ).get('view');
+
+  if(!view) return;
+
+  const target =
+    normalizarUrl(view);
+
+  const btn =
+    buttons.find(function(item){
+
+      return normalizarUrl(
+        item.dataset.url
+      ) === target;
+
+    });
+
+  /*
+    Segurança:
+    só abre telas que já existem
+    oficialmente no menu do Dashboard.
+  */
+  if(!btn) return;
+
+  abrirTela(
+    btn.dataset.url,
+    btn
+  );
+
+})();
 
 
 async function atualizarLojaAtiva(store){
@@ -268,3 +305,150 @@ if(logoutBtn){
   );
 
 }
+
+/* MOBILE DRAWER PRO */
+(function(){
+
+  const mobileBtn =
+    document.getElementById('mobileMenuBtn');
+
+  const mobileOverlay =
+    document.getElementById('mobileMenuOverlay');
+
+  const mobileSidebar =
+    document.querySelector('.sidebar');
+
+
+  function isMobile(){
+    return window.matchMedia(
+      '(max-width: 760px)'
+    ).matches;
+  }
+
+
+  function openMobileMenu(){
+
+    if(!isMobile()) return;
+
+    document.body.classList.add(
+      'mobile-menu-open'
+    );
+
+    if(mobileBtn){
+      mobileBtn.setAttribute(
+        'aria-expanded',
+        'true'
+      );
+    }
+
+  }
+
+
+  function closeMobileMenu(){
+
+    document.body.classList.remove(
+      'mobile-menu-open'
+    );
+
+    if(mobileBtn){
+      mobileBtn.setAttribute(
+        'aria-expanded',
+        'false'
+      );
+    }
+
+  }
+
+
+  function toggleMobileMenu(){
+
+    if(
+      document.body.classList.contains(
+        'mobile-menu-open'
+      )
+    ){
+      closeMobileMenu();
+    }else{
+      openMobileMenu();
+    }
+
+  }
+
+
+  if(mobileBtn){
+
+    mobileBtn.addEventListener(
+      'click',
+      function(e){
+
+        e.preventDefault();
+        e.stopPropagation();
+
+        toggleMobileMenu();
+
+      }
+    );
+
+  }
+
+
+  if(mobileOverlay){
+
+    mobileOverlay.addEventListener(
+      'click',
+      closeMobileMenu
+    );
+
+  }
+
+
+  if(mobileSidebar){
+
+    mobileSidebar.addEventListener(
+      'click',
+      function(e){
+
+        const item =
+          e.target.closest(
+            '.menu-btn'
+          );
+
+        if(
+          item &&
+          isMobile()
+        ){
+
+          closeMobileMenu();
+
+        }
+
+      }
+    );
+
+  }
+
+
+  document.addEventListener(
+    'keydown',
+    function(e){
+
+      if(e.key === 'Escape'){
+        closeMobileMenu();
+      }
+
+    }
+  );
+
+
+  window.addEventListener(
+    'resize',
+    function(){
+
+      if(!isMobile()){
+        closeMobileMenu();
+      }
+
+    }
+  );
+
+})();

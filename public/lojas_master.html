@@ -101,6 +101,66 @@ button,input,select{font:inherit}
 
 .field.full{grid-column:1/-1}
 
+/* Ficha profissional compacta */
+.form-sections{
+  display:grid;
+  gap:10px;
+}
+
+.form-section{
+  border:1px solid var(--line);
+  border-radius:14px;
+  background:#fff;
+  overflow:hidden;
+}
+
+.form-section summary{
+  list-style:none;
+  cursor:pointer;
+  padding:13px 14px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  font-weight:900;
+  color:var(--accent-dark);
+  background:#fffafd;
+  user-select:none;
+}
+
+.form-section summary::-webkit-details-marker{
+  display:none;
+}
+
+.form-section summary::after{
+  content:'+';
+  width:26px;
+  height:26px;
+  border-radius:50%;
+  display:grid;
+  place-items:center;
+  background:#f6e8ef;
+  color:var(--accent-dark);
+  font-size:18px;
+  flex:0 0 auto;
+}
+
+.form-section[open] summary::after{
+  content:'?';
+}
+
+.form-section[open] summary{
+  border-bottom:1px solid var(--line);
+}
+
+.form-section-body{
+  padding:14px;
+}
+
+.form-section-body .form-grid{
+  margin:0;
+}
+
 .field label{
   display:block;
   font-weight:800;
@@ -490,6 +550,11 @@ button.small{
 
 <input type="hidden" id="storeId">
 
+<div class="form-sections">
+
+<details class="form-section" name="storeFormGroup" open>
+<summary>Identificação</summary>
+<div class="form-section-body">
 <div class="form-grid">
 
 <div class="field full">
@@ -498,28 +563,8 @@ button.small{
 </div>
 
 <div class="field full">
-<label>Subtítulo</label>
+<label>Subt?tulo</label>
 <input id="storeSub" placeholder="Ex.: Vitrine interativa e campanhas">
-</div>
-
-<div class="field">
-<label>Cor principal</label>
-<input id="storeColor" type="color" value="#e33d8f">
-</div>
-
-<div class="field">
-<label>Slug do link</label>
-<input id="storeSlug" placeholder="ex.: elegance-store">
-</div>
-
-<div class="field">
-<label>Login da loja</label>
-<input id="storeLogin" placeholder="Ex.: admin">
-</div>
-
-<div class="field">
-<label>Nova senha da loja</label>
-<input id="storePassword" type="password" placeholder="Criar ou resetar senha">
 </div>
 
 <div class="field full">
@@ -531,6 +576,88 @@ button.small{
 <label>WhatsApp do cliente</label>
 <input id="storePhone" placeholder="5531999999999">
 </div>
+
+<div class="field">
+<label>CPF do responsável</label>
+<input id="storeCpf" inputmode="numeric" placeholder="000.000.000-00">
+</div>
+
+<div class="field">
+<label>CNPJ da loja (opcional)</label>
+<input id="storeCnpj" inputmode="numeric" placeholder="00.000.000/0000-00">
+</div>
+
+<div class="field">
+<label>Cor principal</label>
+<input id="storeColor" type="color" value="#e33d8f">
+</div>
+
+<div class="field full">
+<label>Logo por URL</label>
+<input id="storeLogo" placeholder="https://...">
+</div>
+
+<div class="field full">
+<label>Carregar logo do PC</label>
+<input id="storeLogoFile" type="file" accept="image/*">
+</div>
+
+</div>
+</div>
+</details>
+
+
+<details class="form-section" name="storeFormGroup">
+<summary>Endereço</summary>
+<div class="form-section-body">
+
+<div class="form-grid">
+
+<div class="field">
+<label>CEP</label>
+<input id="storeCep" inputmode="numeric" placeholder="00000-000">
+</div>
+
+<div class="field full">
+<label>Endereço</label>
+<input id="storeAddress" placeholder="Rua, avenida, praça...">
+</div>
+
+<div class="field">
+<label>Número</label>
+<input id="storeAddressNumber" placeholder="Ex.: 123">
+</div>
+
+<div class="field">
+<label>Complemento</label>
+<input id="storeAddressComplement" placeholder="Sala, loja, bloco...">
+</div>
+
+<div class="field full">
+<label>Bairro</label>
+<input id="storeNeighborhood" placeholder="Bairro">
+</div>
+
+<div class="field">
+<label>Cidade</label>
+<input id="storeCity" placeholder="Cidade">
+</div>
+
+<div class="field">
+<label>UF</label>
+<input id="storeState" maxlength="2" placeholder="MG">
+</div>
+
+</div>
+
+</div>
+</details>
+
+
+<details class="form-section" name="storeFormGroup">
+<summary>Contrato e Plano</summary>
+<div class="form-section-body">
+<div class="form-grid">
 
 <div class="field">
 <label>Plano</label>
@@ -546,6 +673,32 @@ button.small{
 <input id="storeExpiresAt" type="date">
 </div>
 
+<div class="field">
+<label>Data da contratação</label>
+<input id="storeContractDate" type="date">
+</div>
+
+<div class="field">
+<label>Início da licença</label>
+<input id="storeLicenseStartDate" type="date">
+</div>
+
+<div class="field">
+<label>Valor contratado (R$)</label>
+<input id="storeContractValue" inputmode="decimal" placeholder="Ex.: 99,90">
+</div>
+
+<div class="field">
+<label>Situação do contrato</label>
+<select id="storeContractStatus">
+<option value="ativo">Ativo</option>
+<option value="pendente">Pendente</option>
+<option value="suspenso">Suspenso</option>
+<option value="cancelado">Cancelado</option>
+<option value="encerrado">Encerrado</option>
+</select>
+</div>
+
 <div class="field full">
 <label>Status</label>
 <select id="storeStatus">
@@ -555,20 +708,93 @@ button.small{
 </select>
 </div>
 
+</div>
+</div>
+</details>
+
+
+<details class="form-section" name="storeFormGroup">
+<summary>Pagamentos</summary>
+<div class="form-section-body">
+<div class="form-grid">
+
+<div class="field full">
+<label><strong>Produtor &rarr; Lojista</strong></label>
+<small style="display:block;margin-bottom:10px;color:#6b7280;">
+Formas de pagamento aceitas para plano, licen&ccedil;a e cobran&ccedil;as da loja.
+</small>
+
+<label style="display:flex;gap:16px;flex-wrap:wrap;">
+<span><input id="producerPayPix" type="checkbox" style="width:auto;"> PIX</span>
+<span><input id="producerPayCard" type="checkbox" style="width:auto;"> Cart&atilde;o</span>
+<span><input id="producerPayBoleto" type="checkbox" style="width:auto;"> Boleto</span>
+<span><input id="producerPayOther" type="checkbox" style="width:auto;"> Outro</span>
+</label>
+</div>
+
+<div class="field full">
+<label><strong>Lojista &rarr; Cliente final</strong></label>
+<small style="display:block;margin-bottom:10px;color:#6b7280;">
+Formas de pagamento que esta loja aceita dos seus clientes.
+</small>
+
+<label style="display:flex;gap:16px;flex-wrap:wrap;">
+<span><input id="customerPayPix" type="checkbox" style="width:auto;"> PIX</span>
+<span><input id="customerPayCredit" type="checkbox" style="width:auto;"> Cart&atilde;o de cr&eacute;dito</span>
+<span><input id="customerPayDebit" type="checkbox" style="width:auto;"> Cart&atilde;o de d&eacute;bito</span>
+<span><input id="customerPayCash" type="checkbox" style="width:auto;"> Dinheiro</span>
+</label>
+</div>
+
+</div>
+</div>
+</details>
+
+
+<details class="form-section" name="storeFormGroup">
+<summary>Acesso e Segurança</summary>
+<div class="form-section-body">
+<div class="form-grid">
+
+<div class="field">
+<label>Slug do link</label>
+<input id="storeSlug" placeholder="ex.: elegance-store">
+</div>
+
+<div class="field">
+<label>Login da loja</label>
+<input id="storeLogin" placeholder="Ex.: admin">
+</div>
+
+<div class="field full">
+<label>Nova senha da loja</label>
+<input id="storePassword" type="password" placeholder="Digite uma nova senha segura" autocomplete="new-password">
+<small style="display:block;margin-top:6px;color:#6b7280;">
+A senha atual nunca é exibida. Use este campo somente para criar ou redefinir a senha.
+</small>
+</div>
+
+<div class="field full">
+<label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+<input id="storeForcePasswordChange" type="checkbox" checked style="width:auto;">
+Exigir troca da senha no próximo login
+</label>
+</div>
+
+<div class="field full">
+<button class="secondary" id="resetPasswordBtn" type="button">
+Redefinir senha
+</button>
+</div>
+
 <div class="field full">
 <label>Domínio próprio da loja</label>
 <input id="storeCustomDomain" placeholder="Ex.: painel.sualoja.com">
 </div>
 
-<div class="field full">
-<label>Logo por URL</label>
-<input id="storeLogo" placeholder="https://...">
 </div>
-
-<div class="field full">
-<label>Carregar logo do PC</label>
-<input id="storeLogoFile" type="file" accept="image/*">
 </div>
+</details>
 
 </div>
 
@@ -602,7 +828,7 @@ button.small{
 <div>
 <h2>Localizar loja</h2>
 <div class="section-sub" style="margin:4px 0 0">
-Pesquise por nome ou slug e troque a loja ativa com um clique.
+Pesquise por nome, CPF ou CNPJ e troque a loja ativa com um clique.
 </div>
 </div>
 
@@ -617,7 +843,7 @@ Pesquise por nome ou slug e troque a loja ativa com um clique.
 <input
 id="storeSearch"
 type="search"
-placeholder="Buscar por nome ou slug..."
+placeholder="Buscar por nome, CPF ou CNPJ..."
 autocomplete="off">
 
 <button
@@ -774,6 +1000,81 @@ store?.email||'';
 
 el('storePhone').value=
 store?.phone||'';
+
+el('storeCpf').value=
+store?.cpf||'';
+
+el('storeCnpj').value=
+store?.cnpj||'';
+
+el('storeCep').value=
+store?.cep||'';
+
+el('storeAddress').value=
+store?.address||'';
+
+el('storeAddressNumber').value=
+store?.addressNumber||'';
+
+el('storeAddressComplement').value=
+store?.addressComplement||'';
+
+el('storeNeighborhood').value=
+store?.neighborhood||'';
+
+el('storeCity').value=
+store?.city||'';
+
+el('storeState').value=
+store?.state||'';
+
+el('storeContractDate').value=
+store?.contractDate||'';
+
+el('storeLicenseStartDate').value=
+store?.licenseStartDate||'';
+
+el('storeContractValue').value=
+Number(store?.contractValueCents||0)>0
+? (Number(store.contractValueCents)/100).toFixed(2).replace('.',',')
+: '';
+
+el('storeContractStatus').value=
+store?.contractStatus||'ativo';
+
+const producerPaymentMethods =
+Array.isArray(store?.producerPaymentMethods)
+? store.producerPaymentMethods
+: ['pix'];
+
+el('producerPayPix').checked=
+producerPaymentMethods.includes('pix');
+
+el('producerPayCard').checked=
+producerPaymentMethods.includes('card');
+
+el('producerPayBoleto').checked=
+producerPaymentMethods.includes('boleto');
+
+el('producerPayOther').checked=
+producerPaymentMethods.includes('other');
+
+const customerPaymentMethods =
+Array.isArray(store?.customerPaymentMethods)
+? store.customerPaymentMethods
+: [];
+
+el('customerPayPix').checked=
+customerPaymentMethods.includes('pix');
+
+el('customerPayCredit').checked=
+customerPaymentMethods.includes('credit');
+
+el('customerPayDebit').checked=
+customerPaymentMethods.includes('debit');
+
+el('customerPayCash').checked=
+customerPaymentMethods.includes('cash');
 
 el('storePlan').value=
 store?.plan||'premium';
@@ -1117,6 +1418,90 @@ Excluir
 
 </div>
 
+<div
+style='margin-top:18px;padding-top:16px;border-top:1px solid #f1d7e5;'>
+
+<div
+style='display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;'>
+
+<div>
+<strong style='display:block;color:#7a3157;'>
+Backups desta loja
+</strong>
+
+<span style='font-size:12px;color:#6b7280;'>
+Hist&oacute;rico exclusivo de ${esc(store.name||'esta loja')}.
+</span>
+</div>
+
+<div class='actions' style='margin:0;padding:0;'>
+
+<button
+class='small secondary'
+data-action='backup-store'
+data-id='${esc(store.id)}'>
+Criar backup agora
+</button>
+
+<button
+class='small secondary'
+data-action='toggle-store-backups'
+data-id='${esc(store.id)}'>
+Hist&oacute;rico de restaura&ccedil;&atilde;o
+</button>
+
+</div>
+
+</div>
+
+<div
+id='storeBackupPanel'
+style='display:none;margin-top:14px;padding:14px;border:1px solid #f1d7e5;border-radius:12px;background:#fffafd;'>
+
+<div style='font-weight:800;color:#7a3157;margin-bottom:10px;'>
+Localizar ponto de restaura&ccedil;&atilde;o
+</div>
+
+<div style='display:flex;gap:8px;align-items:end;flex-wrap:wrap;'>
+
+<div style='min-width:180px;'>
+<label
+for='storeBackupDate'
+style='display:block;font-size:12px;font-weight:700;color:#6f4059;margin-bottom:5px;'>
+Data
+</label>
+
+<input
+id='storeBackupDate'
+type='date'
+style='min-height:38px;padding:8px 10px;border:1px solid #dec9d5;border-radius:10px;'>
+</div>
+
+<button
+class='small secondary'
+data-action='filter-store-backups'
+data-id='${esc(store.id)}'>
+Buscar
+</button>
+
+<button
+class='small secondary'
+data-action='recent-store-backups'
+data-id='${esc(store.id)}'>
+Mais recentes
+</button>
+
+</div>
+
+<div
+id='storeBackupHistory'
+style='margin-top:12px;max-height:260px;overflow-y:auto;padding-right:6px;'>
+</div>
+
+</div>
+
+</div>
+
 </div>
 
 </div>
@@ -1145,12 +1530,24 @@ store=>{
 
 const hay=
 normalize(
-`${store.name||''} ${store.slug||''}`
+`${store.name||''} ${store.slug||''} ${store.cpf||''} ${store.cnpj||''}`
 );
+
+const queryDigits=
+String(searchTerm||'')
+.replace(/\D/g,'');
+
+const documentDigits=
+`${store.cpf||''} ${store.cnpj||''}`
+.replace(/\D/g,'');
 
 const queryOk=
 !searchTerm||
-hay.includes(searchTerm);
+hay.includes(searchTerm)||
+(
+queryDigits.length>0&&
+documentDigits.includes(queryDigits)
+);
 
 const first=
 normalize(
@@ -1435,6 +1832,69 @@ el('storeEmail').value.trim(),
 phone:
 el('storePhone').value.trim(),
 
+cpf:
+el('storeCpf').value.trim(),
+
+cnpj:
+el('storeCnpj').value.trim(),
+
+cep:
+el('storeCep').value.trim(),
+
+address:
+el('storeAddress').value.trim(),
+
+addressNumber:
+el('storeAddressNumber').value.trim(),
+
+addressComplement:
+el('storeAddressComplement').value.trim(),
+
+neighborhood:
+el('storeNeighborhood').value.trim(),
+
+city:
+el('storeCity').value.trim(),
+
+state:
+el('storeState').value.trim().toUpperCase(),
+
+contractDate:
+el('storeContractDate').value,
+
+licenseStartDate:
+el('storeLicenseStartDate').value,
+
+contractValueCents:
+Math.max(
+0,
+Math.round(
+(Number(
+el('storeContractValue').value
+.trim()
+.replace(/\./g,'')
+.replace(',','.')
+)||0)*100
+)
+),
+
+contractStatus:
+el('storeContractStatus').value||'ativo',
+
+producerPaymentMethods:[
+  ...(el('producerPayPix').checked ? ['pix'] : []),
+  ...(el('producerPayCard').checked ? ['card'] : []),
+  ...(el('producerPayBoleto').checked ? ['boleto'] : []),
+  ...(el('producerPayOther').checked ? ['other'] : [])
+],
+
+customerPaymentMethods:[
+  ...(el('customerPayPix').checked ? ['pix'] : []),
+  ...(el('customerPayCredit').checked ? ['credit'] : []),
+  ...(el('customerPayDebit').checked ? ['debit'] : []),
+  ...(el('customerPayCash').checked ? ['cash'] : [])
+],
+
 plan:
 el('storePlan').value||
 'premium',
@@ -1476,7 +1936,10 @@ throw new Error(
 }
 
 
-if(password){
+if(
+!id &&
+password
+){
 
 payload.password=
 password;
@@ -1541,6 +2004,64 @@ payload
 
 el('status').textContent=
 'Loja salva com segurança.';
+
+await loadStores();
+
+}
+
+
+async function resetStorePassword(){
+
+const id=
+el('storeId').value;
+
+const password=
+el('storePassword').value.trim();
+
+const forcePasswordChange=
+el('storeForcePasswordChange').checked;
+
+
+if(!id){
+
+throw new Error(
+'Selecione uma loja cadastrada antes de redefinir a senha.'
+);
+
+}
+
+
+if(!password){
+
+throw new Error(
+'Digite a nova senha da loja.'
+);
+
+}
+
+
+await api(
+`/api/admin/stores/${encodeURIComponent(id)}/reset-password`,
+{
+method:'POST',
+headers:{
+'Content-Type':'application/json'
+},
+body:
+JSON.stringify({
+password,
+forcePasswordChange
+})
+}
+);
+
+
+el('storePassword').value='';
+
+el('status').textContent=
+forcePasswordChange
+?'Senha redefinida. A loja dever? trocar a senha no pr?ximo login.'
+:'Senha redefinida com seguran?a.';
 
 await loadStores();
 
@@ -1789,6 +2310,270 @@ openEmail(store);
 }
 
 
+if(action==='restore-store-backup'){
+
+const arquivo=
+String(element.dataset.file||'').trim();
+
+if(!arquivo){
+
+el('status').textContent=
+'Arquivo de backup nao informado.';
+
+return;
+
+}
+
+const confirmado=
+window.confirm(
+`Restaurar somente ${store.name} a partir deste backup?
+
+Esta operacao substituira os dados salvos desta loja, incluindo cadastro, catalogo/estoque, configuracoes, senha e cobrancas.
+
+As outras lojas nao serao alteradas.
+
+Antes da restauracao, o sistema criara automaticamente um backup de seguranca da situacao atual.`
+);
+
+if(!confirmado)return;
+
+element.disabled=true;
+
+api(
+`/api/admin/stores/${encodeURIComponent(id)}/backups/${encodeURIComponent(arquivo)}/restore`,
+{
+method:'POST'
+}
+)
+.then(
+data=>{
+
+el('status').textContent=
+`${store.name} restaurada com sucesso. Backup de seguranca criado: ${data?.emergencyBackup||'OK'}.`;
+
+return loadStores();
+
+}
+)
+.catch(
+e=>{
+
+el('status').textContent=
+e.message||'Nao foi possivel restaurar esta loja.';
+
+}
+)
+.finally(
+()=>{
+
+element.disabled=false;
+
+}
+);
+
+return;
+
+}
+
+
+if(action==='toggle-store-backups'){
+
+const panel=
+el('storeBackupPanel');
+
+if(!panel)return;
+
+const aberto=
+panel.style.display!=='none';
+
+panel.style.display=
+aberto
+? 'none'
+: 'block';
+
+return;
+
+}
+
+
+if(
+action==='recent-store-backups' ||
+action==='filter-store-backups'
+){
+
+api(
+`/api/admin/stores/${encodeURIComponent(id)}/backups`
+)
+.then(
+data=>{
+
+const history=
+el('storeBackupHistory');
+
+if(!history)return;
+
+let backups=
+Array.isArray(data?.backups)
+? data.backups
+: [];
+
+if(action==='filter-store-backups'){
+
+const campoData=
+el('storeBackupDate');
+
+const dataEscolhida=
+String(campoData?.value||'').trim();
+
+if(!dataEscolhida){
+
+history.innerHTML=
+`<div style="font-size:12px;color:#6b7280;">
+Selecione uma data para localizar os pontos de restaura&ccedil;&atilde;o.
+</div>`;
+
+return;
+
+}
+
+backups=
+backups.filter(
+item=>{
+
+if(!item.criadoEm)return false;
+
+const d=
+new Date(item.criadoEm);
+
+if(Number.isNaN(d.getTime())){
+return false;
+}
+
+const chave=
+`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+
+return chave===dataEscolhida;
+
+}
+);
+
+}else{
+
+backups=
+backups.slice(0,5);
+
+}
+
+if(backups.length===0){
+
+history.innerHTML=
+`<div style="font-size:12px;color:#6b7280;">
+Nenhum ponto de restaura&ccedil;&atilde;o encontrado.
+</div>`;
+
+return;
+
+}
+
+history.innerHTML=
+backups.map(
+item=>{
+
+const dataBr=
+item.criadoEm
+? new Date(item.criadoEm).toLocaleString('pt-BR')
+: '-';
+
+const tamanhoKb=
+Math.max(
+1,
+Math.round(
+Number(item.tamanho||0)/1024
+)
+);
+
+return `
+<div
+style="display:flex;justify-content:space-between;gap:12px;align-items:center;padding:8px 0;border-bottom:1px solid #f3e3eb;font-size:12px;">
+
+<div>
+<strong>${esc(item.arquivo||'backup')}</strong>
+
+<div style="color:#6b7280;margin-top:2px;">
+${esc(dataBr)} &middot; ${tamanhoKb} KB
+</div>
+</div>
+
+<button
+class="small secondary"
+data-action='restore-store-backup'
+data-id='${esc(id)}'
+data-file='${esc(item.arquivo||"")}'>
+Restaurar
+</button>
+
+</div>
+`;
+
+}
+).join('');
+
+}
+)
+.catch(
+e=>{
+
+el('status').textContent=
+e.message||'Nao foi possivel localizar os backups da loja.';
+
+}
+);
+
+return;
+
+}
+
+
+if(action==='backup-store'){
+
+api(
+`/api/admin/stores/${encodeURIComponent(id)}/backup`,
+{
+method:'POST'
+}
+)
+.then(
+data=>{
+
+el('status').textContent=
+`Backup individual de ${store.name} criado com sucesso.`;
+
+const history=
+el('storeBackupHistory');
+
+if(history){
+
+history.innerHTML=
+`<div style="font-size:12px;color:#6b7280;">
+Backup criado: <strong>${esc(data?.backup?.arquivo||'arquivo salvo')}</strong>
+</div>`;
+
+}
+
+}
+)
+.catch(
+e=>{
+
+el('status').textContent=
+e.message||'Nao foi possivel criar o backup da loja.';
+
+}
+);
+
+}
+
+
 if(action==='edit'){
 
 fillForm(store);
@@ -1860,6 +2645,16 @@ el('clearBtn')
 .addEventListener(
 'click',
 resetForm
+);
+
+
+el('resetPasswordBtn')
+.addEventListener(
+'click',
+()=>resetStorePassword()
+.catch(
+e=>el('status').textContent=e.message
+)
 );
 
 

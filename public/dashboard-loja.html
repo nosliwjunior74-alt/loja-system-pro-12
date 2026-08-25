@@ -5,6 +5,7 @@
   <meta name='viewport' content='width=device-width, initial-scale=1.0'>
   <title>Painel da Loja</title>
   <link rel='stylesheet' href='css/dashboard.css'>
+  <link rel='stylesheet' href='css/store-admin-pro.css'>
   <style>
     .store-meta{display:flex;flex-direction:column;gap:6px}
     .status-wrap{display:flex;flex-direction:column;gap:8px;margin-top:8px}
@@ -197,7 +198,7 @@ try {
 let store = null;
 
 if (slug) {
-  const resp = await fetch('/api/public/store/' + encodeURIComponent(slug));
+  const resp = await fetch('/api/public/session-store');
   const data = await resp.json();
   store = data.store || null;
 }
@@ -367,7 +368,7 @@ setInterval(async () => {
     if(!slug) return;
 
     const r = await fetch(
-      `/api/public/store/${encodeURIComponent(slug)}`
+      '/api/public/session-store'
     );
 
     const data = await r.json();
@@ -414,7 +415,7 @@ window.addEventListener("load", montarLinkPublicoLoja);
     if(!slug) return;
 
     const r = await fetch(
-      `/api/public/store/${encodeURIComponent(slug)}`
+      '/api/public/session-store'
     );
 
     const data = await r.json();
@@ -477,5 +478,6 @@ async function iniciarCamera() {
   }
 });
 </script>
+  <script src='js/store-admin-pro.js'></script>
 </body>
 </html>

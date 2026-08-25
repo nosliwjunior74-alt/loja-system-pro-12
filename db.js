@@ -89,6 +89,25 @@ function maybeAddColumn(table, column, typeDef){
   if(!cols.includes(column)) db.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${typeDef}`);
 }
 maybeAddColumn('stores','custom_domain','TEXT');
+maybeAddColumn('stores','support_config','TEXT');
+maybeAddColumn('stores','cpf','TEXT');
+maybeAddColumn('stores','cnpj','TEXT');
+
+maybeAddColumn('stores','cep','TEXT');
+maybeAddColumn('stores','address','TEXT');
+maybeAddColumn('stores','address_number','TEXT');
+maybeAddColumn('stores','address_complement','TEXT');
+maybeAddColumn('stores','neighborhood','TEXT');
+maybeAddColumn('stores','city','TEXT');
+maybeAddColumn('stores','state','TEXT');
+
+maybeAddColumn('stores','contract_date','TEXT');
+maybeAddColumn('stores','license_start_date','TEXT');
+maybeAddColumn('stores','contract_value_cents','INTEGER DEFAULT 0');
+maybeAddColumn('stores','contract_status','TEXT DEFAULT "ativo"');
+maybeAddColumn('stores','force_password_change','INTEGER DEFAULT 0');
+maybeAddColumn('stores','producer_payment_methods',"TEXT DEFAULT '[\"pix\"]'");
+maybeAddColumn('stores','customer_payment_methods',"TEXT DEFAULT '[]'");
 maybeAddColumn('payments','notes','TEXT');
 maybeAddColumn('payments','whatsapp_sent_at','TEXT');
 maybeAddColumn('payments','whatsapp_message_id','TEXT');
@@ -124,9 +143,54 @@ function rowToStore(row, baseUrl=''){
   const synced = syncStoreLicense(row.id) || row;
   const store = {
     id: synced.id, slug: synced.slug, name: synced.name, sub: synced.sub || '', color: synced.color || '#e33d8f', logo: synced.logo || 'assets/default-logo.svg',
-    email: synced.email || '', phone: synced.phone || '', login: synced.login, status: synced.status, plan: synced.plan || 'premium', expiresAt: synced.expires_at || '',
+    email: synced.email || '', phone: synced.phone || '', cpf: synced.cpf || '', cnpj: synced.cnpj || '',
+    cep: synced.cep || '', address: synced.address || '', addressNumber: synced.address_number || '',
+    addressComplement: synced.address_complement || '', neighborhood: synced.neighborhood || '',
+    city: synced.city || '', state: synced.state || '',
+    contractDate: synced.contract_date || '',
+    licenseStartDate: synced.license_start_date || '',
+    contractValueCents: synced.contract_value_cents || 0,
+    contractStatus: synced.contract_status || 'ativo',
+    forcePasswordChange: Boolean(synced.force_password_change),
+    login: synced.login, status: synced.status, plan: synced.plan || 'premium', expiresAt: synced.expires_at || '',
     licenseKey: synced.license_key || '', customDomain: synced.custom_domain || '', createdAt: synced.created_at, updatedAt: synced.updated_at || '',
   };
+  try {
+    const producerMethods =
+      JSON.parse(synced.producer_payment_methods || '["pix"]');
+
+    store.producerPaymentMethods =
+      Array.isArray(producerMethods)
+        ? producerMethods
+        : ['pix'];
+
+  } catch(e) {
+    store.producerPaymentMethods = ['pix'];
+  }
+
+  try {
+    const customerMethods =
+      JSON.parse(synced.customer_payment_methods || '[]');
+
+    store.customerPaymentMethods =
+      Array.isArray(customerMethods)
+        ? customerMethods
+        : [];
+
+  } catch(e) {
+    store.customerPaymentMethods = [];
+  }
+
+  try {
+    const cfg = JSON.parse(synced.support_config || '{}');
+    store.supportConfig =
+      cfg && typeof cfg === 'object' && !Array.isArray(cfg)
+        ? cfg
+        : {};
+  } catch(e) {
+    store.supportConfig = {};
+  }
+
   store.estoque = JSON.parse(synced.estoque || '[]');
 store.products = JSON.parse(synced.products || '[]');
 store.looks = JSON.parse(synced.looks || '[]');
@@ -207,6 +271,21 @@ color,
 logo,
 email,
 phone,
+cpf,
+cnpj,
+cep,
+address,
+address_number,
+address_complement,
+neighborhood,
+city,
+state,
+contract_date,
+license_start_date,
+contract_value_cents,
+contract_status,
+producer_payment_methods,
+customer_payment_methods,
 login,
 password_hash,
 status,
@@ -214,6 +293,7 @@ plan,
 expires_at,
 license_key,
 custom_domain,
+support_config,
 estoque,
 products,
 looks,
@@ -222,9 +302,13 @@ created_at,
 updated_at
 )
   VALUES (
-@id,@slug,@name,@sub,@color,@logo,@email,@phone,@login,
+@id,@slug,@name,@sub,@color,@logo,@email,@phone,@cpf,@cnpj,
+@cep,@address,@address_number,@address_complement,@neighborhood,@city,@state,
+@contract_date,@license_start_date,@contract_value_cents,@contract_status,
+@producer_payment_methods,@customer_payment_methods,@login,
 @password_hash,@status,@plan,@expires_at,@license_key,
 @custom_domain,
+@support_config,
 @estoque,
 @products,
 @looks,
@@ -233,9 +317,33 @@ updated_at
 @updated_at
 )`).run({
     id, slug, name: payload.name || 'Sua Loja', sub: payload.sub || 'Dashboard Integrado Multi-Loja', color: payload.color || '#e33d8f', logo: payload.logo || 'assets/default-logo.svg',
-    email: payload.email || '', phone: payload.phone || '', login: payload.login || 'admin', password_hash: hashPassword(payload.password || crypto.randomBytes(12).toString('base64url')),
+    email: payload.email || '', phone: payload.phone || '', cpf: payload.cpf || '', cnpj: payload.cnpj || '',
+    cep: payload.cep || '',
+    address: payload.address || '',
+    address_number: payload.addressNumber || '',
+    address_complement: payload.addressComplement || '',
+    neighborhood: payload.neighborhood || '',
+    city: payload.city || '',
+    state: payload.state || '',
+    contract_date: payload.contractDate || '',
+    license_start_date: payload.licenseStartDate || '',
+    contract_value_cents: Math.max(0, Math.round(Number(payload.contractValueCents || 0))),
+    contract_status: ['ativo','pendente','suspenso','cancelado','encerrado'].includes(payload.contractStatus)
+      ? payload.contractStatus
+      : 'ativo',
+    producer_payment_methods: JSON.stringify(
+      Array.isArray(payload.producerPaymentMethods)
+        ? payload.producerPaymentMethods
+        : ['pix']
+    ),
+    customer_payment_methods: JSON.stringify(
+      Array.isArray(payload.customerPaymentMethods)
+        ? payload.customerPaymentMethods
+        : []
+    ),
+    login: payload.login || 'admin', password_hash: hashPassword(payload.password || crypto.randomBytes(12).toString('base64url')),
     status: payload.status === 'inativo' ? 'inativo' : (payload.status === 'degustacao' ? 'degustacao' : 'ativo'), plan: payload.plan || 'premium', expires_at: expiresAt || null, license_key: licenseKey,
-    custom_domain: payload.customDomain || '',estoque: JSON.stringify(payload.estoque || []),
+    custom_domain: payload.customDomain || '', support_config: JSON.stringify(payload.supportConfig || {}), estoque: JSON.stringify(payload.estoque || []),
 products: JSON.stringify(payload.products || []),
 looks: JSON.stringify(payload.looks || []),
 roupas: JSON.stringify(payload.roupas || []), created_at: now, updated_at: now
@@ -249,16 +357,53 @@ function updateStore(id, payload, baseUrl=''){
   const expiresAt = payload.expiresAt !== undefined ? payload.expiresAt : (current.expires_at || '');
   const licenseKey = generateLicenseKey(id, slug, expiresAt);
   const passwordHash = payload.password ? hashPassword(payload.password) : current.password_hash;
-  db.prepare(`UPDATE stores SET slug=@slug,name=@name,sub=@sub,color=@color,logo=@logo,email=@email,phone=@phone,login=@login,password_hash=@password_hash,status=@status,plan=@plan,expires_at=@expires_at,license_key=@license_key,custom_domain=@custom_domain,
+  db.prepare(`UPDATE stores SET slug=@slug,name=@name,sub=@sub,color=@color,logo=@logo,email=@email,phone=@phone,cpf=@cpf,cnpj=@cnpj,cep=@cep,address=@address,address_number=@address_number,address_complement=@address_complement,neighborhood=@neighborhood,city=@city,state=@state,contract_date=@contract_date,license_start_date=@license_start_date,contract_value_cents=@contract_value_cents,contract_status=@contract_status,producer_payment_methods=@producer_payment_methods,customer_payment_methods=@customer_payment_methods,login=@login,password_hash=@password_hash,status=@status,plan=@plan,expires_at=@expires_at,license_key=@license_key,custom_domain=@custom_domain,support_config=@support_config,
 estoque=@estoque,
 products=@products,
 looks=@looks,
 roupas=@roupas,
 updated_at=@updated_at WHERE id=@id`).run({
     id, slug, name: payload.name ?? current.name, sub: payload.sub ?? current.sub, color: payload.color ?? current.color, logo: payload.logo ?? current.logo,
-    email: payload.email ?? current.email, phone: payload.phone ?? current.phone, login: payload.login ?? current.login, password_hash: passwordHash,
+    email: payload.email ?? current.email, phone: payload.phone ?? current.phone, cpf: payload.cpf ?? current.cpf ?? '', cnpj: payload.cnpj ?? current.cnpj ?? '',
+    cep: payload.cep ?? current.cep ?? '',
+    address: payload.address ?? current.address ?? '',
+    address_number: payload.addressNumber ?? current.address_number ?? '',
+    address_complement: payload.addressComplement ?? current.address_complement ?? '',
+    neighborhood: payload.neighborhood ?? current.neighborhood ?? '',
+    city: payload.city ?? current.city ?? '',
+    state: payload.state ?? current.state ?? '',
+    contract_date: payload.contractDate ?? current.contract_date ?? '',
+    license_start_date: payload.licenseStartDate ?? current.license_start_date ?? '',
+    contract_value_cents: payload.contractValueCents !== undefined
+      ? Math.max(0, Math.round(Number(payload.contractValueCents) || 0))
+      : (current.contract_value_cents ?? 0),
+    contract_status: payload.contractStatus !== undefined
+      ? (
+          ['ativo','pendente','suspenso','cancelado','encerrado'].includes(payload.contractStatus)
+            ? payload.contractStatus
+            : 'ativo'
+        )
+      : (current.contract_status || 'ativo'),
+    producer_payment_methods:
+      payload.producerPaymentMethods !== undefined
+        ? JSON.stringify(
+            Array.isArray(payload.producerPaymentMethods)
+              ? payload.producerPaymentMethods
+              : []
+          )
+        : (current.producer_payment_methods ?? '["pix"]'),
+    customer_payment_methods:
+      payload.customerPaymentMethods !== undefined
+        ? JSON.stringify(
+            Array.isArray(payload.customerPaymentMethods)
+              ? payload.customerPaymentMethods
+              : []
+          )
+        : (current.customer_payment_methods ?? '[]'),
+    login: payload.login ?? current.login, password_hash: passwordHash,
     status: payload.status === 'inativo' ? 'inativo' : (payload.status === 'degustacao' ? 'degustacao' : (payload.status ?? current.status)), plan: payload.plan ?? current.plan,
     expires_at: expiresAt || null, license_key: licenseKey, custom_domain: payload.customDomain ?? current.custom_domain,
+support_config: payload.supportConfig !== undefined ? JSON.stringify(payload.supportConfig || {}) : (current.support_config ?? '{}'),
    
 estoque: payload.estoque !== undefined ? JSON.stringify(payload.estoque) : (current.estoque ?? `[]`),
 products: payload.products !== undefined ? JSON.stringify(payload.products) : (current.products ?? `[]`),
@@ -270,6 +415,25 @@ baseUrl
   });
   return getStoreById(id, baseUrl);
 }
+function setStorePassword(id, password, forcePasswordChange=false){
+  const current = getStoreRowById(id);
+  if(!current) return null;
+
+  const newPassword = String(password || '');
+  if(!newPassword) return null;
+
+  db.prepare(
+    'UPDATE stores SET password_hash = ?, force_password_change = ?, updated_at = ? WHERE id = ?'
+  ).run(
+    hashPassword(newPassword),
+    forcePasswordChange ? 1 : 0,
+    new Date().toISOString(),
+    id
+  );
+
+  return getStoreById(id);
+}
+
 function deleteStore(id){ db.prepare('DELETE FROM stores WHERE id = ?').run(id); }
 function verifyStoreLogin(slug, login, password){
   const row = getStoreRowBySlug(slug); if (!row) return { ok:false, code:'not_found' };
@@ -351,4 +515,4 @@ function ensureSeedStore(){
   }
 }
 ensureSeedStore();
-module.exports = { db, slugify, uniqueSlug, listStores, getStoreById, getStoreBySlug, getStoreRowById, getStoreRowBySlug, createStore, updateStore, deleteStore, verifyStoreLogin, licenseStatus: rawLicenseStatus, generateLicenseKey, createPayment, listPayments, updatePaymentStatus, getFinanceSummary, getFinanceChart, syncStoreLicense };
+module.exports = { db, slugify, uniqueSlug, listStores, getStoreById, getStoreBySlug, getStoreRowById, getStoreRowBySlug, createStore, updateStore, setStorePassword, deleteStore, verifyStoreLogin, licenseStatus: rawLicenseStatus, generateLicenseKey, createPayment, listPayments, updatePaymentStatus, getFinanceSummary, getFinanceChart, syncStoreLicense };

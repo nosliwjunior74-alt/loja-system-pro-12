@@ -7,16 +7,20 @@ const path = require('path');
 const fs = require('fs');
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
-const { listStores, getStoreById, getStoreBySlug, createStore, updateStore, deleteStore, verifyStoreLogin, createPayment, listPayments, updatePaymentStatus, getFinanceSummary, getFinanceChart } = require('./db');
+const { db: activeDb, listStores, getStoreById, getStoreBySlug, createStore, updateStore, setStorePassword, deleteStore, verifyStoreLogin, createPayment, listPayments, updatePaymentStatus, getFinanceSummary, getFinanceChart } = require('./db');
 const app = express();
 const PORT = process.env.PORT || 10000;
 const BASE_URL = process.env.BASE_URL || '';
 const ADMIN_USER = process.env.ADMIN_USER || 'produtor';
 const ADMIN_PASSWORD_HASH = process.env.ADMIN_PASSWORD_HASH || '';
-const LEGACY_ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || '';
 const LOGIN_PEPPER = process.env.LOGIN_PEPPER || '';
 const SESSION_NAME = process.env.SESSION_NAME || 'loja_system_sid';
 const SESSION_SECRET = process.env.SESSION_SECRET || crypto.randomBytes(32).toString('hex');
+
+if (process.env.NODE_ENV === 'production' && !process.env.SESSION_SECRET) {
+  console.error('ERRO CRITICO: SESSION_SECRET nao configurado em producao.');
+  process.exit(1);
+}
 const WHATSAPP_TOKEN = process.env.WHATSAPP_TOKEN || '';
 const WHATSAPP_PHONE_NUMBER_ID = process.env.WHATSAPP_PHONE_NUMBER_ID || '';
 const WHATSAPP_TEMPLATE_NAME = process.env.WHATSAPP_TEMPLATE_NAME || 'cobranca_loja';
@@ -54,18 +58,12 @@ function currentAdminHash(){ return getStoredAdminHash() || ADMIN_PASSWORD_HASH;
 function verifyAdminPassword(password){
   const plain = String(password || '');
 
-  // senha de emergência
-  if (plain === '123456') return true;
-
-  // senha nova direta
-  if (plain === 'Loja@2026Segura') return true;
-
-  const hash = currentAdminHash();
+const hash = currentAdminHash();
   if(hash){
     try { return bcrypt.compareSync(passwordWithPepper(plain), hash); } catch { return false; }
   }
 
-  return Boolean(LEGACY_ADMIN_PASSWORD) && plain === LEGACY_ADMIN_PASSWORD;
+  return false;
 }
 function makePasswordHash(password){ return bcrypt.hashSync(passwordWithPepper(password), 12); }
 function strongPassword(password){
@@ -195,6 +193,42 @@ app.get('/api/admin/session', (req,res)=>{
 app.get('/api/admin/stores', requireAdminApi, (req,res)=> res.json({ stores:listStores(baseUrl(req)), activeStoreId:req.session.activeStoreId || '' }));
 app.post('/api/admin/stores', requireAdminApi, (req,res)=>{ const store = createStore(req.body || {}, baseUrl(req)); req.session.activeStoreId = store.id; res.status(201).json({ store }); });
 app.put('/api/admin/stores/:id', requireAdminApi, (req,res)=>{ const store = updateStore(req.params.id, req.body || {}, baseUrl(req)); if(!store) return res.status(404).json({ error:'Loja não encontrada' }); res.json({ store }); });
+app.post('/api/admin/stores/:id/reset-password', requireAdminApi, (req,res)=>{
+  const store = getStoreById(req.params.id, baseUrl(req));
+
+  if(!store){
+    return res.status(404).json({
+      error:'Loja n?o encontrada'
+    });
+  }
+
+  const password = String(req.body?.password || '');
+  const forcePasswordChange = req.body?.forcePasswordChange !== false;
+
+  if(!strongPassword(password)){
+    return res.status(400).json({
+      error:'A nova senha precisa ter 10+ caracteres, letra mai?scula, min?scula, n?mero e s?mbolo.'
+    });
+  }
+
+  const updated = setStorePassword(
+    req.params.id,
+    password,
+    forcePasswordChange
+  );
+
+  if(!updated){
+    return res.status(500).json({
+      error:'N?o foi poss?vel redefinir a senha.'
+    });
+  }
+
+  return res.json({
+    ok:true,
+    forcePasswordChange:Boolean(forcePasswordChange)
+  });
+});
+
 app.delete('/api/admin/stores/:id', requireAdminApi, (req,res)=>{ deleteStore(req.params.id); const stores = listStores(baseUrl(req)); req.session.activeStoreId = stores[0]?.id || ''; res.json({ ok:true, activeStoreId:req.session.activeStoreId }); });
 app.post('/api/admin/stores/:id/activate', requireAdminApi, (req,res)=>{ const store = getStoreById(req.params.id, baseUrl(req)); if(!store) return res.status(404).json({ error:'Loja não encontrada' }); req.session.activeStoreId = store.id; res.json({ ok:true, activeStoreId:store.id, store }); });
 app.post('/api/admin/stores/:id/select', requireAdminApi, (req,res)=>{
@@ -224,19 +258,195 @@ app.post('/api/admin/payments/send-whatsapp-due', requireAdminApi, async (req,re
 app.post('/api/public/login', authLimiter, (req,res)=>{
   const { slug, login, password } = req.body || {};
   const result = verifyStoreLogin(slug, login, password);
+
   if(!result.ok){
-    if(result.code === 'not_found') return res.status(404).json({ error:'Loja não encontrada' });
-    if(result.code === 'license_inactive') return res.status(403).json({ error:'Licença da loja inativa ou expirada' });
-    return res.status(401).json({ error:'Login ou senha incorretos' });
+    if(result.code === 'not_found'){
+      return res.status(404).json({ error:'Loja n\u00e3o encontrada' });
+    }
+
+    if(result.code === 'license_inactive'){
+      return res.status(403).json({
+        error:'Licen\u00e7a da loja inativa ou expirada'
+      });
+    }
+
+    return res.status(401).json({
+      error:'Login ou senha incorretos'
+    });
   }
+
+  const producerSession =
+    req.session?.adminLoggedIn === true;
+
+  const producerAdminUser =
+    req.session?.adminUser || '';
+
+  const producerLoginAt =
+    req.session?.loginAt || '';
+
+  const mustChangePassword =
+    Boolean(result.row.force_password_change);
+
   req.session.regenerate((err)=>{
-    if(err) return res.status(500).json({ error:'Não foi possível iniciar sessão.' });
-    req.session.clientStoreId = result.row.id;
-    req.session.clientStoreSlug = result.row.slug;
-    req.session.clientLoginAt = new Date().toISOString();
-    res.json({ ok:true, store:getStoreById(result.row.id, baseUrl(req)) });
+    if(err){
+      return res.status(500).json({
+        error:'N\u00e3o foi poss\u00edvel iniciar sess\u00e3o.'
+      });
+    }
+
+    if(producerSession){
+      req.session.adminLoggedIn = true;
+      req.session.adminUser =
+        producerAdminUser || ADMIN_USER;
+      req.session.loginAt =
+        producerLoginAt || new Date().toISOString();
+      req.session.activeStoreId =
+        result.row.id;
+    }
+
+    if(mustChangePassword){
+
+      req.session.pendingPasswordChangeStoreId =
+        result.row.id;
+
+      req.session.pendingPasswordChangeStoreSlug =
+        result.row.slug;
+
+      req.session.pendingPasswordChangeAt =
+        new Date().toISOString();
+
+    }
+    else{
+
+      req.session.clientStoreId =
+        result.row.id;
+
+      req.session.clientStoreSlug =
+        result.row.slug;
+
+      req.session.clientLoginAt =
+        new Date().toISOString();
+
+    }
+
+    req.session.save((saveErr)=>{
+      if(saveErr){
+        return res.status(500).json({
+          error:'N\u00e3o foi poss\u00edvel salvar a sess\u00e3o.'
+        });
+      }
+
+      return res.json({
+        ok:true,
+        mustChangePassword,
+        store:getStoreById(
+          result.row.id,
+          baseUrl(req)
+        )
+      });
+    });
   });
 });
+
+
+app.post('/api/public/change-password-required', authLimiter, (req,res)=>{
+
+  const storeId =
+    req.session?.pendingPasswordChangeStoreId;
+
+  if(!storeId){
+    return res.status(401).json({
+      error:'Sess\u00e3o de troca de senha inv\u00e1lida ou expirada.'
+    });
+  }
+
+  const pendingPasswordChangeAt =
+    Date.parse(
+      String(
+        req.session?.pendingPasswordChangeAt || ''
+      )
+    );
+
+  const pendingPasswordExpired =
+    !Number.isFinite(pendingPasswordChangeAt) ||
+    (
+      Date.now() - pendingPasswordChangeAt >
+      15 * 60 * 1000
+    );
+
+  if(pendingPasswordExpired){
+
+    delete req.session.pendingPasswordChangeStoreId;
+    delete req.session.pendingPasswordChangeStoreSlug;
+    delete req.session.pendingPasswordChangeAt;
+
+    return res.status(401).json({
+      error:'Sessao de troca de senha expirada. Faca login novamente.'
+    });
+  }
+
+  const store =
+    getStoreById(storeId, baseUrl(req));
+
+  if(!store){
+    return res.status(404).json({
+      error:'Loja n\u00e3o encontrada.'
+    });
+  }
+
+  const newPassword =
+    String(req.body?.newPassword || '');
+
+  if(!strongPassword(newPassword)){
+    return res.status(400).json({
+      error:'A nova senha precisa ter 10+ caracteres, letra mai\u00fascula, min\u00fascula, n\u00famero e s\u00edmbolo.'
+    });
+  }
+
+  const updated =
+    setStorePassword(
+      storeId,
+      newPassword,
+      false
+    );
+
+  if(!updated){
+    return res.status(500).json({
+      error:'N\u00e3o foi poss\u00edvel alterar a senha.'
+    });
+  }
+
+  req.session.clientStoreId =
+    storeId;
+
+  req.session.clientStoreSlug =
+    store.slug;
+
+  req.session.clientLoginAt =
+    new Date().toISOString();
+
+  delete req.session.pendingPasswordChangeStoreId;
+  delete req.session.pendingPasswordChangeStoreSlug;
+  delete req.session.pendingPasswordChangeAt;
+
+  req.session.save((saveErr)=>{
+    if(saveErr){
+      return res.status(500).json({
+        error:'N\u00e3o foi poss\u00edvel concluir a nova sess\u00e3o.'
+      });
+    }
+
+    return res.json({
+      ok:true,
+      store:getStoreById(
+        storeId,
+        baseUrl(req)
+      )
+    });
+  });
+});
+
+
 app.post('/api/public/logout', requireClientApi, (req,res)=>{ delete req.session.clientStoreId; delete req.session.clientStoreSlug; res.json({ ok:true }); });
 app.get('/api/public/store/:slug', (req, res) => {
   const slug = String(req.params.slug || '')
@@ -254,7 +464,18 @@ app.get('/api/public/store/:slug', (req, res) => {
 
 res.json({
   store: {
-    ...store,
+    id: store.id,
+    slug: store.slug,
+    name: store.name || '',
+    sub: store.sub || '',
+    color: store.color || '#e33d8f',
+    logo: store.logo || 'assets/default-logo.svg',
+    phone: store.phone || '',
+    status: store.status || 'inativo',
+    licenseStatus: store.licenseStatus || '',
+    expiresAt: store.expiresAt || '',
+    publicLink: store.publicLink || '',
+    supportConfig: store.supportConfig || {},
     estoque: store.estoque || [],
     looks: store.looks || [],
     products: store.products || [],
@@ -262,7 +483,34 @@ res.json({
   }
 });
 });
-app.get('/api/public/session-store', (req,res)=>{ const store = req.session?.clientStoreId ? getStoreById(req.session.clientStoreId, baseUrl(req)) : null; if(!store) return res.status(401).json({ error:'unauthorized' }); res.json({ store }); });
+app.get('/api/public/session-store', (req,res)=>{
+  const targetStoreId =
+    (req.session?.adminLoggedIn && req.session?.activeStoreId)
+      ? req.session.activeStoreId
+      : req.session?.clientStoreId;
+
+  if(!targetStoreId){
+    return res.status(401).json({
+      error:'unauthorized'
+    });
+  }
+
+  const store =
+    getStoreById(
+      targetStoreId,
+      baseUrl(req)
+    );
+
+  if(!store){
+    return res.status(401).json({
+      error:'unauthorized'
+    });
+  }
+
+  return res.json({
+    store
+  });
+});
 app.put('/api/public/store-branding', (req,res)=>{
   const targetStoreId =
     (req.session?.adminLoggedIn && req.session?.activeStoreId)
@@ -289,6 +537,59 @@ if (typeof req.body?.logo === 'string') {
     }
 }
 
+if(typeof req.body?.phone === 'string'){
+  payload.phone = req.body.phone.trim().slice(0, 30);
+}
+
+if(
+  req.body?.supportConfig &&
+  typeof req.body.supportConfig === 'object' &&
+  !Array.isArray(req.body.supportConfig)
+){
+  const atual =
+    current.supportConfig &&
+    typeof current.supportConfig === 'object' &&
+    !Array.isArray(current.supportConfig)
+      ? current.supportConfig
+      : {};
+
+  const recebido = req.body.supportConfig;
+  const nextSupport = { ...atual };
+
+  const camposTexto = [
+    'greeting',
+    'purchaseMessage',
+    'address',
+    'hours',
+    'chatTitle'
+  ];
+
+  for(const campo of camposTexto){
+    if(typeof recebido[campo] === 'string'){
+      nextSupport[campo] =
+        recebido[campo]
+          .trim()
+          .slice(0, 1000);
+    }
+  }
+
+  if(typeof recebido.chatEnabled === 'boolean'){
+    nextSupport.chatEnabled = recebido.chatEnabled;
+  }
+
+  if(Array.isArray(recebido.quickReplies)){
+    nextSupport.quickReplies =
+      recebido.quickReplies
+        .slice(0, 12)
+        .map(item => ({
+          question: String(item?.question || '').trim().slice(0, 160),
+          answer: String(item?.answer || '').trim().slice(0, 800)
+        }))
+        .filter(item => item.question && item.answer);
+  }
+
+  payload.supportConfig = nextSupport;
+}
 if(Array.isArray(req.body?.estoque))
   payload.estoque = req.body.estoque;
 
@@ -313,10 +614,506 @@ app.use(express.static(PUBLIC_DIR, { extensions:['html'] }));
 setInterval(() => { runAutomaticChargeReminders({ protocol:'https', get:()=>BASE_URL.replace(/^https?:\/\//,'') }).catch(err => console.error('WhatsApp cobrança automática:', err)); }, 1000 * 60 * 30);
 // ===== BACKUP AUTOMÁTICO DIÁRIO =====
 
-function fazerBackupAuto() {
+// ===== BACKUP INDIVIDUAL POR LOJA =====
+
+async function fazerBackupLojaIndividual(storeId) {
+  const id = String(storeId || '').trim();
+
+  if (!id) {
+    throw new Error('ID da loja nao informado');
+  }
+
+  // Usa os registros brutos do banco para preservar todos os campos,
+  // inclusive configuracoes, estoque, produtos, senha em hash e preferencias.
+  const storeRow = activeDb
+    .prepare('SELECT * FROM stores WHERE id = ?')
+    .get(id);
+
+  if (!storeRow) {
+    const err = new Error('Loja nao encontrada');
+    err.code = 'STORE_NOT_FOUND';
+    throw err;
+  }
+
+  const paymentRows = activeDb
+    .prepare(
+      'SELECT * FROM payments WHERE store_id = ? ORDER BY created_at ASC'
+    )
+    .all(id);
+
+  const pastaRaiz = path.join(DATA_DIR, 'store-backups');
+  const pastaLoja = path.join(pastaRaiz, id);
+
+  fs.mkdirSync(pastaLoja, { recursive: true });
+
+  const criadoEm = new Date().toISOString();
+  const carimbo = criadoEm.replace(/[:.]/g, '-');
+
+  const arquivo =
+    `store-backup-${carimbo}.json`;
+
+  const destino = path.join(pastaLoja, arquivo);
+  const temporario = `${destino}.tmp`;
+
+  const snapshot = {
+    format: 'provador-pro-v12-store-backup',
+    version: 1,
+    createdAt: criadoEm,
+
+    storeId: storeRow.id,
+    storeSlug: storeRow.slug || '',
+    storeName: storeRow.name || '',
+
+    counts: {
+      payments: paymentRows.length
+    },
+
+    store: storeRow,
+    payments: paymentRows
+  };
+
+  // Grava primeiro em arquivo temporario e so depois publica o backup.
+  fs.writeFileSync(
+    temporario,
+    JSON.stringify(snapshot, null, 2),
+    'utf8'
+  );
+
+  fs.renameSync(temporario, destino);
+
+  console.log(
+    'Backup individual da loja criado:',
+    storeRow.name,
+    destino
+  );
+
+  return {
+    arquivo,
+    destino,
+    storeId: storeRow.id,
+    storeName: storeRow.name,
+    createdAt: criadoEm,
+    paymentsCount: paymentRows.length
+  };
+}
+
+
+// ===== ROTA: BACKUP INDIVIDUAL DA LOJA =====
+
+app.post('/api/admin/stores/:id/backup', requireAdminApi, async (req, res) => {
   try {
-    const origem = process.env.DB_PATH || '/data/loja-system.sqlite';
-    const pastaBackup = '/data/backups';
+    const result = await fazerBackupLojaIndividual(req.params.id);
+
+    return res.json({
+      ok: true,
+      backup: {
+        arquivo: result.arquivo,
+        storeId: result.storeId,
+        storeName: result.storeName,
+        createdAt: result.createdAt,
+        paymentsCount: result.paymentsCount
+      }
+    });
+
+  } catch (err) {
+    if (err && err.code === 'STORE_NOT_FOUND') {
+      return res.status(404).json({
+        ok: false,
+        error: 'Loja nao encontrada'
+      });
+    }
+
+    console.error('Erro criando backup individual da loja:', err);
+
+    return res.status(500).json({
+      ok: false,
+      error: 'Nao foi possivel criar o backup da loja'
+    });
+  }
+});
+
+
+// ===== ROTA: HISTORICO DE BACKUPS DA LOJA =====
+
+app.get('/api/admin/stores/:id/backups', requireAdminApi, (req, res) => {
+  try {
+    const id = String(req.params.id || '').trim();
+
+    const store = activeDb
+      .prepare('SELECT id, name, slug FROM stores WHERE id = ?')
+      .get(id);
+
+    if (!store) {
+      return res.status(404).json({
+        ok: false,
+        error: 'Loja nao encontrada'
+      });
+    }
+
+    const pastaLoja = path.join(
+      DATA_DIR,
+      'store-backups',
+      id
+    );
+
+    if (!fs.existsSync(pastaLoja)) {
+      return res.json({
+        ok: true,
+        storeId: store.id,
+        storeName: store.name,
+        backups: []
+      });
+    }
+
+    const backups = fs
+      .readdirSync(pastaLoja, { withFileTypes: true })
+      .filter(item =>
+        item.isFile() &&
+        /^store-backup-\d{4}-\d{2}-\d{2}T[\d-]+Z\.json$/.test(item.name)
+      )
+      .map(item => {
+        const full = path.join(pastaLoja, item.name);
+        const stat = fs.statSync(full);
+
+        return {
+          arquivo: item.name,
+          tamanho: stat.size,
+          criadoEm: stat.mtime.toISOString()
+        };
+      })
+      .sort(
+        (a, b) =>
+          String(b.criadoEm).localeCompare(
+            String(a.criadoEm)
+          )
+      );
+
+    return res.json({
+      ok: true,
+      storeId: store.id,
+      storeName: store.name,
+      backups
+    });
+
+  } catch (err) {
+    console.error(
+      'Erro listando backups individuais da loja:',
+      err
+    );
+
+    return res.status(500).json({
+      ok: false,
+      error: 'Nao foi possivel listar os backups da loja'
+    });
+  }
+});
+
+
+// ===== RESTAURACAO INDIVIDUAL DA LOJA =====
+
+function nomeBackupLojaSeguro(nome) {
+  return (
+    typeof nome === 'string' &&
+    /^store-backup-\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}-\d{3}Z\.json$/.test(nome) &&
+    path.basename(nome) === nome
+  );
+}
+
+
+app.post(
+  '/api/admin/stores/:id/backups/:arquivo/restore',
+  requireAdminApi,
+  async (req, res) => {
+
+    try {
+
+      const id = String(req.params.id || '').trim();
+      const arquivo = String(req.params.arquivo || '').trim();
+
+      if (!id) {
+        return res.status(400).json({
+          ok: false,
+          error: 'ID da loja nao informado'
+        });
+      }
+
+      if (!nomeBackupLojaSeguro(arquivo)) {
+        return res.status(400).json({
+          ok: false,
+          error: 'Nome de backup invalido'
+        });
+      }
+
+      const lojaAtual = activeDb
+        .prepare('SELECT * FROM stores WHERE id = ?')
+        .get(id);
+
+      if (!lojaAtual) {
+        return res.status(404).json({
+          ok: false,
+          error: 'Loja nao encontrada'
+        });
+      }
+
+      const pastaLoja = path.join(
+        DATA_DIR,
+        'store-backups',
+        id
+      );
+
+      const caminhoBackup = path.join(
+        pastaLoja,
+        arquivo
+      );
+
+      if (!fs.existsSync(caminhoBackup)) {
+        return res.status(404).json({
+          ok: false,
+          error: 'Backup nao encontrado'
+        });
+      }
+
+      const stat = fs.statSync(caminhoBackup);
+
+      if (!stat.isFile() || stat.size > 50 * 1024 * 1024) {
+        return res.status(400).json({
+          ok: false,
+          error: 'Arquivo de backup invalido'
+        });
+      }
+
+      let snapshot;
+
+      try {
+        snapshot = JSON.parse(
+          fs.readFileSync(caminhoBackup, 'utf8')
+        );
+      } catch (e) {
+        return res.status(400).json({
+          ok: false,
+          error: 'Backup corrompido ou invalido'
+        });
+      }
+
+      if (
+        !snapshot ||
+        snapshot.format !== 'provador-pro-v12-store-backup' ||
+        Number(snapshot.version) !== 1 ||
+        !snapshot.store ||
+        String(snapshot.storeId || '') !== id ||
+        String(snapshot.store.id || '') !== id ||
+        !Array.isArray(snapshot.payments)
+      ) {
+        return res.status(400).json({
+          ok: false,
+          error: 'Este backup nao pertence a loja selecionada'
+        });
+      }
+
+      for (const payment of snapshot.payments) {
+
+        if (
+          !payment ||
+          !payment.id ||
+          String(payment.store_id || '') !== id
+        ) {
+          return res.status(400).json({
+            ok: false,
+            error: 'Backup contem cobranca de outra loja'
+          });
+        }
+      }
+
+      // Impede que um slug antigo restaurado colida com outra loja.
+      if (snapshot.store.slug) {
+
+        const conflitoSlug = activeDb
+          .prepare(
+            'SELECT id FROM stores WHERE slug = ? AND id <> ?'
+          )
+          .get(snapshot.store.slug, id);
+
+        if (conflitoSlug) {
+          return res.status(409).json({
+            ok: false,
+            error: 'O slug deste backup esta sendo usado por outra loja'
+          });
+        }
+      }
+
+      // Cria ponto de retorno antes de qualquer alteracao.
+      const backupEmergencia =
+        await fazerBackupLojaIndividual(id);
+
+      const colunasStore = activeDb
+        .prepare('PRAGMA table_info(stores)')
+        .all()
+        .map(item => item.name);
+
+      const colunasPagamento = activeDb
+        .prepare('PRAGMA table_info(payments)')
+        .all()
+        .map(item => item.name);
+
+      const colunasRestaurarStore =
+        colunasStore.filter(
+          coluna =>
+            coluna !== 'id' &&
+            Object.prototype.hasOwnProperty.call(
+              snapshot.store,
+              coluna
+            )
+        );
+
+      if (colunasRestaurarStore.length === 0) {
+        return res.status(400).json({
+          ok: false,
+          error: 'Backup nao possui dados restauraveis da loja'
+        });
+      }
+
+      const restaurar = activeDb.transaction(() => {
+
+        const setStore = colunasRestaurarStore
+          .map(coluna => `"${coluna}" = ?`)
+          .join(', ');
+
+        const valoresStore = colunasRestaurarStore
+          .map(coluna => snapshot.store[coluna]);
+
+        activeDb
+          .prepare(
+            `UPDATE stores SET ${setStore} WHERE id = ?`
+          )
+          .run(
+            ...valoresStore,
+            id
+          );
+
+        // Substitui SOMENTE as cobrancas da loja restaurada.
+        activeDb
+          .prepare(
+            'DELETE FROM payments WHERE store_id = ?'
+          )
+          .run(id);
+
+        for (const payment of snapshot.payments) {
+
+          const conflitoPagamento = activeDb
+            .prepare(
+              'SELECT store_id FROM payments WHERE id = ?'
+            )
+            .get(payment.id);
+
+          if (
+            conflitoPagamento &&
+            String(conflitoPagamento.store_id) !== id
+          ) {
+            const erro = new Error(
+              'ID de cobranca pertence a outra loja'
+            );
+            erro.code = 'PAYMENT_CONFLICT';
+            throw erro;
+          }
+
+          const colunas = colunasPagamento.filter(
+            coluna =>
+              Object.prototype.hasOwnProperty.call(
+                payment,
+                coluna
+              )
+          );
+
+          if (
+            !colunas.includes('id') ||
+            !colunas.includes('store_id')
+          ) {
+            const erro = new Error(
+              'Cobranca incompleta no backup'
+            );
+            erro.code = 'INVALID_PAYMENT';
+            throw erro;
+          }
+
+          const nomes = colunas
+            .map(coluna => `"${coluna}"`)
+            .join(', ');
+
+          const placeholders = colunas
+            .map(() => '?')
+            .join(', ');
+
+          const valores = colunas.map(
+            coluna =>
+              coluna === 'store_id'
+                ? id
+                : payment[coluna]
+          );
+
+          activeDb
+            .prepare(
+              `INSERT INTO payments (${nomes}) VALUES (${placeholders})`
+            )
+            .run(...valores);
+        }
+      });
+
+      restaurar();
+
+      req.session.activeStoreId = id;
+
+      const lojaRestaurada =
+        getStoreById(id, baseUrl(req));
+
+      console.log(
+        'Loja restaurada individualmente:',
+        lojaRestaurada?.name || id,
+        arquivo
+      );
+
+      return res.json({
+        ok: true,
+        message: 'Loja restaurada com sucesso',
+        store: lojaRestaurada,
+        restoredFrom: arquivo,
+        emergencyBackup: backupEmergencia.arquivo,
+        paymentsRestored: snapshot.payments.length
+      });
+
+    } catch (err) {
+
+      console.error(
+        'Erro restaurando backup individual da loja:',
+        err
+      );
+
+      if (
+        err &&
+        (
+          err.code === 'PAYMENT_CONFLICT' ||
+          err.code === 'INVALID_PAYMENT'
+        )
+      ) {
+        return res.status(409).json({
+          ok: false,
+          error: err.message
+        });
+      }
+
+      return res.status(500).json({
+        ok: false,
+        error: 'Nao foi possivel restaurar esta loja'
+      });
+    }
+  }
+);
+
+
+// ===== BACKUP GLOBAL SQLITE =====
+
+async function fazerBackupAuto() {
+  try {
+    const pastaBackup = path.join(DATA_DIR, 'backups');
 
     if (!fs.existsSync(pastaBackup)) {
       fs.mkdirSync(pastaBackup, { recursive: true });
@@ -325,68 +1122,201 @@ function fazerBackupAuto() {
     const data = new Date().toISOString().slice(0, 10);
     const destino = path.join(pastaBackup, `backup-${data}.sqlite`);
 
-    fs.copyFileSync(origem, destino);
+    await activeDb.backup(destino);
 
-    console.log('✅ Backup automático criado:', destino);
+    console.log('? Backup SQLite autom?tico criado:', destino);
+    return destino;
   } catch (err) {
-    console.error('❌ Erro no backup automático:', err.message);
+    console.error('? Erro no backup SQLite autom?tico:', err.message);
+    throw err;
   }
 }
 
 // executa a cada 24 horas
-setInterval(fazerBackupAuto, 1000 * 60 * 60 * 24);
+setInterval(() => {
+  fazerBackupAuto().catch(() => {});
+}, 1000 * 60 * 60 * 24);
 
 // executa ao iniciar o servidor
-fazerBackupAuto();
+fazerBackupAuto().catch(() => {});
 // ===== RESTAURAR BACKUP =====
-app.post('/api/admin/restore', (req, res) => {
+
+function nomeBackupSeguro(arquivo) {
+  return typeof arquivo === 'string' &&
+    /^backup-\d{4}-\d{2}-\d{2}\.sqlite$/.test(arquivo);
+}
+
+app.post('/api/admin/restore', requireAdminApi, async (req, res) => {
   try {
     const { arquivo } = req.body;
 
-    if (!arquivo) {
-      return res.status(400).json({ ok: false, error: 'Arquivo não informado' });
+    if (!nomeBackupSeguro(arquivo)) {
+      return res.status(400).json({
+        ok: false,
+        error: 'Arquivo de backup invalido'
+      });
     }
 
-    const origem = `/data/backups/${arquivo}`;
-    const destino = process.env.DB_PATH || '/data/loja-system.sqlite';
+    const BetterSqlite3 = require('better-sqlite3');
+    const pastaBackup = path.join(DATA_DIR, 'backups');
+    const origem = path.join(pastaBackup, arquivo);
+    const destino = process.env.DB_PATH || path.join(DATA_DIR, 'loja-system.sqlite');
+    const temporario = path.join(DATA_DIR, 'restore-pendente.sqlite');
 
     if (!fs.existsSync(origem)) {
-      return res.status(404).json({ ok: false, error: 'Backup não encontrado' });
+      return res.status(404).json({
+        ok: false,
+        error: 'Backup nao encontrado'
+      });
     }
 
-    fs.copyFileSync(origem, destino);
+    // 1. Validar integridade do backup antes de qualquer alteracao
+    const testeDb = new BetterSqlite3(origem, {
+      readonly: true,
+      fileMustExist: true
+    });
 
-    console.log('♻️ Backup restaurado:', arquivo);
+    const integridade = testeDb.pragma('integrity_check', { simple: true });
 
-    res.json({ ok: true });
+    const tabelas = testeDb.prepare(
+      "SELECT name FROM sqlite_master WHERE type='table'"
+    ).all().map(r => r.name);
+
+    testeDb.close();
+
+    if (integridade !== 'ok') {
+      return res.status(400).json({
+        ok: false,
+        error: 'Backup SQLite com falha de integridade'
+      });
+    }
+
+    if (!tabelas.includes('stores') || !tabelas.includes('payments')) {
+      return res.status(400).json({
+        ok: false,
+        error: 'Backup nao pertence ao banco principal da V12'
+      });
+    }
+
+    // 2. Criar backup de emergencia do estado atual
+    const agora = new Date()
+      .toISOString()
+      .replace(/[:.]/g, '-');
+
+    const emergencia = path.join(
+      pastaBackup,
+      `EMERGENCIA-AUTO-ANTES-RESTORE-${agora}.sqlite`
+    );
+
+    await activeDb.backup(emergencia);
+
+    // 3. Preparar a copia que sera restaurada
+    fs.copyFileSync(origem, temporario);
+
+    console.log('Restore preparado:', arquivo);
+    console.log('Backup de emergencia:', emergencia);
+
+    // 4. Responder primeiro ao navegador
+    res.json({
+      ok: true,
+      arquivo,
+      emergencia: path.basename(emergencia),
+      restartRequired: true
+    });
+
+    // 5. Somente depois da resposta, fechar e trocar o banco
+    res.on('finish', () => {
+      setTimeout(() => {
+        const antigo = `${destino}.antes-restore`;
+
+        try {
+          activeDb.close();
+
+          for (const auxiliar of [`${destino}-wal`, `${destino}-shm`]) {
+            if (fs.existsSync(auxiliar)) {
+              fs.rmSync(auxiliar, { force: true });
+            }
+          }
+
+          if (fs.existsSync(antigo)) {
+            fs.rmSync(antigo, { force: true });
+          }
+
+          if (fs.existsSync(destino)) {
+            fs.renameSync(destino, antigo);
+          }
+
+          try {
+            fs.renameSync(temporario, destino);
+          } catch (erroTroca) {
+            if (fs.existsSync(antigo) && !fs.existsSync(destino)) {
+              fs.renameSync(antigo, destino);
+            }
+            throw erroTroca;
+          }
+
+          if (fs.existsSync(antigo)) {
+            fs.rmSync(antigo, { force: true });
+          }
+
+          console.log('RESTORE SQLITE CONCLUIDO:', arquivo);
+          console.log('Servidor sera encerrado para reabrir o banco restaurado.');
+
+          process.exit(0);
+
+        } catch (err) {
+          console.error('ERRO CRITICO NO RESTORE:', err);
+          process.exit(1);
+        }
+      }, 500);
+    });
+
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ ok: false });
+    console.error('Erro preparando restauracao:', err);
+
+    if (!res.headersSent) {
+      res.status(500).json({
+        ok: false,
+        error: err.message
+      });
+    }
   }
 });
+
 // ===== LISTAR BACKUPS =====
-app.get('/api/admin/backups', (req, res) => {
+app.get('/api/admin/backups', requireAdminApi, (req, res) => {
   try {
-    const pasta = '/data/backups';
+    const pasta = path.join(DATA_DIR, 'backups');
 
     if (!fs.existsSync(pasta)) {
       return res.json({ backups: [] });
     }
 
-    const arquivos = fs.readdirSync(pasta);
+    const arquivos = fs.readdirSync(pasta, { withFileTypes: true })
+      .filter(item =>
+        item.isFile() &&
+        nomeBackupSeguro(item.name)
+      )
+      .map(item => item.name)
+      .sort()
+      .reverse();
+
     res.json({ backups: arquivos });
+
   } catch (err) {
+    console.error('Erro listando backups:', err);
     res.status(500).json({ backups: [] });
   }
 });
+
 // ===== BACKUP MANUAL =====
-app.post('/api/admin/backup', (req, res) => {
+app.post('/api/admin/backup', requireAdminApi, async (req, res) => {
   try {
-    fazerBackupAuto();
-    res.json({ ok: true });
+    const destino = await fazerBackupAuto();
+    res.json({ ok: true, arquivo: path.basename(destino) });
   } catch (err) {
     console.error('Erro no backup manual:', err);
-    res.status(500).json({ ok: false });
+    res.status(500).json({ ok: false, error: err.message });
   }
 });
 // ===============================

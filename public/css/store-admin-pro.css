@@ -1,0 +1,310 @@
+/* =========================================================
+   PROVADOR PRO SYSTEM
+   PAINEL ADMINISTRATIVO DA LOJA - PRO
+   ========================================================= */
+
+:root{
+  --admin-bg:#f6f7fb;
+  --admin-card:#ffffff;
+  --admin-text:#2d2430;
+  --admin-muted:#7d7180;
+  --admin-line:#ebe7ec;
+  --admin-shadow:0 12px 36px rgba(45,36,48,.08);
+}
+
+body.store-admin-pro{
+  background:var(--admin-bg);
+}
+
+.store-admin-pro .main-area{
+  background:var(--admin-bg);
+}
+
+.store-admin-pro .topbar{
+  background:rgba(255,255,255,.94);
+  backdrop-filter:blur(14px);
+  border-bottom:1px solid var(--admin-line);
+}
+
+.admin-pro-home{
+  padding:18px 20px 4px;
+}
+
+.admin-pro-hero{
+  background:
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--brand-color,#e33d8f) 12%, white),
+      #ffffff
+    );
+  border:1px solid var(--admin-line);
+  border-radius:22px;
+  padding:20px;
+  box-shadow:var(--admin-shadow);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:18px;
+}
+
+.admin-pro-hero-copy h2{
+  margin:0 0 5px;
+  font-size:22px;
+  color:var(--admin-text);
+}
+
+.admin-pro-hero-copy p{
+  margin:0;
+  color:var(--admin-muted);
+  font-size:13px;
+}
+
+.admin-pro-badge{
+  display:inline-flex;
+  align-items:center;
+  gap:7px;
+  border-radius:999px;
+  padding:8px 12px;
+  background:#fff;
+  border:1px solid var(--admin-line);
+  font-size:12px;
+  font-weight:800;
+  color:var(--admin-text);
+}
+
+.admin-pro-grid{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:12px;
+  margin-top:14px;
+}
+
+.admin-pro-stat{
+  background:var(--admin-card);
+  border:1px solid var(--admin-line);
+  border-radius:18px;
+  padding:15px;
+  box-shadow:0 8px 24px rgba(45,36,48,.05);
+}
+
+.admin-pro-stat span{
+  display:block;
+  font-size:11px;
+  text-transform:uppercase;
+  letter-spacing:.05em;
+  color:var(--admin-muted);
+  margin-bottom:5px;
+}
+
+.admin-pro-stat strong{
+  display:block;
+  font-size:15px;
+  color:var(--admin-text);
+  overflow-wrap:anywhere;
+}
+
+.admin-pro-section{
+  margin:16px 20px;
+  background:var(--admin-card);
+  border:1px solid var(--admin-line);
+  border-radius:22px;
+  box-shadow:var(--admin-shadow);
+  overflow:hidden;
+}
+
+.admin-pro-section-head{
+  padding:18px 20px 12px;
+  border-bottom:1px solid var(--admin-line);
+}
+
+.admin-pro-section-head h2{
+  margin:0 0 5px;
+  color:var(--admin-text);
+  font-size:18px;
+}
+
+.admin-pro-section-head p{
+  margin:0;
+  color:var(--admin-muted);
+  font-size:13px;
+}
+
+.admin-pro-form{
+  padding:18px 20px 20px;
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:14px;
+}
+
+.admin-field{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+}
+
+.admin-field.full{
+  grid-column:1 / -1;
+}
+
+.admin-field label{
+  font-size:12px;
+  font-weight:800;
+  color:#594b5d;
+}
+
+.admin-field input,
+.admin-field textarea{
+  width:100%;
+  box-sizing:border-box;
+  border:1px solid #ddd6df;
+  border-radius:13px;
+  background:#fff;
+  padding:11px 12px;
+  color:var(--admin-text);
+  font:inherit;
+  outline:none;
+}
+
+.admin-field textarea{
+  min-height:88px;
+  resize:vertical;
+}
+
+.admin-field input:focus,
+.admin-field textarea:focus{
+  border-color:var(--brand-color,#e33d8f);
+  box-shadow:0 0 0 3px color-mix(in srgb, var(--brand-color,#e33d8f) 13%, transparent);
+}
+
+.admin-help{
+  color:var(--admin-muted);
+  font-size:11px;
+}
+
+.quick-replies-editor{
+  grid-column:1 / -1;
+  display:grid;
+  gap:10px;
+}
+
+.quick-reply-row{
+  display:grid;
+  grid-template-columns:1fr 2fr auto;
+  gap:8px;
+  align-items:start;
+}
+
+.quick-reply-row button{
+  border:0;
+  border-radius:11px;
+  min-height:42px;
+  padding:0 12px;
+  cursor:pointer;
+  background:#fff1f3;
+  color:#8b2435;
+  font-weight:800;
+}
+
+.admin-pro-actions{
+  grid-column:1 / -1;
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  padding-top:4px;
+}
+
+.admin-pro-primary{
+  border:0;
+  border-radius:13px;
+  padding:12px 18px;
+  cursor:pointer;
+  font-weight:900;
+  background:var(--brand-color,#e33d8f);
+  color:#fff;
+}
+
+.admin-pro-secondary{
+  border:1px solid var(--admin-line);
+  border-radius:13px;
+  padding:12px 18px;
+  cursor:pointer;
+  font-weight:800;
+  background:#fff;
+  color:var(--admin-text);
+}
+
+.admin-save-status{
+  grid-column:1 / -1;
+  min-height:18px;
+  font-size:12px;
+  font-weight:700;
+}
+
+.admin-save-status.ok{
+  color:#17723a;
+}
+
+.admin-save-status.error{
+  color:#a52331;
+}
+
+.store-admin-pro #appFrame{
+  background:#fff;
+}
+
+@media(max-width:980px){
+  .admin-pro-grid{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+}
+
+@media(max-width:760px){
+  .admin-pro-home{
+    padding:14px 12px 2px;
+  }
+
+  .admin-pro-hero{
+    border-radius:18px;
+    padding:16px;
+    align-items:flex-start;
+    flex-direction:column;
+  }
+
+  .admin-pro-grid{
+    grid-template-columns:1fr 1fr;
+    gap:8px;
+  }
+
+  .admin-pro-stat{
+    border-radius:15px;
+    padding:12px;
+  }
+
+  .admin-pro-section{
+    margin:12px;
+    border-radius:18px;
+  }
+
+  .admin-pro-form{
+    grid-template-columns:1fr;
+    padding:15px;
+  }
+
+  .admin-field.full{
+    grid-column:auto;
+  }
+
+  .quick-replies-editor,
+  .admin-pro-actions,
+  .admin-save-status{
+    grid-column:auto;
+  }
+
+  .quick-reply-row{
+    grid-template-columns:1fr;
+  }
+
+  .quick-reply-row button{
+    width:max-content;
+  }
+}

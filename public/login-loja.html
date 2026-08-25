@@ -213,6 +213,36 @@
 
       <button id="entrarBtn" type="button">Entrar no painel da loja</button>
       <div id="msg"></div>
+
+      <div id="passwordChangeBox" style="display:none;margin-top:18px;">
+        <h3>Crie sua nova senha</h3>
+
+        <p class="lead">
+          Por segurança, você precisa criar uma nova senha antes de acessar o painel.
+        </p>
+
+        <label for="newPasswordRequired">Nova senha</label>
+        <input
+          id="newPasswordRequired"
+          type="password"
+          placeholder="Digite uma nova senha segura"
+          autocomplete="new-password"
+        >
+
+        <label for="confirmPasswordRequired">Confirmar nova senha</label>
+        <input
+          id="confirmPasswordRequired"
+          type="password"
+          placeholder="Digite novamente a nova senha"
+          autocomplete="new-password"
+        >
+
+        <button id="changePasswordRequiredBtn" type="button">
+          Salvar nova senha e continuar
+        </button>
+
+        <div id="passwordChangeMsg"></div>
+      </div>
       <div class="login-foot">Sistema de acesso com identidade visual, status e licença da loja.</div>
     </section>
   </div>
@@ -358,21 +388,109 @@
       return;
     }
 
-    sessionStorage.setItem('STORE_SESSION', JSON.stringify({
-      id:data.store.id,
-      slug:data.store.slug
-    }));
+    if(data.mustChangePassword){
 
-    location.href = 'dashboard-loja.html?loja=' + encodeURIComponent(data.store.slug);
+    sessionStorage.removeItem('STORE_SESSION');
+
+    msg.textContent =
+      'Por seguran\u00e7a, crie uma nova senha antes de acessar o painel.';
+
+    document.getElementById('passwordChangeBox').style.display =
+      'block';
+
+    document.getElementById('entrarBtn').disabled =
+      true;
+
+    return;
+  }
+
+  sessionStorage.setItem('STORE_SESSION', JSON.stringify({
+    id:data.store.id,
+    slug:data.store.slug
+  }));
+
+  location.href =
+    'dashboard-loja.html?loja=' +
+    encodeURIComponent(data.store.slug);
 
   }catch(err){
     console.error(err);
     msg.textContent = 'Erro ao conectar servidor';
   }
-}  
+}
+
+
+async function trocarSenhaObrigatoria(){
+
+  const novaSenha =
+    document.getElementById('newPasswordRequired').value.trim();
+
+  const confirmarSenha =
+    document.getElementById('confirmPasswordRequired').value.trim();
+
+  const msg =
+    document.getElementById('passwordChangeMsg');
+
+  if(!novaSenha){
+    msg.textContent = 'Digite a nova senha.';
+    return;
+  }
+
+  if(novaSenha !== confirmarSenha){
+    msg.textContent = 'As duas senhas n\u00e3o s\u00e3o iguais.';
+    return;
+  }
+
+  try{
+
+    const r = await fetch(
+      '/api/public/change-password-required',
+      {
+        method:'POST',
+        headers:{
+          'Content-Type':'application/json'
+        },
+        body:JSON.stringify({
+          newPassword:novaSenha
+        })
+      }
+    );
+
+    const data =
+      await r.json().catch(()=>({}));
+
+    if(!r.ok || !data.ok){
+      msg.textContent =
+        data.error || 'N\u00e3o foi poss\u00edvel alterar a senha.';
+      return;
+    }
+
+    sessionStorage.setItem(
+      'STORE_SESSION',
+      JSON.stringify({
+        id:data.store.id,
+        slug:data.store.slug
+      })
+    );
+
+    location.href =
+      'dashboard-loja.html?loja=' +
+      encodeURIComponent(data.store.slug);
+
+  }catch(err){
+    console.error(err);
+    msg.textContent = 'Erro ao conectar servidor.';
+  }
+}
+
+
 document
   .getElementById('entrarBtn')
   .addEventListener('click', fazerLogin);
+
+document
+  .getElementById('changePasswordRequiredBtn')
+  .addEventListener('click', trocarSenhaObrigatoria);
 
     loadStore();
   </script>

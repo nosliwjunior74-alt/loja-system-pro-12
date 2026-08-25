@@ -308,3 +308,269 @@ body.store-admin-pro{
     width:max-content;
   }
 }
+
+/* CLIENTES DA LOJA - PAINEL PROFISSIONAL */
+
+.admin-customers-section{
+  position:relative;
+}
+
+.admin-customers-toolbar{
+  grid-column:1 / -1;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:14px;
+  flex-wrap:wrap;
+  margin-top:4px;
+  padding:14px 16px;
+  border-radius:16px;
+  background:linear-gradient(
+    135deg,
+    rgba(255,255,255,.92),
+    rgba(255,242,248,.88)
+  );
+  border:1px solid rgba(185,45,112,.12);
+}
+
+.admin-customers-toolbar strong{
+  color:#5e2442;
+  font-size:14px;
+}
+
+.admin-customer-status{
+  font-size:13px;
+  font-weight:700;
+  color:#7d5169;
+}
+
+.admin-customer-status.ok{
+  color:#13723a;
+}
+
+.admin-customer-status.error{
+  color:#a72e39;
+}
+
+.admin-customers-list{
+  grid-column:1 / -1;
+  display:grid;
+  gap:12px;
+  margin-top:2px;
+}
+
+.admin-customer-card{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  align-items:center;
+  gap:18px;
+  padding:16px;
+  border-radius:18px;
+  background:rgba(255,255,255,.94);
+  border:1px solid rgba(167,44,105,.12);
+  box-shadow:0 8px 22px rgba(112,34,73,.06);
+}
+
+.admin-customer-info{
+  min-width:0;
+  display:flex;
+  flex-direction:column;
+  gap:5px;
+}
+
+.admin-customer-info strong{
+  color:#4f1f38;
+  font-size:16px;
+  overflow-wrap:anywhere;
+}
+
+.admin-customer-info span{
+  color:#75465f;
+  font-size:13px;
+  font-weight:700;
+  overflow-wrap:anywhere;
+}
+
+.admin-customer-info small{
+  color:#92677e;
+  font-size:12px;
+  line-height:1.45;
+  overflow-wrap:anywhere;
+}
+
+.admin-customer-actions{
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  gap:8px;
+  flex-wrap:wrap;
+}
+
+.admin-customer-actions button{
+  min-width:86px;
+}
+
+.admin-pro-danger{
+  border:none;
+  border-radius:13px;
+  padding:11px 14px;
+  cursor:pointer;
+  font-weight:800;
+  color:#fff;
+  background:linear-gradient(
+    180deg,
+    #c74962,
+    #9d2f46
+  );
+  box-shadow:0 6px 14px rgba(157,47,70,.16);
+}
+
+.admin-pro-danger:hover{
+  filter:brightness(.96);
+}
+
+.admin-customers-empty{
+  padding:26px 18px;
+  text-align:center;
+  border-radius:18px;
+  color:#8d6378;
+  background:rgba(255,255,255,.72);
+  border:1px dashed rgba(157,49,102,.22);
+  font-size:14px;
+}
+
+@media (max-width:760px){
+
+  .admin-customer-card{
+    grid-template-columns:1fr;
+  }
+
+  .admin-customer-actions{
+    justify-content:flex-start;
+  }
+
+  .admin-customer-actions button{
+    flex:1 1 100px;
+  }
+
+  .admin-customers-toolbar{
+    align-items:flex-start;
+    flex-direction:column;
+  }
+}
+
+/* CLIENTES COMPACTOS - PADRAO PAINEL MESTRE */
+
+.admin-customers-search-results{
+  grid-column:1 / -1;
+  width:100%;
+  min-width:0;
+}
+
+.admin-customers-list{
+  width:100%;
+  grid-template-columns:1fr;
+}
+
+.admin-customer-card{
+  width:100%;
+  box-sizing:border-box;
+  grid-template-columns:minmax(260px,1fr) auto;
+}
+
+.admin-customer-info{
+  width:100%;
+  min-width:0;
+}
+
+.admin-customer-info strong,
+.admin-customer-info span,
+.admin-customer-info small{
+  word-break:normal;
+  overflow-wrap:break-word;
+}
+
+.admin-customer-actions{
+  flex-wrap:nowrap;
+}
+
+.admin-customers-toolbar:has(#adminCustomerStatus:empty){
+  display:none;
+}
+
+@media (max-width:760px){
+
+  .admin-customer-card{
+    grid-template-columns:1fr;
+  }
+
+  .admin-customer-actions{
+    width:100%;
+    flex-wrap:wrap;
+    justify-content:flex-start;
+  }
+
+  .admin-customer-actions button{
+    flex:1 1 100px;
+  }
+}
+
+
+
+
+/* ATENDIMENTO COMPACTO - PADRAO PAINEL MESTRE */
+
+.admin-support-summary{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:18px;
+  padding:16px 18px;
+  border:1px solid rgba(167,44,105,.12);
+  border-radius:18px;
+  background:rgba(255,255,255,.94);
+  box-shadow:0 8px 22px rgba(112,34,73,.05);
+}
+
+.admin-support-summary-info{
+  min-width:0;
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+}
+
+.admin-support-summary-info span{
+  color:#92677e;
+  font-size:12px;
+  font-weight:800;
+  text-transform:uppercase;
+  letter-spacing:.04em;
+}
+
+.admin-support-summary-info strong{
+  color:#4f1f38;
+  font-size:16px;
+}
+
+.admin-support-summary-info small{
+  color:#7d5369;
+  font-size:13px;
+  line-height:1.45;
+}
+
+.admin-support-form-area{
+  width:100%;
+  margin-top:16px;
+}
+
+@media (max-width:760px){
+
+  .admin-support-summary{
+    align-items:stretch;
+    flex-direction:column;
+  }
+
+  .admin-support-summary button{
+    width:100%;
+  }
+}

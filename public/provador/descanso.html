@@ -1,32 +1,782 @@
 <!DOCTYPE html>
-<html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Sua Loja - Descanso</title><link rel="stylesheet" href="css/estilo.css"></head>
-<body class="home"><main class="wrapper"><section class="tv">
-<header class="topbar">
-<img class="logo small" src="imagens/logo.png" alt="Sua Loja">
-<h1 class="title" style="font-size:30px">TELA DE DESCANSO</h1>
-<p class="subtitle" id="restLabel">Sua Loja</p>
-<p class="kicker">Toque para começar</p>
-</header>
-<section class="rest-stage">
-  <div class="rest-card" id="restHolder"></div>
-</section>
-<section class="carousel">
-<button class="arrow" disabled>•</button>
-<div class="track">
-  <div class="card"><div class="name">Sua Loja</div><img src="imagens/logo.png" alt=""></div>
-  <div class="card"><div class="name">Moda Social</div><img src="imagens/logo.png" alt=""></div>
-  <div class="card"><div class="name">TV Vertical</div><img src="imagens/logo.png" alt=""></div>
-  <div class="card"><div class="name">Toque para começar</div><img src="imagens/logo.png" alt=""></div>
-</div>
-<button class="arrow" disabled>•</button>
-</section>
-<section class="actions">
-<button class="btn primary" onclick="location.href='index.html'">IR PARA TELA INICIAL</button>
-<button class="btn secondary" onclick="location.href='catalogo.html'">IR PARA CATÁLOGO</button>
-<button class="btn neutral" onclick="location.href='admin.html'">PAINEL DA LOJA</button>
-</section>
-</section></main>
-<script src="js/salvar.js"></script><script src="js/provador.js"></script><script>renderDescanso();</script><script src="../shared/brand-sync.js"></script>
-<script src="js/client-neutral-brand.js"></script>
-</body></html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta
+    name="viewport"
+    content="width=device-width,initial-scale=1.0,viewport-fit=cover"
+  >
+
+  <title>Modo Exibi&ccedil;&atilde;o</title>
+
+  <style>
+    :root{
+      --brand:#e33d8f;
+      --rest-fit:contain;
+    }
+
+    *{
+      box-sizing:border-box;
+    }
+
+    html,
+    body{
+      width:100%;
+      height:100%;
+      margin:0;
+      overflow:hidden;
+      background:#050507;
+      font-family:Arial,Helvetica,sans-serif;
+    }
+
+    body{
+      color:#fff;
+    }
+
+    .rest-shell{
+      position:fixed;
+      inset:0;
+      width:100vw;
+      height:100dvh;
+      overflow:hidden;
+      background:#000;
+    }
+
+    .rest-stage{
+      position:absolute;
+      inset:0;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      overflow:hidden;
+      background:#000;
+    }
+
+    .rest-media{
+      position:absolute;
+      inset:0;
+      width:100%;
+      height:100%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      overflow:hidden;
+      background:#000;
+    }
+
+    .rest-media img,
+    .rest-media video{
+      display:block;
+      width:100%;
+      height:100%;
+      object-fit:var(--rest-fit);
+      object-position:center center;
+      background:#000;
+    }
+
+    .rest-default{
+      position:absolute;
+      inset:0;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+      padding:8vh 8vw;
+      background:
+        radial-gradient(
+          circle at 50% 40%,
+          color-mix(in srgb, var(--brand) 32%, transparent),
+          transparent 42%
+        ),
+        linear-gradient(
+          160deg,
+          #09070a 0%,
+          #191018 48%,
+          #050506 100%
+        );
+    }
+
+    .rest-default::before{
+      content:"";
+      position:absolute;
+      inset:0;
+      background:
+        linear-gradient(
+          180deg,
+          rgba(255,255,255,.035),
+          transparent 22%,
+          transparent 76%,
+          rgba(255,255,255,.025)
+        );
+      pointer-events:none;
+    }
+
+    .rest-logo-wrap{
+      position:relative;
+      z-index:2;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      width:min(72vw,560px);
+      max-height:46vh;
+      margin-bottom:30px;
+    }
+
+    .rest-logo{
+      display:block;
+      max-width:100%;
+      max-height:42vh;
+      width:auto;
+      height:auto;
+      object-fit:contain;
+      object-position:center;
+      filter:drop-shadow(0 24px 50px rgba(0,0,0,.42));
+    }
+
+    .rest-store-name{
+      position:relative;
+      z-index:2;
+      margin:0;
+      max-width:90vw;
+      font-size:clamp(30px,5vw,76px);
+      line-height:1.05;
+      font-weight:900;
+      letter-spacing:.02em;
+      color:#fff;
+      text-shadow:0 8px 30px rgba(0,0,0,.55);
+    }
+
+    .rest-store-sub{
+      position:relative;
+      z-index:2;
+      max-width:82vw;
+      margin:14px 0 0;
+      font-size:clamp(16px,2vw,30px);
+      font-weight:600;
+      color:rgba(255,255,255,.78);
+    }
+
+    .rest-line{
+      position:relative;
+      z-index:2;
+      width:min(260px,48vw);
+      height:4px;
+      margin-top:26px;
+      border-radius:999px;
+      background:var(--brand);
+      box-shadow:0 0 30px var(--brand);
+    }
+
+    .rest-back-group{
+      position:fixed;
+      top:max(18px,env(safe-area-inset-top));
+      left:max(18px,env(safe-area-inset-left));
+      z-index:50;
+      display:flex;
+      flex-direction:column;
+      align-items:flex-start;
+      gap:8px;
+    }
+
+    .rest-back{
+      border:1px solid rgba(255,255,255,.20);
+      border-radius:16px;
+      padding:13px 18px;
+      background:rgba(10,10,12,.62);
+      color:#fff;
+      font-size:15px;
+      font-weight:800;
+      cursor:pointer;
+      backdrop-filter:blur(12px);
+      box-shadow:0 10px 30px rgba(0,0,0,.28);
+    }
+
+    .rest-back:hover{
+      background:rgba(10,10,12,.82);
+    }
+
+    .rest-brand{
+      position:fixed;
+      top:max(18px,env(safe-area-inset-top));
+      right:max(18px,env(safe-area-inset-right));
+      z-index:40;
+      display:flex;
+      align-items:center;
+      gap:10px;
+      max-width:min(48vw,380px);
+      padding:8px 12px 8px 8px;
+      border:1px solid rgba(255,255,255,.16);
+      border-radius:16px;
+      background:rgba(8,8,10,.52);
+      backdrop-filter:blur(12px);
+      box-shadow:0 10px 30px rgba(0,0,0,.24);
+    }
+
+    .rest-brand img{
+      width:42px;
+      height:42px;
+      object-fit:contain;
+      border-radius:10px;
+      background:rgba(255,255,255,.94);
+      padding:3px;
+    }
+
+    .rest-brand span{
+      min-width:0;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      white-space:nowrap;
+      font-size:14px;
+      font-weight:800;
+    }
+
+    .rest-counter{
+      position:fixed;
+      right:max(18px,env(safe-area-inset-right));
+      bottom:max(18px,env(safe-area-inset-bottom));
+      z-index:40;
+      padding:8px 12px;
+      border-radius:999px;
+      background:rgba(0,0,0,.48);
+      border:1px solid rgba(255,255,255,.14);
+      font-size:12px;
+      font-weight:700;
+      backdrop-filter:blur(8px);
+    }
+
+    .hidden{
+      display:none !important;
+    }
+
+    @media (orientation:portrait){
+      .rest-logo-wrap{
+        width:min(78vw,620px);
+        max-height:38vh;
+      }
+
+      .rest-logo{
+        max-height:34vh;
+      }
+
+      .rest-store-name{
+        font-size:clamp(32px,8vw,74px);
+      }
+
+      .rest-store-sub{
+        font-size:clamp(16px,4vw,28px);
+      }
+
+      .rest-back{
+        font-size:14px;
+        padding:12px 15px;
+      }
+
+      .rest-brand{
+        max-width:46vw;
+      }
+    }
+
+    @media (orientation:landscape){
+      .rest-logo-wrap{
+        width:min(46vw,620px);
+      }
+
+      .rest-logo{
+        max-height:44vh;
+      }
+    }
+
+    @media (max-width:640px){
+      .rest-brand span{
+        display:none;
+      }
+
+      .rest-brand{
+        padding:6px;
+      }
+
+      .rest-brand img{
+        width:38px;
+        height:38px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <main class="rest-shell">
+
+    <section class="rest-stage">
+
+      <div
+        id="restMedia"
+        class="rest-media hidden"
+      ></div>
+
+      <div
+        id="restDefault"
+        class="rest-default"
+      >
+        <div class="rest-logo-wrap">
+          <img
+            id="restMainLogo"
+            class="rest-logo"
+            src="imagens/logo.png"
+            alt="Logo da loja"
+          >
+        </div>
+
+        <h1
+          id="restStoreName"
+          class="rest-store-name"
+        >
+          Sua Loja
+        </h1>
+
+        <p
+          id="restStoreSub"
+          class="rest-store-sub"
+        >
+          Moda e estilo
+        </p>
+
+        <div class="rest-line"></div>
+      </div>
+
+    </section>
+
+    <div class="rest-back-group">
+      <button
+        id="backToFitting"
+        class="rest-back"
+        type="button"
+      >
+        &larr; Voltar ao Provador
+      </button>
+
+      <button
+        id="backToAdmin"
+        class="rest-back"
+        type="button"
+      >
+        &#9881; Voltar ao Painel da Loja
+      </button>
+    </div>
+
+    <div
+      id="restBrand"
+      class="rest-brand"
+    >
+      <img
+        id="restSmallLogo"
+        src="imagens/logo.png"
+        alt=""
+      >
+      <span id="restSmallName">
+        Sua Loja
+      </span>
+    </div>
+
+    <div
+      id="restCounter"
+      class="rest-counter hidden"
+    ></div>
+
+  </main>
+
+  <script src="js/salvar.js"></script>
+
+  <script>
+  (async function(){
+
+    const params =
+      new URLSearchParams(location.search);
+
+    const slug =
+      params.get('loja') ||
+      localStorage.getItem('loja_slug') ||
+      '';
+
+    if(slug){
+      localStorage.setItem(
+        'loja_slug',
+        slug
+      );
+    }
+
+    const restMedia =
+      document.getElementById('restMedia');
+
+    const restDefault =
+      document.getElementById('restDefault');
+
+    const restMainLogo =
+      document.getElementById('restMainLogo');
+
+    const restStoreName =
+      document.getElementById('restStoreName');
+
+    const restStoreSub =
+      document.getElementById('restStoreSub');
+
+    const restSmallLogo =
+      document.getElementById('restSmallLogo');
+
+    const restSmallName =
+      document.getElementById('restSmallName');
+
+    const restCounter =
+      document.getElementById('restCounter');
+
+    const backToFitting =
+      document.getElementById('backToFitting');
+
+    const backToAdmin =
+      document.getElementById('backToAdmin');
+
+    let playlist = [];
+    let settings = {
+      imageSeconds:6,
+      fitMode:'cover'
+    };
+
+    let currentIndex = 0;
+    let currentTimer = null;
+    let currentObjectUrl = null;
+
+    function fittingUrl(){
+      return 'index.html' +
+        (
+          slug
+            ? '?loja=' + encodeURIComponent(slug)
+            : ''
+        );
+    }
+
+    function adminUrl(){
+      return 'admin.html' +
+        (
+          slug
+            ? '?loja=' + encodeURIComponent(slug)
+            : ''
+        );
+    }
+
+    backToFitting.onclick = ()=>{
+      location.href = fittingUrl();
+    };
+
+    backToAdmin.onclick = ()=>{
+      location.href = adminUrl();
+    };
+
+    function cleanupMedia(){
+      if(currentTimer){
+        clearTimeout(currentTimer);
+        currentTimer = null;
+      }
+
+      if(currentObjectUrl){
+        try{
+          URL.revokeObjectURL(
+            currentObjectUrl
+          );
+        }catch(e){}
+
+        currentObjectUrl = null;
+      }
+
+      restMedia.innerHTML = '';
+    }
+
+    function setBrand(store){
+      const fallbackLogo =
+        'imagens/logo.png';
+
+      const logo =
+        store && store.logo
+          ? store.logo
+          : fallbackLogo;
+
+      const name =
+        store && store.name
+          ? store.name
+          : 'Sua Loja';
+
+      const sub =
+        store && store.sub
+          ? store.sub
+          : 'Moda e estilo';
+
+      const color =
+        store && store.color
+          ? store.color
+          : '#e33d8f';
+
+      document.documentElement.style.setProperty(
+        '--brand',
+        color
+      );
+
+      restMainLogo.src = logo;
+      restSmallLogo.src = logo;
+
+      restStoreName.textContent = name;
+      restSmallName.textContent = name;
+      restStoreSub.textContent = sub;
+
+      restMainLogo.onerror = ()=>{
+        restMainLogo.src = fallbackLogo;
+      };
+
+      restSmallLogo.onerror = ()=>{
+        restSmallLogo.src = fallbackLogo;
+      };
+    }
+
+    async function loadBrand(){
+      if(!slug){
+        setBrand(null);
+        return;
+      }
+
+      try{
+        const response =
+          await fetch(
+            '/api/public/store/' +
+            encodeURIComponent(slug),
+            {
+              cache:'no-store'
+            }
+          );
+
+        if(!response.ok){
+          throw new Error(
+            'HTTP ' + response.status
+          );
+        }
+
+        const data =
+          await response.json();
+
+        setBrand(
+          data && data.store
+            ? data.store
+            : null
+        );
+
+      }catch(err){
+        console.log(
+          'Nao foi possivel carregar a marca da loja.',
+          err
+        );
+
+        setBrand(null);
+      }
+    }
+
+    async function loadConfig(){
+      const lista =
+        await DB.getKV('rest_playlist');
+
+      playlist =
+        Array.isArray(lista)
+          ? lista.filter(item=>
+              item &&
+              item.file &&
+              (
+                item.type === 'image' ||
+                item.type === 'video'
+              )
+            )
+          : [];
+
+      const salvo =
+        await DB.getKV('rest_settings');
+
+      settings = {
+        imageSeconds:
+          Number(
+            salvo &&
+            salvo.imageSeconds
+          ) || 6,
+
+        fitMode:
+          salvo &&
+          salvo.fitMode === 'contain'
+            ? 'contain'
+            : 'cover'
+      };
+
+      document.documentElement.style.setProperty(
+        '--rest-fit',
+        settings.fitMode
+      );
+
+      return await DB.getKV('rest_meta');
+    }
+
+    function showDefault(){
+      cleanupMedia();
+
+      restMedia.classList.add('hidden');
+      restDefault.classList.remove('hidden');
+      restCounter.classList.add('hidden');
+    }
+
+    function updateCounter(){
+      if(playlist.length <= 1){
+        restCounter.classList.add(
+          'hidden'
+        );
+        return;
+      }
+
+      restCounter.textContent =
+        (currentIndex + 1) +
+        ' / ' +
+        playlist.length;
+
+      restCounter.classList.remove(
+        'hidden'
+      );
+    }
+
+    function nextMedia(){
+      if(!playlist.length){
+        showDefault();
+        return;
+      }
+
+      currentIndex =
+        (currentIndex + 1) %
+        playlist.length;
+
+      renderCurrentMedia();
+    }
+
+    function renderCurrentMedia(){
+      cleanupMedia();
+
+      if(!playlist.length){
+        showDefault();
+        return;
+      }
+
+      const item =
+        playlist[currentIndex];
+
+      if(
+        !item ||
+        !item.file
+      ){
+        nextMedia();
+        return;
+      }
+
+      restDefault.classList.add('hidden');
+      restMedia.classList.remove('hidden');
+
+      updateCounter();
+
+      currentObjectUrl =
+        URL.createObjectURL(
+          item.file
+        );
+
+      if(item.type === 'video'){
+        const video =
+          document.createElement('video');
+
+        video.src =
+          currentObjectUrl;
+
+        video.autoplay = true;
+        video.muted = true;
+        video.playsInline = true;
+        video.controls = false;
+
+        video.onended = ()=>{
+          nextMedia();
+        };
+
+        video.onerror = ()=>{
+          nextMedia();
+        };
+
+        restMedia.appendChild(video);
+
+        const playPromise =
+          video.play();
+
+        if(
+          playPromise &&
+          typeof playPromise.catch === 'function'
+        ){
+          playPromise.catch(()=>{
+            video.muted = true;
+            video.play().catch(()=>{});
+          });
+        }
+
+        return;
+      }
+
+      const img =
+        document.createElement('img');
+
+      img.src =
+        currentObjectUrl;
+
+      img.alt =
+        item.name ||
+        'Look da loja';
+
+      img.onerror = ()=>{
+        nextMedia();
+      };
+
+      restMedia.appendChild(img);
+
+      currentTimer =
+        setTimeout(
+          nextMedia,
+          Math.max(
+            2,
+            Number(settings.imageSeconds) || 6
+          ) * 1000
+        );
+    }
+
+    async function start(){
+      await loadBrand();
+
+      const meta =
+        await loadConfig();
+
+      if(
+        playlist.length &&
+        meta &&
+        meta.mode === 'playlist'
+      ){
+        currentIndex = 0;
+        renderCurrentMedia();
+      }else{
+        showDefault();
+      }
+    }
+
+    window.addEventListener(
+      'beforeunload',
+      cleanupMedia
+    );
+
+    await start();
+
+  })();
+  </script>
+
+</body>
+</html>

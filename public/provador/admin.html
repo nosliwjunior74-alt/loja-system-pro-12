@@ -69,12 +69,85 @@
 
 <div class="divider"></div>
 
-<h2 style="margin-top:0">Tela de descanso</h2>
-<div class="muted">Escolha foto ou vídeo do PC para tela vertical.</div>
-<label>Arquivo de mídia</label><input type="file" id="restFile" accept="image/*,video/*">
-<div class="muted" id="restInfo" style="margin-top:10px">Atual: Logo padrão da loja</div>
+<h2 style="margin-top:0">Tela de descanso e m&iacute;dia</h2>
+
+<div class="muted">
+  Configure a TV da loja para exibir descanso, slideshow de fotos
+  ou v&iacute;deos. A tela se adapta automaticamente ao formato vertical
+  ou horizontal.
+</div>
+
+<label>Adicionar fotos e v&iacute;deos</label>
+<input
+  type="file"
+  id="restFile"
+  accept="image/*,video/*"
+  multiple
+>
+
+<div class="rest-media-settings">
+  <div>
+    <label>Tempo de cada foto</label>
+    <select id="restImageSeconds">
+      <option value="4">4 segundos</option>
+      <option value="6" selected>6 segundos</option>
+      <option value="8">8 segundos</option>
+      <option value="10">10 segundos</option>
+      <option value="15">15 segundos</option>
+    </select>
+  </div>
+
+  <div>
+    <label>Ajuste da m&iacute;dia</label>
+    <select id="restFitMode">
+      <option value="cover" selected>Preencher a tela</option>
+      <option value="contain">Mostrar imagem inteira</option>
+    </select>
+  </div>
+</div>
+
+<div
+  class="muted"
+  id="restInfo"
+  style="margin-top:10px"
+>
+  Nenhuma m&iacute;dia adicionada.
+</div>
+
 <div class="rest-box" id="restPreview"></div>
-<div class="item-actions"><button class="small-btn" id="openRestBtn">Abrir descanso</button><button class="small-btn" id="defaultRestBtn">Restaurar logo</button></div>
+
+<button
+  type="button"
+  class="small-btn"
+  id="restPlaylistToggle"
+  aria-expanded="false"
+>
+  Arquivos de midia (0)
+</button>
+
+<div
+  id="restPlaylistPanel"
+  hidden
+>
+  <div
+    id="restPlaylist"
+    class="rest-playlist"
+  ></div>
+</div>
+
+<div class="item-actions">
+  <button class="small-btn" id="openRestBtn">
+    Abrir modo exibi&ccedil;&atilde;o
+  </button>
+
+  <button class="small-btn" id="defaultRestBtn">
+    Usar descanso / logo
+  </button>
+
+  <button class="small-btn danger" id="clearRestMediaBtn">
+    Apagar m&iacute;dias
+  </button>
+</div>
 </div>
 
 <div class="panel">
@@ -210,28 +283,327 @@ clearBtn.onclick = clearForm;
 clearCustomerBtn.onclick = clearCustomerForm;
 restoreCustomersBtn.onclick = async ()=>{ await Estoque.restoreCustomers(); await renderCustomers(); alert('Clientes iniciais restaurados.'); };
 
+let restObjectUrls = [];
+
+function limparRestObjectUrls(){
+  restObjectUrls.forEach(url=>{
+    try{ URL.revokeObjectURL(url); }catch(e){}
+  });
+  restObjectUrls = [];
+}
+
+function criarRestUrl(file){
+  const url = URL.createObjectURL(file);
+  restObjectUrls.push(url);
+  return url;
+}
+
+function restUid(){
+  return 'midia-' +
+    Date.now() +
+    '-' +
+    Math.random().toString(36).slice(2,9);
+}
+
+async function getRestPlaylist(){
+  const lista = await DB.getKV('rest_playlist');
+  return Array.isArray(lista) ? lista : [];
+}
+
+async function saveRestPlaylist(lista){
+  await DB.setKV(
+    'rest_playlist',
+    Array.isArray(lista) ? lista : []
+  );
+}
+
+async function getRestSettings(){
+  const salvo = await DB.getKV('rest_settings');
+
+  return {
+    imageSeconds:
+      Number(salvo && salvo.imageSeconds) || 6,
+
+    fitMode:
+      salvo && salvo.fitMode === 'contain'
+        ? 'contain'
+        : 'cover'
+  };
+}
+
+async function saveRestSettings(){
+  await DB.setKV('rest_settings',{
+    imageSeconds:
+      Number(restImageSeconds.value) || 6,
+
+    fitMode:
+      restFitMode.value === 'contain'
+        ? 'contain'
+        : 'cover'
+  });
+}
+
 restFile.onchange = async ()=>{
-  const file = restFile.files && restFile.files[0];
-  if(!file) return;
-  const type = file.type.startsWith('video/') ? 'video' : file.type.startsWith('image/') ? 'image' : '';
-  if(!type){ alert('Escolha uma imagem ou vídeo.'); return; }
-  await DB.setKV('rest_file', file);
-  await DB.setKV('rest_meta', {mode:'custom', type, name:file.name});
+  const arquivos =
+    Array.from(restFile.files || []);
+
+  if(!arquivos.length) return;
+
+  const validos = arquivos.filter(file=>
+    file.type.startsWith('image/') ||
+    file.type.startsWith('video/')
+  );
+
+  if(!validos.length){
+    alert('Escolha fotos ou videos validos.');
+    restFile.value = '';
+    return;
+  }
+
+  const lista = await getRestPlaylist();
+
+  validos.forEach(file=>{
+    lista.push({
+      id:restUid(),
+      name:file.name,
+      type:file.type.startsWith('video/')
+        ? 'video'
+        : 'image',
+      file
+    });
+  });
+
+  await saveRestPlaylist(lista);
+
+  await DB.setKV('rest_meta',{
+    mode:'playlist',
+    type:'mixed',
+    name:
+      lista.length +
+      (lista.length === 1
+        ? ' midia'
+        : ' midias')
+  });
+
+  restFile.value = '';
+
   await renderRestPreview();
 };
-defaultRestBtn.onclick = async ()=>{ await DB.setKV('rest_meta',{mode:'default',type:'image',name:'Logo padrão da loja'}); await DB.setKV('rest_file', null); await renderRestPreview(); };
-openRestBtn.onclick = ()=>location.href='descanso.html';
+
+restImageSeconds.onchange = async ()=>{
+  await saveRestSettings();
+};
+
+restFitMode.onchange = async ()=>{
+  await saveRestSettings();
+  await renderRestPreview();
+};
+
+defaultRestBtn.onclick = async ()=>{
+  await DB.setKV('rest_meta',{
+    mode:'default',
+    type:'image',
+    name:'Logo padrao da loja'
+  });
+
+  await renderRestPreview();
+};
+
+clearRestMediaBtn.onclick = async ()=>{
+  if(
+    !confirm(
+      'Apagar todas as fotos e videos da Tela de Descanso desta loja?'
+    )
+  ){
+    return;
+  }
+
+  await saveRestPlaylist([]);
+  await DB.setKV('rest_file', null);
+
+  await DB.setKV('rest_meta',{
+    mode:'default',
+    type:'image',
+    name:'Logo padrao da loja'
+  });
+
+  await renderRestPreview();
+};
+
+openRestBtn.onclick = ()=>{
+  const params =
+    new URLSearchParams(location.search);
+
+  const slug =
+    params.get('loja') ||
+    localStorage.getItem('loja_slug') ||
+    '';
+
+  location.href =
+    'descanso.html' +
+    (
+      slug
+        ? '?loja=' + encodeURIComponent(slug)
+        : ''
+    );
+};
+
+restPlaylistToggle.onclick = ()=>{
+  const aberto =
+    restPlaylistToggle.getAttribute('aria-expanded') === 'true';
+
+  restPlaylistToggle.setAttribute(
+    'aria-expanded',
+    aberto ? 'false' : 'true'
+  );
+
+  restPlaylistPanel.hidden = aberto;
+};
+
+window.removeRestMedia = async id=>{
+  const lista = await getRestPlaylist();
+
+  const nova =
+    lista.filter(item=>item && item.id !== id);
+
+  await saveRestPlaylist(nova);
+
+  if(!nova.length){
+    await DB.setKV('rest_meta',{
+      mode:'default',
+      type:'image',
+      name:'Logo padrao da loja'
+    });
+  }
+
+  await renderRestPreview();
+};
+
 async function renderRestPreview(){
+  limparRestObjectUrls();
+
+  const lista = await getRestPlaylist();
   const meta = await DB.getKV('rest_meta');
-  const file = await DB.getKV('rest_file');
-  if(meta) restInfo.textContent = `Atual: ${meta.name||'Logo padrão da loja'} • Tipo: ${meta.type==='video'?'Vídeo':'Imagem'}`;
-  if(meta && meta.mode==='custom' && file){
-    const url = URL.createObjectURL(file);
-    restPreview.innerHTML = meta.type==='video' ? `<video src="${url}" autoplay muted loop playsinline controls></video>` : `<img src="${url}" alt="${meta.name||''}">`;
+  const settings = await getRestSettings();
+
+  restImageSeconds.value =
+    String(settings.imageSeconds);
+
+  restFitMode.value =
+    settings.fitMode;
+
+  if(!lista.length){
+    restInfo.textContent =
+      'Nenhuma midia adicionada. Descanso com logo da loja.';
+
+    restPreview.innerHTML =
+      '<img src="imagens/logo.png" alt="Sua Loja">';
+
+    restPlaylist.innerHTML = '';
+
+    restPlaylistToggle.textContent =
+      'Arquivos de midia (0)';
+
+    restPlaylistToggle.setAttribute(
+      'aria-expanded',
+      'false'
+    );
+
+    restPlaylistPanel.hidden = true;
+
+    return;
+  }
+
+  restInfo.textContent =
+    lista.length +
+    (lista.length === 1
+      ? ' midia armazenada nesta loja.'
+      : ' midias armazenadas nesta loja.');
+
+  const primeira =
+    lista[0];
+
+  const primeiraUrl =
+    criarRestUrl(primeira.file);
+
+  if(primeira.type === 'video'){
+    restPreview.innerHTML =
+      '<video autoplay muted loop playsinline controls></video>';
+
+    const video =
+      restPreview.querySelector('video');
+
+    video.src = primeiraUrl;
+    video.style.objectFit = settings.fitMode;
   }else{
-    restPreview.innerHTML = `<img src="imagens/logo.png" alt="Sua Loja">`;
+    restPreview.innerHTML =
+      '<img alt="Pre-visualizacao da midia">';
+
+    const img =
+      restPreview.querySelector('img');
+
+    img.src = primeiraUrl;
+    img.style.objectFit = settings.fitMode;
+  }
+
+  restPlaylist.innerHTML = '';
+
+  restPlaylistToggle.textContent =
+    'Arquivos de midia (' + lista.length + ')';
+
+  lista.forEach((item,index)=>{
+    const linha =
+      document.createElement('div');
+
+    linha.className =
+      'rest-playlist-item';
+
+    const texto =
+      document.createElement('div');
+
+    texto.className =
+      'rest-playlist-name';
+
+    texto.textContent =
+      (index + 1) +
+      '. ' +
+      (item.name || 'Midia') +
+      ' - ' +
+      (
+        item.type === 'video'
+          ? 'Video'
+          : 'Foto'
+      );
+
+    const remover =
+      document.createElement('button');
+
+    remover.type = 'button';
+    remover.className =
+      'small-btn danger';
+
+    remover.textContent =
+      'Remover';
+
+    remover.onclick = ()=>{
+      window.removeRestMedia(item.id);
+    };
+
+    linha.appendChild(texto);
+    linha.appendChild(remover);
+
+    restPlaylist.appendChild(linha);
+  });
+
+  if(meta && meta.mode === 'default'){
+    restInfo.textContent +=
+      ' Modo atual: descanso com logo.';
+  }else{
+    restInfo.textContent +=
+      ' Modo atual: exibicao de midias.';
   }
 }
+
 async function prepararLojaSelecionada(){
   try{
     const response = await fetch('/api/session/store-config', { credentials:'same-origin', cache:'no-store' });

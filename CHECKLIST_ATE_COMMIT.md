@@ -43,7 +43,7 @@ Motor Central IA das Lojas — concluir e fazer commit primeiro.
 [ ] git diff --check
 [ ] Auditar arquivos antes de staging
 [ ] Nao incluir .bak, data, SQLite, node_modules ou segredos
-[ ] Fazer commit seguro da etapa IA
+[?] Fazer commit seguro da etapa IA ? commit 0126f86
 
 ## PROXIMA FRENTE APOS O COMMIT DA IA
 Profissionalizacao antiga das lojas.
@@ -93,3 +93,20 @@ Profissionalizacao antiga das lojas.
 ## REGRA DE RETOMADA
 Nunca refazer uma etapa marcada [✓].
 Ao parar, registrar aqui a ultima tarefa concluida e a proxima tarefa.
+
+
+## COMMITS DE SEGURANCA CONCLUIDOS
+[?] 3ec15a7 ? Profissionaliza paineis, seguranca, clientes e gestao multiloja
+[?] 0126f86 ? Adiciona Motor Central IA com consumo e limites por loja
+
+
+## VALIDACAO TELA DE DESCANSO
+[?] Playlist aceita foto e video
+[?] Video avanca automaticamente quando termina
+[?] Foto respeita tempo configurado
+[?] Ciclo video -> foto -> video funcionando
+[?] Preencher a tela usa cover
+[?] Mostrar imagem inteira preservado com contain
+[?] Lista de arquivos de midia ficou retratil no painel
+[?] Adicionar botao Voltar ao Provador
+[?] Adicionar botao Voltar ao Painel da Loja

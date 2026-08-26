@@ -581,6 +581,19 @@ button.small{
 </section>
 
 
+<!-- ===== PLANOS E PRECOS DO PRODUTOR ===== -->
+<section class=card id=producerPlansPanel style=margin-bottom:18px>
+<div style=display:flex;justify-content:space-between;gap:16px;align-items:flex-start;flex-wrap:wrap>
+<div><h2 class=section-title style=margin-bottom:4px>Planos e Pre&ccedil;os</h2><p class=section-sub style=margin:0>Valores cobrados pelo Produtor para novas lojas. O checkout usa estes valores diretamente do servidor.</p></div><span class=active-badge>Configura&ccedil;&atilde;o global</span>
+</div>
+<div style=display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-top:18px>
+<div style=border:1px solid #f1d7e5;border-radius:14px;padding:16px;background:#fffafd><strong style=display:block;color:#7a3157;font-size:16px;margin-bottom:12px>Simples</strong><div class=field><label>Mensal (R$)</label><input id=planSimplesMonthly inputmode=decimal placeholder=97,00></div><div class=field style=margin-top:10px><label>Anual (R$)</label><input id=planSimplesAnnual inputmode=decimal placeholder=797,00></div><label style=display:flex;align-items:center;gap:8px;margin-top:12px><input id=planSimplesActive type=checkbox style=width:auto>Plano ativo</label></div>
+<div style=border:1px solid #f1d7e5;border-radius:14px;padding:16px;background:#fffafd><strong style=display:block;color:#7a3157;font-size:16px;margin-bottom:12px>Profissional</strong><div class=field><label>Mensal (R$)</label><input id=planProfissionalMonthly inputmode=decimal placeholder=197,00></div><div class=field style=margin-top:10px><label>Anual (R$)</label><input id=planProfissionalAnnual inputmode=decimal placeholder=1497,00></div><label style=display:flex;align-items:center;gap:8px;margin-top:12px><input id=planProfissionalActive type=checkbox style=width:auto>Plano ativo</label></div>
+<div style=border:1px solid #f1d7e5;border-radius:14px;padding:16px;background:#fffafd><strong style=display:block;color:#7a3157;font-size:16px;margin-bottom:12px>Premium</strong><div class=field><label>Mensal (R$)</label><input id=planPremiumMonthly inputmode=decimal placeholder=297,00></div><div class=field style=margin-top:10px><label>Anual (R$)</label><input id=planPremiumAnnual inputmode=decimal placeholder=2597,00></div><label style=display:flex;align-items:center;gap:8px;margin-top:12px><input id=planPremiumActive type=checkbox style=width:auto>Plano ativo</label></div>
+</div>
+<div class=actions style=padding-bottom:0><button id=saveProducerPlansBtn type=button>Salvar pre&ccedil;os</button></div><p class=status-message id=producerPlanStatus></p>
+</section>
+
 <div class="layout">
 
 <section class="card">
@@ -2810,7 +2823,73 @@ e=>handleStoreAction(e.target)
 );
 
 
+// ===== JS PLANOS E PRECOS DO PRODUTOR =====
+const producerPlanUi={
+  simples:{monthly:'planSimplesMonthly',annual:'planSimplesAnnual',active:'planSimplesActive'},
+  profissional:{monthly:'planProfissionalMonthly',annual:'planProfissionalAnnual',active:'planProfissionalActive'},
+  premium:{monthly:'planPremiumMonthly',annual:'planPremiumAnnual',active:'planPremiumActive'}
+};
+
+function centsToBrl(cents){
+  return (Number(cents||0)/100).toFixed(2).replace('.',',');
+}
+
+function brlToCents(value,label){
+  let text=String(value||'').trim().replace(/\s+/g,'').replace(/R\$/gi,'');
+  if(!text)throw new Error(`Informe o valor ${label}.`);
+  if(text.includes(','))text=text.replace(/\./g,'').replace(',','.');
+  const amount=Number(text);
+  if(!Number.isFinite(amount)||amount<0)throw new Error(`Valor invalido em ${label}.`);
+  return Math.round(amount*100);
+}
+
+async function loadProducerPlans(){
+  const status=el('producerPlanStatus');
+  try{
+    const data=await api('/api/admin/plans');
+    const plans=Array.isArray(data?.plans)?data.plans:[];
+    plans.forEach(plan=>{
+      const cfg=producerPlanUi[plan.id];
+      if(!cfg)return;
+      el(cfg.monthly).value=centsToBrl(plan.monthlyAmountCents);
+      el(cfg.annual).value=centsToBrl(plan.annualAmountCents);
+      el(cfg.active).checked=Boolean(plan.active);
+    });
+    status.textContent='';
+  }catch(e){
+    status.textContent=e.message||'Nao foi possivel carregar os planos.';
+  }
+}
+
+async function saveProducerPlans(){
+  const status=el('producerPlanStatus');
+  const btn=el('saveProducerPlansBtn');
+  btn.disabled=true;
+  status.textContent='Salvando precos...';
+  try{
+    for(const [id,cfg] of Object.entries(producerPlanUi)){
+      const payload={
+        monthlyAmountCents:brlToCents(el(cfg.monthly).value,`${id} mensal`),
+        annualAmountCents:brlToCents(el(cfg.annual).value,`${id} anual`),
+        active:el(cfg.active).checked
+      };
+      await api('/api/admin/plans/'+encodeURIComponent(id),{
+        method:'PUT',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify(payload)
+      });
+    }
+    await loadProducerPlans();
+    status.textContent='Precos atualizados com sucesso.';
+  }finally{
+    btn.disabled=false;
+  }
+}
+
+el('saveProducerPlansBtn').addEventListener('click',()=>saveProducerPlans().catch(e=>el('producerPlanStatus').textContent=e.message));
+
 loadStores();
+loadProducerPlans();
 
 </script>
 

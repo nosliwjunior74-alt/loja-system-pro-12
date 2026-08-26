@@ -99,6 +99,94 @@ try { db.exec("ALTER TABLE stores ADD COLUMN looks TEXT"); } catch(e) {}
 try { db.exec("ALTER TABLE stores ADD COLUMN roupas TEXT"); } catch(e) {}
 }
 ensureTables();
+// ===== CHECKOUTS SEPARADOS: PRODUTOR E LOJISTAS =====
+db.exec(`
+  CREATE TABLE IF NOT EXISTS producer_checkout_orders (
+    id TEXT PRIMARY KEY,
+    checkout_token TEXT UNIQUE NOT NULL,
+    buyer_name TEXT NOT NULL,
+    buyer_email TEXT,
+    buyer_phone TEXT,
+    buyer_cpf_cnpj TEXT,
+    store_name TEXT NOT NULL,
+    plan TEXT NOT NULL DEFAULT 'premium',
+    amount_cents INTEGER NOT NULL DEFAULT 0,
+    currency TEXT NOT NULL DEFAULT 'BRL',
+    gateway TEXT NOT NULL DEFAULT 'test',
+    method TEXT NOT NULL DEFAULT 'pix',
+    status TEXT NOT NULL DEFAULT 'pending',
+    external_id TEXT,
+    checkout_url TEXT,
+    created_store_id TEXT,
+    paid_at TEXT,
+    created_at TEXT NOT NULL,
+    updated_at TEXT,
+    FOREIGN KEY(created_store_id) REFERENCES stores(id) ON DELETE SET NULL
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_producer_checkout_status
+    ON producer_checkout_orders(status);
+
+  CREATE INDEX IF NOT EXISTS idx_producer_checkout_external
+    ON producer_checkout_orders(external_id);
+
+  CREATE TABLE IF NOT EXISTS customer_orders (
+    id TEXT PRIMARY KEY,
+    checkout_token TEXT UNIQUE NOT NULL,
+    store_id TEXT NOT NULL,
+    customer_name TEXT NOT NULL,
+    customer_email TEXT,
+    customer_phone TEXT,
+    items_json TEXT NOT NULL DEFAULT '[]',
+    amount_cents INTEGER NOT NULL DEFAULT 0,
+    currency TEXT NOT NULL DEFAULT 'BRL',
+    gateway TEXT NOT NULL DEFAULT 'test',
+    method TEXT NOT NULL DEFAULT 'pix',
+    status TEXT NOT NULL DEFAULT 'pending',
+    external_id TEXT,
+    checkout_url TEXT,
+    paid_at TEXT,
+    created_at TEXT NOT NULL,
+    updated_at TEXT,
+    FOREIGN KEY(store_id) REFERENCES stores(id) ON DELETE CASCADE
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_customer_orders_store
+    ON customer_orders(store_id);
+
+  CREATE INDEX IF NOT EXISTS idx_customer_orders_status
+    ON customer_orders(status);
+
+  CREATE INDEX IF NOT EXISTS idx_customer_orders_external
+    ON customer_orders(external_id);
+`);
+// ===== PLANOS EDITAVEIS DO PRODUTOR =====
+db.exec(`
+  CREATE TABLE IF NOT EXISTS producer_plans (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    monthly_amount_cents INTEGER NOT NULL DEFAULT 0,
+    annual_amount_cents INTEGER NOT NULL DEFAULT 0,
+    active INTEGER NOT NULL DEFAULT 1,
+    sort_order INTEGER NOT NULL DEFAULT 0,
+    created_at TEXT NOT NULL,
+    updated_at TEXT
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_producer_plans_active
+    ON producer_plans(active);
+`);
+
+const seedPlanNow = new Date().toISOString();
+const insertProducerPlan = db.prepare(`
+  INSERT OR IGNORE INTO producer_plans
+  (id,name,monthly_amount_cents,annual_amount_cents,active,sort_order,created_at,updated_at)
+  VALUES (?,?,?,?,?,?,?,?)
+`);
+insertProducerPlan.run('simples','Simples',9700,79700,1,1,seedPlanNow,seedPlanNow);
+insertProducerPlan.run('profissional','Profissional',19700,149700,1,2,seedPlanNow,seedPlanNow);
+insertProducerPlan.run('premium','Premium',29700,259700,1,3,seedPlanNow,seedPlanNow);
+
 function maybeAddColumn(table, column, typeDef){
   const cols = db.prepare(`PRAGMA table_info(${table})`).all().map(c=>c.name);
   if(!cols.includes(column)) db.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${typeDef}`);
@@ -127,6 +215,19 @@ maybeAddColumn('payments','notes','TEXT');
 maybeAddColumn('payments','whatsapp_sent_at','TEXT');
 maybeAddColumn('payments','whatsapp_message_id','TEXT');
 maybeAddColumn('payments','reminders_count','INTEGER DEFAULT 0');
+// CAMPOS EXTRAS DOS CHECKOUTS
+maybeAddColumn('producer_checkout_orders','installments','INTEGER DEFAULT 1');
+maybeAddColumn('producer_checkout_orders','secondary_method','TEXT DEFAULT ""');
+maybeAddColumn('producer_checkout_orders','secondary_amount_cents','INTEGER DEFAULT 0');
+maybeAddColumn('producer_checkout_orders','payment_details_json','TEXT DEFAULT "{}"');
+
+maybeAddColumn('customer_orders','installments','INTEGER DEFAULT 1');
+maybeAddColumn('customer_orders','secondary_method','TEXT DEFAULT ""');
+maybeAddColumn('customer_orders','secondary_amount_cents','INTEGER DEFAULT 0');
+maybeAddColumn('customer_orders','payment_details_json','TEXT DEFAULT "{}"');
+maybeAddColumn('producer_checkout_orders','billing_cycle','TEXT DEFAULT "monthly"');
+maybeAddColumn('stores','billing_cycle','TEXT DEFAULT "monthly"');
+
 function uniqueSlug(base, ignoreId=''){
   let slug = slugify(base);
   let out = slug, count=2;
@@ -494,6 +595,263 @@ function updatePaymentStatus(id, status, extra={}){
   if(nextStatus === 'overdue') syncStoreLicense(updated.store_id);
   return paymentRowToView(updated);
 }
+// ===== FUNCOES DOS CHECKOUTS SEPARADOS =====
+function safeJsonObject(value){
+  try{
+    const parsed = JSON.parse(value || '{}');
+    return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {};
+  }catch(e){
+    return {};
+  }
+}
+
+function producerCheckoutRowToView(row){
+  if(!row) return null;
+  return {
+    id: row.id,
+    checkoutToken: row.checkout_token,
+    buyerName: row.buyer_name,
+    buyerEmail: row.buyer_email || '',
+    buyerPhone: row.buyer_phone || '',
+    buyerCpfCnpj: row.buyer_cpf_cnpj || '',
+    storeName: row.store_name,
+    plan: row.plan,
+    billingCycle: row.billing_cycle || 'monthly',
+    amountCents: row.amount_cents,
+    currency: row.currency,
+    gateway: row.gateway,
+    method: row.method,
+    status: row.status,
+    externalId: row.external_id || '',
+    checkoutUrl: row.checkout_url || '',
+    createdStoreId: row.created_store_id || '',
+    installments: row.installments || 1,
+    secondaryMethod: row.secondary_method || '',
+    secondaryAmountCents: row.secondary_amount_cents || 0,
+    paymentDetails: safeJsonObject(row.payment_details_json),
+    paidAt: row.paid_at || '',
+    createdAt: row.created_at,
+    updatedAt: row.updated_at || ''
+  };
+}
+
+function createProducerCheckoutOrder(payload={}){
+  const id = nanoid();
+  const now = new Date().toISOString();
+  const checkoutToken = String(payload.checkoutToken || (nanoid()+nanoid()));
+  db.prepare(`INSERT INTO producer_checkout_orders (
+    id,checkout_token,buyer_name,buyer_email,buyer_phone,buyer_cpf_cnpj,
+    store_name,plan,billing_cycle,amount_cents,currency,gateway,method,status,external_id,
+    checkout_url,created_store_id,paid_at,created_at,updated_at,installments,
+    secondary_method,secondary_amount_cents,payment_details_json
+  ) VALUES (
+    @id,@checkout_token,@buyer_name,@buyer_email,@buyer_phone,@buyer_cpf_cnpj,
+    @store_name,@plan,@billing_cycle,@amount_cents,@currency,@gateway,@method,@status,@external_id,
+    @checkout_url,@created_store_id,@paid_at,@created_at,@updated_at,@installments,
+    @secondary_method,@secondary_amount_cents,@payment_details_json
+  )`).run({
+    id,
+    checkout_token: checkoutToken,
+    buyer_name: String(payload.buyerName || '').trim(),
+    buyer_email: String(payload.buyerEmail || '').trim(),
+    buyer_phone: String(payload.buyerPhone || '').trim(),
+    buyer_cpf_cnpj: String(payload.buyerCpfCnpj || '').trim(),
+    store_name: String(payload.storeName || '').trim(),
+    plan: String(payload.plan || 'premium'),
+    billing_cycle: String(payload.billingCycle || 'monthly'),
+    amount_cents: cents(payload.amountCents),
+    currency: String(payload.currency || 'BRL'),
+    gateway: String(payload.gateway || 'test'),
+    method: String(payload.method || 'pix'),
+    status: String(payload.status || 'pending'),
+    external_id: payload.externalId ? String(payload.externalId) : null,
+    checkout_url: payload.checkoutUrl ? String(payload.checkoutUrl) : null,
+    created_store_id: payload.createdStoreId ? String(payload.createdStoreId) : null,
+    paid_at: payload.paidAt || null,
+    created_at: now,
+    updated_at: now,
+    installments: Math.max(1, Number(payload.installments || 1) || 1),
+    secondary_method: String(payload.secondaryMethod || ''),
+    secondary_amount_cents: cents(payload.secondaryAmountCents),
+    payment_details_json: JSON.stringify(payload.paymentDetails || {})
+  });
+  return producerCheckoutRowToView(
+    db.prepare('SELECT * FROM producer_checkout_orders WHERE id = ?').get(id)
+  );
+}
+
+function getProducerCheckoutOrderById(id){
+  return producerCheckoutRowToView(
+    db.prepare('SELECT * FROM producer_checkout_orders WHERE id = ?').get(id)
+  );
+}
+
+function getProducerCheckoutOrderByToken(token){
+  return producerCheckoutRowToView(
+    db.prepare('SELECT * FROM producer_checkout_orders WHERE checkout_token = ?').get(token)
+  );
+}
+
+function getProducerCheckoutOrderByExternalId(externalId){
+  return producerCheckoutRowToView(
+    db.prepare('SELECT * FROM producer_checkout_orders WHERE external_id = ? ORDER BY created_at DESC LIMIT 1').get(externalId)
+  );
+}
+
+function updateProducerCheckoutOrder(id, patch={}){
+  const row = db.prepare('SELECT * FROM producer_checkout_orders WHERE id = ?').get(id);
+  if(!row) return null;
+  const now = new Date().toISOString();
+  const next = {
+    status: patch.status !== undefined ? String(patch.status) : row.status,
+    external_id: patch.externalId !== undefined ? (patch.externalId ? String(patch.externalId) : null) : row.external_id,
+    checkout_url: patch.checkoutUrl !== undefined ? (patch.checkoutUrl ? String(patch.checkoutUrl) : null) : row.checkout_url,
+    created_store_id: patch.createdStoreId !== undefined ? (patch.createdStoreId ? String(patch.createdStoreId) : null) : row.created_store_id,
+    paid_at: patch.paidAt !== undefined ? patch.paidAt : row.paid_at,
+    gateway: patch.gateway !== undefined ? String(patch.gateway) : row.gateway,
+    method: patch.method !== undefined ? String(patch.method) : row.method,
+    billing_cycle: patch.billingCycle !== undefined ? String(patch.billingCycle || 'monthly') : (row.billing_cycle || 'monthly'),
+    installments: patch.installments !== undefined ? Math.max(1, Number(patch.installments) || 1) : row.installments,
+    secondary_method: patch.secondaryMethod !== undefined ? String(patch.secondaryMethod || '') : row.secondary_method,
+    secondary_amount_cents: patch.secondaryAmountCents !== undefined ? cents(patch.secondaryAmountCents) : row.secondary_amount_cents,
+    payment_details_json: patch.paymentDetails !== undefined ? JSON.stringify(patch.paymentDetails || {}) : row.payment_details_json,
+    updated_at: now,
+    id
+  };
+  db.prepare(`UPDATE producer_checkout_orders SET
+    status=@status, external_id=@external_id, checkout_url=@checkout_url,
+    created_store_id=@created_store_id, paid_at=@paid_at, gateway=@gateway,
+    method=@method, billing_cycle=@billing_cycle, installments=@installments, secondary_method=@secondary_method,
+    secondary_amount_cents=@secondary_amount_cents,
+    payment_details_json=@payment_details_json, updated_at=@updated_at
+    WHERE id=@id`).run(next);
+  return getProducerCheckoutOrderById(id);
+}
+
+function customerOrderRowToView(row){
+  if(!row) return null;
+  let items = [];
+  try{
+    const parsed = JSON.parse(row.items_json || '[]');
+    items = Array.isArray(parsed) ? parsed : [];
+  }catch(e){}
+  return {
+    id: row.id,
+    checkoutToken: row.checkout_token,
+    storeId: row.store_id,
+    customerName: row.customer_name,
+    customerEmail: row.customer_email || '',
+    customerPhone: row.customer_phone || '',
+    items,
+    amountCents: row.amount_cents,
+    currency: row.currency,
+    gateway: row.gateway,
+    method: row.method,
+    status: row.status,
+    externalId: row.external_id || '',
+    checkoutUrl: row.checkout_url || '',
+    installments: row.installments || 1,
+    secondaryMethod: row.secondary_method || '',
+    secondaryAmountCents: row.secondary_amount_cents || 0,
+    paymentDetails: safeJsonObject(row.payment_details_json),
+    paidAt: row.paid_at || '',
+    createdAt: row.created_at,
+    updatedAt: row.updated_at || ''
+  };
+}
+
+function createCustomerOrder(payload={}){
+  const id = nanoid();
+  const now = new Date().toISOString();
+  const checkoutToken = String(payload.checkoutToken || (nanoid()+nanoid()));
+  db.prepare(`INSERT INTO customer_orders (
+    id,checkout_token,store_id,customer_name,customer_email,customer_phone,
+    items_json,amount_cents,currency,gateway,method,status,external_id,checkout_url,
+    paid_at,created_at,updated_at,installments,secondary_method,
+    secondary_amount_cents,payment_details_json
+  ) VALUES (
+    @id,@checkout_token,@store_id,@customer_name,@customer_email,@customer_phone,
+    @items_json,@amount_cents,@currency,@gateway,@method,@status,@external_id,@checkout_url,
+    @paid_at,@created_at,@updated_at,@installments,@secondary_method,
+    @secondary_amount_cents,@payment_details_json
+  )`).run({
+    id,
+    checkout_token: checkoutToken,
+    store_id: String(payload.storeId || ''),
+    customer_name: String(payload.customerName || '').trim(),
+    customer_email: String(payload.customerEmail || '').trim(),
+    customer_phone: String(payload.customerPhone || '').trim(),
+    items_json: JSON.stringify(Array.isArray(payload.items) ? payload.items : []),
+    amount_cents: cents(payload.amountCents),
+    currency: String(payload.currency || 'BRL'),
+    gateway: String(payload.gateway || 'test'),
+    method: String(payload.method || 'pix'),
+    status: String(payload.status || 'pending'),
+    external_id: payload.externalId ? String(payload.externalId) : null,
+    checkout_url: payload.checkoutUrl ? String(payload.checkoutUrl) : null,
+    paid_at: payload.paidAt || null,
+    created_at: now,
+    updated_at: now,
+    installments: Math.max(1, Number(payload.installments || 1) || 1),
+    secondary_method: String(payload.secondaryMethod || ''),
+    secondary_amount_cents: cents(payload.secondaryAmountCents),
+    payment_details_json: JSON.stringify(payload.paymentDetails || {})
+  });
+  return customerOrderRowToView(
+    db.prepare('SELECT * FROM customer_orders WHERE id = ?').get(id)
+  );
+}
+
+function getCustomerOrderById(id){
+  return customerOrderRowToView(
+    db.prepare('SELECT * FROM customer_orders WHERE id = ?').get(id)
+  );
+}
+
+function getCustomerOrderByToken(token){
+  return customerOrderRowToView(
+    db.prepare('SELECT * FROM customer_orders WHERE checkout_token = ?').get(token)
+  );
+}
+
+function getCustomerOrderByExternalId(externalId){
+  return customerOrderRowToView(
+    db.prepare('SELECT * FROM customer_orders WHERE external_id = ? ORDER BY created_at DESC LIMIT 1').get(externalId)
+  );
+}
+
+function updateCustomerOrder(id, patch={}){
+  const row = db.prepare('SELECT * FROM customer_orders WHERE id = ?').get(id);
+  if(!row) return null;
+  const now = new Date().toISOString();
+  const next = {
+    status: patch.status !== undefined ? String(patch.status) : row.status,
+    external_id: patch.externalId !== undefined ? (patch.externalId ? String(patch.externalId) : null) : row.external_id,
+    checkout_url: patch.checkoutUrl !== undefined ? (patch.checkoutUrl ? String(patch.checkoutUrl) : null) : row.checkout_url,
+    paid_at: patch.paidAt !== undefined ? patch.paidAt : row.paid_at,
+    gateway: patch.gateway !== undefined ? String(patch.gateway) : row.gateway,
+    method: patch.method !== undefined ? String(patch.method) : row.method,
+    installments: patch.installments !== undefined ? Math.max(1, Number(patch.installments) || 1) : row.installments,
+    secondary_method: patch.secondaryMethod !== undefined ? String(patch.secondaryMethod || '') : row.secondary_method,
+    secondary_amount_cents: patch.secondaryAmountCents !== undefined ? cents(patch.secondaryAmountCents) : row.secondary_amount_cents,
+    payment_details_json: patch.paymentDetails !== undefined ? JSON.stringify(patch.paymentDetails || {}) : row.payment_details_json,
+    updated_at: now,
+    id
+  };
+  db.prepare(`UPDATE customer_orders SET
+    status=@status, external_id=@external_id, checkout_url=@checkout_url,
+    paid_at=@paid_at, gateway=@gateway, method=@method, installments=@installments,
+    secondary_method=@secondary_method, secondary_amount_cents=@secondary_amount_cents,
+    payment_details_json=@payment_details_json, updated_at=@updated_at
+    WHERE id=@id`).run(next);
+  return getCustomerOrderById(id);
+}
+
+function listCustomerOrdersByStore(storeId){
+  return db.prepare(
+    'SELECT * FROM customer_orders WHERE store_id = ? ORDER BY created_at DESC'
+  ).all(storeId).map(customerOrderRowToView);
+}
 function getFinanceSummary(){
   const sum = (status) => db.prepare('SELECT COALESCE(SUM(amount_cents),0) t FROM payments WHERE status = ?').get(status).t || 0;
   const paid = sum('paid'); const pending = sum('pending'); const overdue = sum('overdue');
@@ -648,5 +1006,76 @@ function ensureSeedStore(){
     createStore({ name:'Sua Loja', slug:'sua-loja', login:'admin', password:process.env.SEED_DEMO_PASSWORD || crypto.randomBytes(12).toString('base64url'), sub:'Dashboard Integrado Multi-Loja' });
   }
 }
+// ===== FUNCOES DOS PLANOS EDITAVEIS DO PRODUTOR =====
+function producerPlanRowToView(row){
+  if(!row) return null;
+  return {
+    id: row.id,
+    name: row.name,
+    monthlyAmountCents: Number(row.monthly_amount_cents || 0),
+    annualAmountCents: Number(row.annual_amount_cents || 0),
+    active: Boolean(row.active),
+    sortOrder: Number(row.sort_order || 0),
+    createdAt: row.created_at || '',
+    updatedAt: row.updated_at || ''
+  };
+}
+
+function listProducerPlans(){
+  return db.prepare(
+    'SELECT * FROM producer_plans ORDER BY sort_order ASC, id ASC'
+  ).all().map(producerPlanRowToView);
+}
+
+function getProducerPlan(id){
+  const row = db.prepare(
+    'SELECT * FROM producer_plans WHERE id = ?'
+  ).get(String(id || '').trim().toLowerCase());
+  return producerPlanRowToView(row);
+}
+
+function updateProducerPlan(id, payload={}){
+  const planId = String(id || '').trim().toLowerCase();
+  const row = db.prepare(
+    'SELECT * FROM producer_plans WHERE id = ?'
+  ).get(planId);
+
+  if(!row) return null;
+
+  const monthlyAmountCents =
+    payload.monthlyAmountCents !== undefined
+      ? cents(payload.monthlyAmountCents)
+      : Number(row.monthly_amount_cents || 0);
+
+  const annualAmountCents =
+    payload.annualAmountCents !== undefined
+      ? cents(payload.annualAmountCents)
+      : Number(row.annual_amount_cents || 0);
+
+  const active =
+    payload.active !== undefined
+      ? (payload.active ? 1 : 0)
+      : Number(row.active || 0);
+
+  const now = new Date().toISOString();
+
+  db.prepare(`
+    UPDATE producer_plans
+    SET monthly_amount_cents = ?,
+        annual_amount_cents = ?,
+        active = ?,
+        updated_at = ?
+    WHERE id = ?
+  `).run(
+    monthlyAmountCents,
+    annualAmountCents,
+    active,
+    now,
+    planId
+  );
+
+  return getProducerPlan(planId);
+}
+
 ensureSeedStore();
-module.exports = { db, slugify, uniqueSlug, listStores, getStoreById, getStoreBySlug, getStoreRowById, getStoreRowBySlug, createStore, updateStore, setStorePassword, deleteStore, verifyStoreLogin, licenseStatus: rawLicenseStatus, generateLicenseKey, createPayment, listPayments, updatePaymentStatus, getFinanceSummary, getFinanceChart, syncStoreLicense, currentAiPeriod, getAiUsageMonthly, recordAiUsage };
+module.exports = { db, slugify, uniqueSlug, listStores, getStoreById, getStoreBySlug, getStoreRowById, getStoreRowBySlug, createStore, updateStore, setStorePassword, deleteStore, verifyStoreLogin, licenseStatus: rawLicenseStatus, generateLicenseKey, createPayment, listPayments, updatePaymentStatus, createProducerCheckoutOrder, getProducerCheckoutOrderById, getProducerCheckoutOrderByToken, getProducerCheckoutOrderByExternalId, updateProducerCheckoutOrder, createCustomerOrder, getCustomerOrderById, getCustomerOrderByToken, getCustomerOrderByExternalId, updateCustomerOrder, listCustomerOrdersByStore, listProducerPlans, getProducerPlan, updateProducerPlan, getFinanceSummary, getFinanceChart, syncStoreLicense, currentAiPeriod, getAiUsageMonthly, recordAiUsage };

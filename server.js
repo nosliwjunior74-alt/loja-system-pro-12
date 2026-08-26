@@ -7,7 +7,7 @@ const path = require('path');
 const fs = require('fs');
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
-const { db: activeDb, listStores, getStoreById, getStoreBySlug, createStore, updateStore, setStorePassword, deleteStore, verifyStoreLogin, createPayment, listPayments, updatePaymentStatus, getFinanceSummary, getFinanceChart, recordAiUsage, getAiUsageMonthly } = require('./db');
+const { db: activeDb, listStores, getStoreById, getStoreBySlug, createStore, updateStore, setStorePassword, deleteStore, verifyStoreLogin, createPayment, listPayments, updatePaymentStatus, createProducerCheckoutOrder, getProducerCheckoutOrderById, getProducerCheckoutOrderByToken, getProducerCheckoutOrderByExternalId, updateProducerCheckoutOrder, createCustomerOrder, getCustomerOrderById, getCustomerOrderByToken, getCustomerOrderByExternalId, updateCustomerOrder, listCustomerOrdersByStore, listProducerPlans, getProducerPlan, updateProducerPlan, getFinanceSummary, getFinanceChart, recordAiUsage, getAiUsageMonthly } = require('./db');
 const app = express();
 const PORT = process.env.PORT || 10000;
 const BASE_URL = process.env.BASE_URL || '';
@@ -21,6 +21,31 @@ if (process.env.NODE_ENV === 'production' && !process.env.SESSION_SECRET) {
   console.error('ERRO CRITICO: SESSION_SECRET nao configurado em producao.');
   process.exit(1);
 }
+// ===== CONFIGURACAO CENTRAL DOS CHECKOUTS =====
+const CHECKOUT_MODE = String(process.env.CHECKOUT_MODE || 'test').trim().toLowerCase();
+
+const CHECKOUT_PAYMENT_METHODS = Object.freeze([
+  'pix',
+  'credit_card',
+  'debit_card',
+  'boleto'
+]);
+
+const CHECKOUT_FEATURES = Object.freeze({
+  installments: true,
+  maxInstallments: Math.max(
+    1,
+    Math.min(12, Number(process.env.CHECKOUT_MAX_INSTALLMENTS || 12) || 12)
+  ),
+  twoCreditCards: true
+});
+
+const PRODUCER_PLAN_PRICES = Object.freeze({
+  simples: Math.max(0, Number(process.env.PLAN_SIMPLES_AMOUNT_CENTS || 0) || 0),
+  profissional: Math.max(0, Number(process.env.PLAN_PROFISSIONAL_AMOUNT_CENTS || 0) || 0),
+  premium: Math.max(0, Number(process.env.PLAN_PREMIUM_AMOUNT_CENTS || 0) || 0)
+});
+
 const WHATSAPP_TOKEN = process.env.WHATSAPP_TOKEN || '';
 const WHATSAPP_PHONE_NUMBER_ID = process.env.WHATSAPP_PHONE_NUMBER_ID || '';
 const WHATSAPP_TEMPLATE_NAME = process.env.WHATSAPP_TEMPLATE_NAME || 'cobranca_loja';
@@ -492,6 +517,14 @@ app.use(session({
 }));
 app.use((_req,res,next)=>{ res.setHeader('Cache-Control','no-store'); next(); });
 const authLimiter = rateLimit({ windowMs: 15*60*1000, max: 8, standardHeaders:true, legacyHeaders:false, message:{ error:'Muitas tentativas. Aguarde 15 minutos e tente novamente.' } });
+// ===== LIMITADOR DOS CHECKOUTS PUBLICOS =====
+const checkoutLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 30,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: `Muitas tentativas de checkout. Aguarde alguns minutos e tente novamente.` }
+});
 app.get('/health', (_req,res)=>res.json({ ok:true }));
 function requireAdmin(req,res,next){ if(req.session?.adminLoggedIn) return next(); return res.redirect('/admin-login.html'); }
 function requireAdminApi(req,res,next){ if(req.session?.adminLoggedIn) return next(); return res.status(401).json({ error:'unauthorized' }); }
@@ -606,6 +639,64 @@ app.post('/api/admin/stores/:id/select', requireAdminApi, (req,res)=>{
     activeStoreId: store.id
   });
 });
+// ===== ADMIN PLANOS EDITAVEIS =====
+app.get('/api/admin/plans', requireAdminApi, (_req, res) => {
+  return res.json({
+    ok: true,
+    plans: listProducerPlans()
+  });
+});
+
+app.put('/api/admin/plans/:id', requireAdminApi, (req, res) => {
+  try {
+    const current = getProducerPlan(req.params.id);
+
+    if (!current) {
+      return res.status(404).json({ error:'Plano nao encontrado.' });
+    }
+
+    const body = req.body || {};
+    const patch = {};
+
+    if (body.monthlyAmountCents !== undefined) {
+      const value = Number(body.monthlyAmountCents);
+      if (!Number.isFinite(value) || value < 0) {
+        return res.status(400).json({ error:'Valor mensal invalido.' });
+      }
+      patch.monthlyAmountCents = Math.round(value);
+    }
+
+    if (body.annualAmountCents !== undefined) {
+      const value = Number(body.annualAmountCents);
+      if (!Number.isFinite(value) || value < 0) {
+        return res.status(400).json({ error:'Valor anual invalido.' });
+      }
+      patch.annualAmountCents = Math.round(value);
+    }
+
+    if (body.active !== undefined) {
+      if (typeof body.active !== 'boolean') {
+        return res.status(400).json({ error:'Campo active deve ser true ou false.' });
+      }
+      patch.active = body.active;
+    }
+
+    if (!Object.keys(patch).length) {
+      return res.status(400).json({ error:'Nenhuma alteracao valida informada.' });
+    }
+
+    const plan = updateProducerPlan(req.params.id, patch);
+
+    return res.json({
+      ok: true,
+      plan
+    });
+  } catch (err) {
+    console.error('Erro atualizando plano do produtor:', err);
+    return res.status(500).json({ error:'Nao foi possivel atualizar o plano.' });
+  }
+});
+
 app.get('/api/admin/finance/summary', requireAdminApi, (req,res)=> res.json(getFinanceSummary()));
 app.get('/api/admin/finance/chart', requireAdminApi, (req,res)=> res.json(getFinanceChart(6)));
 app.get('/api/admin/payments', requireAdminApi, (req,res)=> res.json({ payments: listPayments({ storeId: req.query.storeId || '', status: req.query.status || '' }) }));
@@ -614,6 +705,127 @@ app.post('/api/admin/payments/:id/mark-paid', requireAdminApi, (req,res)=> { con
 app.post('/api/admin/payments/:id/mark-overdue', requireAdminApi, (req,res)=> { const payment = updatePaymentStatus(req.params.id, 'overdue', req.body || {}); if(!payment) return res.status(404).json({ error:'Cobrança não encontrada' }); res.json({ payment }); });
 app.post('/api/admin/payments/:id/send-whatsapp', requireAdminApi, async (req,res)=>{ const payment = listPayments({}).find(p=>p.id===req.params.id); if(!payment) return res.status(404).json({ error:'Cobrança não encontrada' }); const store = getStoreById(payment.storeId, baseUrl(req)); if(!store) return res.status(404).json({ error:'Loja não encontrada' }); const result = await sendWhatsAppCharge(store, payment, req); if(!result.ok) return res.status(400).json(result); const updated = updatePaymentStatus(payment.id, payment.status, { whatsappSentAt:new Date().toISOString(), whatsappMessageId:result.messageId, remindersCount:(payment.remindersCount||0)+1, notes:`Cobrança enviada por WhatsApp em ${new Date().toLocaleString('pt-BR')}` }); return res.json({ ok:true, payment:updated }); });
 app.post('/api/admin/payments/send-whatsapp-due', requireAdminApi, async (req,res)=>{ await runAutomaticChargeReminders(req); res.json({ ok:true }); });
+// ===== ROTAS PUBLICAS DE CHECKOUT - CONFIG =====
+app.get('/api/public/checkout/config', (req, res) => {
+  const producerPlans = listProducerPlans().map(plan => ({
+    id: plan.id,
+    name: plan.name,
+    monthlyAmountCents: plan.monthlyAmountCents,
+    annualAmountCents: plan.annualAmountCents,
+    active: plan.active,
+    enabled: plan.active && (plan.monthlyAmountCents > 0 || plan.annualAmountCents > 0)
+  }));
+
+  return res.json({
+    ok: true,
+    mode: CHECKOUT_MODE,
+    paymentMethods: CHECKOUT_PAYMENT_METHODS,
+    features: CHECKOUT_FEATURES,
+    producerPlans
+  });
+});
+
+// ===== CHECKOUT PUBLICO DO PRODUTOR - PEDIDOS =====
+app.post('/api/public/checkout/producer/orders', checkoutLimiter, (req, res) => {
+  try {
+    const body = req.body || {};
+    const buyerName = String(body.buyerName || '').trim();
+    const buyerEmail = String(body.buyerEmail || '').trim().toLowerCase();
+    const buyerPhone = String(body.buyerPhone || '').trim();
+    const buyerCpfCnpj = String(body.buyerCpfCnpj || '').trim();
+    const storeName = String(body.storeName || '').trim();
+    const plan = String(body.plan || '').trim().toLowerCase();
+    const billingCycle = String(body.billingCycle || 'monthly').trim().toLowerCase();
+    const method = String(body.method || 'pix').trim().toLowerCase();
+    const secondaryMethod = String(body.secondaryMethod || '').trim().toLowerCase();
+    const installments = Math.max(1, Number(body.installments || 1) || 1);
+    const secondaryAmountCents = Math.max(0, Math.round(Number(body.secondaryAmountCents || 0) || 0));
+
+    if (!buyerName || !storeName || !plan) {
+      return res.status(400).json({ error:'Nome do comprador, nome da loja e plano são obrigatórios.' });
+    }
+
+    if (buyerEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(buyerEmail)) {
+      return res.status(400).json({ error:'E-mail inválido.' });
+    }
+
+// ===== CHECKOUT PRECO MENSAL ANUAL DO BANCO =====
+    const producerPlan = getProducerPlan(plan);
+
+    if (!producerPlan) {
+      return res.status(400).json({ error:'Plano inválido.' });
+    }
+
+    if (!producerPlan.active) {
+      return res.status(503).json({ error:'Este plano está temporariamente indisponível.' });
+    }
+
+    if (!['monthly','annual'].includes(billingCycle)) {
+      return res.status(400).json({ error:'Ciclo de cobrança inválido.' });
+    }
+
+    const amountCents = billingCycle === 'annual'
+      ? producerPlan.annualAmountCents
+      : producerPlan.monthlyAmountCents;
+
+    if (!amountCents || amountCents <= 0) {
+      return res.status(503).json( { error:'Este ciclo do plano ainda não está liberado para compra.' });
+    }
+
+    if (!CHECKOUT_PAYMENT_METHODS.includes(method)) {
+      return res.status(400).json({ error:'Forma de pagamento inválida.' });
+    }
+
+    if (installments > CHECKOUT_FEATURES.maxInstallments) {
+      return res.status(400).json({ error:`Parcelamento máximo: ${CHECKOUT_FEATURES.maxInstallments}x.` });
+    }
+
+    if (method !== 'credit_card' && installments > 1) {
+      return res.status(400).json({ error:'Parcelamento disponível somente para cartão de crédito.' });
+    }
+
+    if (secondaryMethod) {
+      if (!CHECKOUT_FEATURES.twoCreditCards || method !== 'credit_card' || secondaryMethod !== 'credit_card') {
+        return res.status(400).json({ error:'Pagamento dividido permitido somente com dois cartões de crédito.' });
+      }
+      if (secondaryAmountCents <= 0 || secondaryAmountCents >= amountCents) {
+        return res.status(400).json({ error:'Valor do segundo cartão inválido.' });
+      }
+    }
+
+    const order = createProducerCheckoutOrder({
+      buyerName,
+      buyerEmail,
+      buyerPhone,
+      buyerCpfCnpj,
+      storeName,
+      plan,
+      billingCycle,
+      amountCents,
+      currency:'BRL',
+      gateway: CHECKOUT_MODE === 'test' ? 'test' : 'mercadopago',
+      method,
+      installments,
+      secondaryMethod,
+      secondaryAmountCents,
+      status:'pending',
+      paymentDetails:{
+        checkoutMode: CHECKOUT_MODE,
+        serverPriceValidated: true
+      }
+    });
+
+    return res.status(201).json({
+      ok:true,
+      mode:CHECKOUT_MODE,
+      order
+    });
+  } catch (err) {
+    console.error('Erro criando checkout do produtor:', err);
+    return res.status(500).json({ error:'Não foi possível iniciar o checkout.' });
+  }
+});
+
 app.post('/api/public/login', authLimiter, (req,res)=>{
   const { slug, login, password } = req.body || {};
   const result = verifyStoreLogin(slug, login, password);

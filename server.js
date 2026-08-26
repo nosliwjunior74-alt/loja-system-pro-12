@@ -509,8 +509,7 @@ app.post('/api/admin/login', authLimiter, (req,res)=>{
       req.session.adminLoggedIn = true;
       req.session.adminUser = ADMIN_USER;
       req.session.loginAt = new Date().toISOString();
-      const stores = listStores(baseUrl(req));
-      if(!req.session.activeStoreId && stores[0]) req.session.activeStoreId = stores[0].id;
+      req.session.activeStoreId = '';
       return res.json({ ok:true, username:ADMIN_USER });
     });
     return;
@@ -540,8 +539,14 @@ app.get('/api/admin/security-status', requireAdminApi, (req,res)=>{
 
 app.get('/api/admin/session', (req,res)=>{
   if(!req.session?.adminLoggedIn) return res.status(401).json({ error:'unauthorized' });
-  const active = (req.session.activeStoreId && getStoreById(req.session.activeStoreId, baseUrl(req))) || listStores(baseUrl(req))[0] || null;
-  if(active && !req.session.activeStoreId) req.session.activeStoreId = active.id;
+  const active = req.session.activeStoreId
+    ? getStoreById(req.session.activeStoreId, baseUrl(req))
+    : null;
+
+  if(req.session.activeStoreId && !active){
+    req.session.activeStoreId = '';
+  }
+
   res.json({ ok:true, username:ADMIN_USER, activeStore: active });
 });
 app.get('/api/admin/stores', requireAdminApi, (req,res)=> res.json({ stores:listStores(baseUrl(req)), activeStoreId:req.session.activeStoreId || '' }));

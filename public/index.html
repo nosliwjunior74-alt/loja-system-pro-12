@@ -39,9 +39,9 @@
       >
 
       <div class="brand-copy">
-        <span class="brand-kicker">Loja ativa</span>
-        <h1 id="brandName">Sua Loja</h1>
-        <p id="brandSub">Dashboard Integrado Multi-Loja</p>
+        <span class="brand-kicker" id="brandKicker">PAINEL MESTRE &bull; PRODUTOR</span>
+        <h1 id="brandName">Loja Mestre</h1>
+        <p id="brandSub">Central de administracao do produtor</p>
       </div>
     </div>
 
@@ -53,7 +53,7 @@
         <span class="menu-label">Operação da loja</span>
 
         <button
-          class="menu-btn active"
+          class="menu-btn"
           data-url="provador/index.html"
           type="button">
           <span class="menu-icon">&#128087;</span>
@@ -115,7 +115,7 @@
         <span class="menu-label">Administração</span>
 
         <button
-          class="menu-btn"
+          class="menu-btn active"
           data-url="lojas_master.html"
           type="button">
           <span class="menu-icon">&#127970;</span>
@@ -209,10 +209,10 @@
     <header class="topbar">
 
       <div>
-        <strong id="currentTitle">Vitrine / Provador</strong>
+        <strong id="currentTitle">Painel Mestre das Lojas</strong>
 
         <span id="topbarSub">
-          Dashboard Integrado Multi-Loja
+          PAINEL MESTRE &bull; PRODUTOR
         </span>
       </div>
 
@@ -224,7 +224,7 @@
         <span class="active-store-dot"></span>
 
         <span id="activeStoreName">
-          Sua Loja
+          Loja Mestre
         </span>
 
       </div>
@@ -234,16 +234,9 @@
 
     <iframe
       id="appFrame"
-      src="provador/index.html"
+      src="lojas_master.html"
       title="Área de trabalho"
-      onload="
-        if(
-          this.contentWindow &&
-          this.contentWindow.initProvador
-        ){
-          this.contentWindow.initProvador();
-        }
-      ">
+      >
     </iframe>
 
   </main>

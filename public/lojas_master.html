@@ -418,6 +418,46 @@ button.small{
   border-color:var(--accent);
 }
 
+.store-selector-details{
+  margin-top:12px;
+  border:1px solid var(--line);
+  border-radius:14px;
+  background:#fffafd;
+  overflow:hidden;
+}
+
+.store-selector-details summary{
+  cursor:pointer;
+  list-style:none;
+  padding:12px 14px;
+  font-weight:800;
+  color:var(--accent-dark);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  user-select:none;
+}
+
+.store-selector-details summary::-webkit-details-marker{
+  display:none;
+}
+
+.store-selector-details summary::after{
+  content:'Abrir';
+  font-size:11px;
+  color:var(--muted);
+  font-weight:700;
+}
+
+.store-selector-details[open] summary::after{
+  content:'Fechar';
+}
+
+.selector-details-body{
+  padding:0 12px 12px;
+}
+
 .store-list{
   display:grid;
   gap:7px;
@@ -838,6 +878,10 @@ Pesquise por nome, CPF ou CNPJ e troque a loja ativa com um clique.
 </div>
 
 
+<details class="store-selector-details">
+<summary id="storeSelectorSummary">Lojas cadastradas (0)</summary>
+<div class="selector-details-body">
+
 <div class="search-row">
 
 <input
@@ -859,6 +903,9 @@ Abrir Provador
 <div class="alpha" id="alphabet"></div>
 
 <div class="store-list" id="storeList"></div>
+
+</div>
+</details>
 
 </section>
 
@@ -1229,7 +1276,20 @@ window.location.href=
 
 function syncParent(store){
 
-if(!store)return;
+if(!store){
+
+try{
+localStorage.removeItem("loja_slug");
+localStorage.removeItem("lojaAtivaConfig");
+}catch(e){}
+
+if(parent && parent!==window){
+parent.postMessage({type:"store-selected",store:null},"*");
+}
+
+return;
+
+}
 
 try{
 
@@ -1542,11 +1602,13 @@ const documentDigits=
 .replace(/\D/g,'');
 
 const queryOk=
-!searchTerm||
+Boolean(searchTerm)&&
+(
 hay.includes(searchTerm)||
 (
 queryDigits.length>0&&
 documentDigits.includes(queryDigits)
+)
 );
 
 const first=
@@ -1604,6 +1666,9 @@ visibleStores();
 el('selectorCount').textContent=
 `${list.length} de ${stores.length}`;
 
+el('storeSelectorSummary').textContent=
+`Lojas cadastradas (${stores.length})`;
+
 
 el('storeSummary').textContent=
 `${stores.length} ${
@@ -1615,8 +1680,12 @@ stores.length===1
 
 if(!list.length){
 
+const emptyMessage=searchTerm
+?'Nenhuma loja encontrada com esta pesquisa.'
+:'Digite o nome, CPF ou CNPJ para localizar uma loja.';
+
 el('storeList').innerHTML=
-"<div class='empty-list'>Nenhuma loja encontrada com este filtro.</div>";
+'<div class="empty-list">'+emptyMessage+'</div>';
 
 return;
 
@@ -1750,7 +1819,6 @@ Array.isArray(data.stores)
 
 activeStoreId=
 data.activeStoreId||
-stores[0]?.id||
 '';
 
 online=true;
@@ -1765,7 +1833,6 @@ LocalStoreManager.list();
 
 activeStoreId=
 LocalStoreManager.getActiveId()||
-stores[0]?.id||
 '';
 
 online=false;
@@ -1778,7 +1845,6 @@ el('status').textContent=
 
 const active=
 getActiveStore()||
-stores[0]||
 null;
 
 

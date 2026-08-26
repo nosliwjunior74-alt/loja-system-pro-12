@@ -1,8 +1,8 @@
 ﻿(function(){
 
   const DEFAULTS = {
-    name: 'Sua Loja',
-    sub: 'Dashboard Integrado Multi-Loja',
+    name: 'Loja Mestre',
+    sub: 'Central de administracao do produtor',
     logo: 'assets/default-logo.svg',
     color: '#e33d8f'
   };
@@ -66,6 +66,11 @@
         'activeStoreName'
       );
 
+    const brandKicker =
+      document.getElementById(
+        'brandKicker'
+      );
+
 
     if(brandName){
       brandName.textContent =
@@ -85,6 +90,11 @@
     if(activeStoreName){
       activeStoreName.textContent =
         cfg.name;
+    }
+
+    if(brandKicker){
+      brandKicker.textContent =
+        store ? 'LOJA SELECIONADA' : 'PAINEL MESTRE • PRODUTOR';
     }
 
     if(brandLogo){
@@ -130,6 +140,7 @@
   async function carregarLojaAtiva(){
 
     let store = null;
+    let sessionResolved = false;
 
 
     try{
@@ -148,6 +159,8 @@
 
       if(res.ok){
 
+        sessionResolved = true;
+
         const data =
           await res.json();
 
@@ -161,6 +174,7 @@
 
 
     if(
+      !sessionResolved &&
       !store &&
       window.LocalStorageManager
     ){
@@ -179,7 +193,7 @@
     }
 
 
-    if(!store){
+    if(!sessionResolved && !store){
 
       try{
 
@@ -199,6 +213,13 @@
 
 
     aplicarLoja(store);
+
+    if(sessionResolved && !store){
+      try{
+        localStorage.removeItem("loja_slug");
+        localStorage.removeItem("lojaAtivaConfig");
+      }catch(e){}
+    }
 
     return store;
 

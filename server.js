@@ -803,11 +803,11 @@ app.post('/api/public/checkout/producer/orders', checkoutLimiter, (req, res) => 
     const installments = Math.max(1, Number(body.installments || 1) || 1);
     const secondaryAmountCents = Math.max(0, Math.round(Number(body.secondaryAmountCents || 0) || 0));
 
-    if (!buyerName || !storeName || !plan) {
-      return res.status(400).json({ error:'Nome do comprador, nome da loja e plano são obrigatórios.' });
+    if (!buyerName || !buyerEmail || !storeName || !plan) {
+      return res.status(400).json({ error:'Nome do comprador, e-mail, nome da loja e plano são obrigatórios.' });
     }
 
-    if (buyerEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(buyerEmail)) {
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(buyerEmail)) {
       return res.status(400).json({ error:'E-mail inválido.' });
     }
 
@@ -999,7 +999,10 @@ app.post(
           .digest('hex');
 
       const payer = {
-        email:payerEmail
+        email:
+          CHECKOUT_MODE === 'test'
+            ? 'test_user_br@testuser.com'
+            : payerEmail
       };
 
       // Valor oficial do Mercado Pago para teste PIX.

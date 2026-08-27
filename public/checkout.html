@@ -1,0 +1,151 @@
+﻿<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Contratacao | Provador Pro System</title>
+  <link rel="stylesheet" href="/css/checkout.css">
+</head>
+<body>
+
+  <main class="checkout-shell">
+
+    <header class="checkout-header">
+      <img src="/assets/default-logo.svg" alt="Provador Pro System" class="brand-logo">
+      <div>
+        <span class="eyebrow">PROVADOR PRO SYSTEM</span>
+        <h1>Escolha seu plano</h1>
+        <p>Contrate sua loja de forma segura e comece a configurar seu Provador Pro.</p>
+      </div>
+    </header>
+
+    <section id="checkout-alert" class="checkout-alert" hidden></section>
+
+    <section class="billing-switch" aria-label="Periodo de cobranca">
+      <button type="button" class="billing-btn active" data-cycle="monthly">Mensal</button>
+      <button type="button" class="billing-btn" data-cycle="annual">Anual</button>
+    </section>
+
+    <section>
+      <div id="plans-grid" class="plans-grid">
+        <div class="loading-card">Carregando planos...</div>
+      </div>
+    </section>
+
+    <section id="customer-section" class="checkout-card customer-card" hidden>
+      <div class="section-heading">
+        <span class="step-number">1</span>
+        <div>
+          <h2>Dados para contratacao</h2>
+          <p>Esses dados serao usados para criar sua loja e liberar seu primeiro acesso.</p>
+        </div>
+      </div>
+
+      <form id="checkout-form">
+        <div class="form-grid">
+          <label>
+            <span>Nome completo *</span>
+            <input id="buyerName" name="buyerName" type="text" autocomplete="name" required>
+          </label>
+
+          <label>
+            <span>E-mail *</span>
+            <input id="buyerEmail" name="buyerEmail" type="email" autocomplete="email" required>
+          </label>
+
+          <label>
+            <span>Telefone / WhatsApp</span>
+            <input id="buyerPhone" name="buyerPhone" type="tel" autocomplete="tel">
+          </label>
+
+          <label>
+            <span>CPF ou CNPJ</span>
+            <input id="buyerCpfCnpj" name="buyerCpfCnpj" type="text">
+          </label>
+
+          <label class="full">
+            <span>Nome da loja *</span>
+            <input id="storeName" name="storeName" type="text" required>
+          </label>
+        </div>
+
+        <div class="payment-box">
+          <div>
+            <strong>Forma de pagamento</strong>
+            <p>Pagamento seguro processado pelo Mercado Pago.</p>
+          </div>
+          <label class="payment-option active">
+            <input type="radio" name="method" value="pix" checked>
+            <span>PIX</span>
+          </label>
+        </div>
+
+        <div id="checkout-summary" class="checkout-summary"></div>
+
+        <button id="checkout-submit" type="submit" class="primary-btn">
+          Continuar para pagamento
+        </button>
+      </form>
+    </section>
+
+    <section id="pix-section" class="checkout-card pix-card" hidden>
+      <div class="section-heading">
+        <span class="step-number">2</span>
+        <div>
+          <h2>Pagamento via PIX</h2>
+          <p>Escaneie o QR Code ou copie o codigo PIX.</p>
+        </div>
+      </div>
+
+      <div class="pix-content">
+        <img id="pix-qrcode" class="pix-qrcode" alt="QR Code PIX">
+        <div class="pix-copy-area">
+          <label for="pix-code">PIX Copia e Cola</label>
+          <textarea id="pix-code" readonly></textarea>
+          <button id="copy-pix" type="button" class="secondary-btn">Copiar codigo PIX</button>
+          <a id="pix-ticket" class="secondary-link" href="#" target="_blank" rel="noopener" hidden>Abrir pagamento</a>
+        </div>
+      </div>
+
+      <div class="payment-status">
+        <span class="status-dot"></span>
+        <div>
+          <strong id="payment-status-title">Aguardando pagamento</strong>
+          <p id="payment-status-text">Assim que o pagamento for confirmado, sua loja sera liberada.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="first-access-section" class="checkout-card" hidden>
+      <div class="section-heading">
+        <span class="step-number">3</span>
+        <div>
+          <h2>Crie sua senha de acesso</h2>
+          <p>Pagamento confirmado. Defina agora a senha definitiva da sua loja.</p>
+        </div>
+      </div>
+
+      <form id="first-access-form">
+        <label>
+          <span>Nova senha *</span>
+          <input id="newPassword" type="password" minlength="10" autocomplete="new-password" required>
+        </label>
+
+        <p class="password-help">
+          Use pelo menos 10 caracteres com letra maiuscula, minuscula, numero e simbolo.
+        </p>
+
+        <button type="submit" class="primary-btn">Criar senha e acessar loja</button>
+      </form>
+    </section>
+
+    <footer class="checkout-footer">
+      <span>Pagamento protegido pelo Mercado Pago</span>
+      <span>Provador Pro System</span>
+    </footer>
+
+  </main>
+
+  <script src="/js/checkout.js"></script>
+</body>
+</html>

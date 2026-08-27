@@ -15,7 +15,7 @@ const {
   WebhookSignatureValidator,
   InvalidWebhookSignatureError
 } = require('mercadopago');
-const { db: activeDb, listStores, getStoreById, getStoreBySlug, createStore, updateStore, setStorePassword, deleteStore, verifyStoreLogin, createPayment, listPayments, updatePaymentStatus, createProducerCheckoutOrder, getProducerCheckoutOrderById, getProducerCheckoutOrderByToken, getProducerCheckoutOrderByExternalId, updateProducerCheckoutOrder, createCustomerOrder, getCustomerOrderById, getCustomerOrderByToken, getCustomerOrderByExternalId, updateCustomerOrder, listCustomerOrdersByStore, listProducerPlans, getProducerPlan, updateProducerPlan, getFinanceSummary, getFinanceChart, recordAiUsage, getAiUsageMonthly } = require('./db');
+const { db: activeDb, listStores, getStoreById, getStoreBySlug, createStore, updateStore, setStorePassword, deleteStore, verifyStoreLogin, createPayment, listPayments, updatePaymentStatus, createProducerCheckoutOrder, getProducerCheckoutOrderById, getProducerCheckoutOrderByToken, getProducerCheckoutOrderByExternalId, updateProducerCheckoutOrder, activatePaidProducerCheckoutStore, createCustomerOrder, getCustomerOrderById, getCustomerOrderByToken, getCustomerOrderByExternalId, updateCustomerOrder, listCustomerOrdersByStore, listProducerPlans, getProducerPlan, updateProducerPlan, getFinanceSummary, getFinanceChart, recordAiUsage, getAiUsageMonthly } = require('./db');
 const app = express();
 const PORT = process.env.PORT || 10000;
 const BASE_URL = process.env.BASE_URL || '';
@@ -1329,7 +1329,7 @@ app.get(
                 : null
             );
 
-      const updatedOrder =
+      let updatedOrder =
         updateProducerCheckoutOrder(
           order.id,
           {
@@ -1339,10 +1339,40 @@ app.get(
           }
         );
 
+      let activation = null;
+
+      if(confirmedPaid){
+        activation =
+          activatePaidProducerCheckoutStore(
+            order.id,
+            baseUrl(req)
+          );
+
+        if(!activation?.ok){
+          throw new Error(
+            `Pagamento confirmado, mas a ativacao da loja falhou: ${
+              activation?.code || 'erro_desconhecido'
+            }`
+          );
+        }
+
+        updatedOrder =
+          activation.order || updatedOrder;
+      }
+
       return res.json({
         ok:true,
         verified:true,
         confirmedPaid,
+        storeActivated:
+          Boolean(
+            confirmedPaid &&
+            activation?.ok
+          ),
+        activationReused:
+          Boolean(
+            activation?.reused
+          ),
         mercadoPago:{
           orderId:mpOrderId,
           status:mpStatus,
@@ -1371,6 +1401,130 @@ app.get(
   }
 );
 
+
+
+
+// ===== PRIMEIRO ACESSO DA LOJA APOS PAGAMENTO =====
+app.post(
+  '/api/public/checkout/producer/orders/:token/first-access-password',
+  checkoutLimiter,
+  (req, res) => {
+    try {
+      const token =
+        String(req.params.token || '').trim();
+
+      const newPassword =
+        String(req.body?.newPassword || '');
+
+      const order =
+        getProducerCheckoutOrderByToken(token);
+
+      if(!order){
+        return res.status(404).json({
+          error:'Pedido de checkout nao encontrado.'
+        });
+      }
+
+      if(
+        order.status !== 'paid' ||
+        !order.createdStoreId
+      ){
+        return res.status(409).json({
+          error:'A loja ainda nao foi liberada para primeiro acesso.'
+        });
+      }
+
+      const store =
+        getStoreById(
+          order.createdStoreId,
+          baseUrl(req)
+        );
+
+      if(!store){
+        return res.status(409).json({
+          error:'Loja vinculada ao pagamento nao foi encontrada.'
+        });
+      }
+
+      // O checkoutToken serve somente para o primeiro acesso.
+      // Depois da senha definitiva criada, ele nao redefine senha.
+      if(!store.forcePasswordChange){
+        return res.status(409).json({
+          error:'O primeiro acesso desta loja ja foi concluido.'
+        });
+      }
+
+      if(!strongPassword(newPassword)){
+        return res.status(400).json({
+          error:'A nova senha precisa ter 10+ caracteres, letra maiuscula, minuscula, numero e simbolo.'
+        });
+      }
+
+      const updatedStore =
+        setStorePassword(
+          store.id,
+          newPassword,
+          false
+        );
+
+      if(!updatedStore){
+        return res.status(500).json({
+          error:'Nao foi possivel definir a senha da loja.'
+        });
+      }
+
+      const paymentDetails = {
+        ...(order.paymentDetails || {}),
+        firstAccessRequired:false,
+        firstAccessCompletedAt:
+          new Date().toISOString()
+      };
+
+      const updatedOrder =
+        updateProducerCheckoutOrder(
+          order.id,
+          {
+            paymentDetails
+          }
+        );
+
+      return res.json({
+        ok:true,
+        firstAccessCompleted:true,
+        login:updatedStore.login,
+        store:{
+          id:updatedStore.id,
+          slug:updatedStore.slug,
+          name:updatedStore.name,
+          login:updatedStore.login,
+          plan:updatedStore.plan,
+          billingCycle:
+            updatedStore.billingCycle,
+          expiresAt:
+            updatedStore.expiresAt,
+          forcePasswordChange:
+            updatedStore.forcePasswordChange
+        },
+        order:{
+          id:updatedOrder.id,
+          status:updatedOrder.status,
+          createdStoreId:
+            updatedOrder.createdStoreId
+        }
+      });
+
+    }catch(err){
+      console.error(
+        'Erro no primeiro acesso da loja:',
+        err
+      );
+
+      return res.status(500).json({
+        error:'Nao foi possivel concluir o primeiro acesso.'
+      });
+    }
+  }
+);
 
 
 // ===== WEBHOOK MERCADO PAGO - PRODUTOR =====
@@ -1573,7 +1727,7 @@ app.post(
         serverExternalReferenceVerified:true
       };
 
-      const updatedOrder =
+      let updatedOrder =
         updateProducerCheckoutOrder(
           localOrder.id,
           {
@@ -1589,10 +1743,40 @@ app.post(
           }
         );
 
+      let activation = null;
+
+      if(confirmedPaid){
+        activation =
+          activatePaidProducerCheckoutStore(
+            localOrder.id,
+            baseUrl(req)
+          );
+
+        if(!activation?.ok){
+          throw new Error(
+            `Pagamento confirmado, mas a ativacao da loja falhou: ${
+              activation?.code || 'erro_desconhecido'
+            }`
+          );
+        }
+
+        updatedOrder =
+          activation.order || updatedOrder;
+      }
+
       return res.status(200).json({
         ok:true,
         accepted:true,
         confirmedPaid,
+        storeActivated:
+          Boolean(
+            confirmedPaid &&
+            activation?.ok
+          ),
+        activationReused:
+          Boolean(
+            activation?.reused
+          ),
         order:updatedOrder
       });
 

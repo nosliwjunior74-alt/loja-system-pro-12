@@ -268,7 +268,9 @@ function rowToStore(row, baseUrl=''){
     contractValueCents: synced.contract_value_cents || 0,
     contractStatus: synced.contract_status || 'ativo',
     forcePasswordChange: Boolean(synced.force_password_change),
-    login: synced.login, status: synced.status, plan: synced.plan || 'premium', expiresAt: synced.expires_at || '',
+    login: synced.login, status: synced.status, plan: synced.plan || 'premium',
+    billingCycle: synced.billing_cycle || 'monthly',
+    expiresAt: synced.expires_at || '',
     licenseKey: synced.license_key || '', customDomain: synced.custom_domain || '', createdAt: synced.created_at, updatedAt: synced.updated_at || '',
   };
   try {
@@ -406,6 +408,7 @@ login,
 password_hash,
 status,
 plan,
+billing_cycle,
 expires_at,
 license_key,
 custom_domain,
@@ -422,7 +425,7 @@ updated_at
 @cep,@address,@address_number,@address_complement,@neighborhood,@city,@state,
 @contract_date,@license_start_date,@contract_value_cents,@contract_status,
 @producer_payment_methods,@customer_payment_methods,@login,
-@password_hash,@status,@plan,@expires_at,@license_key,
+@password_hash,@status,@plan,@billing_cycle,@expires_at,@license_key,
 @custom_domain,
 @support_config,
 @estoque,
@@ -458,13 +461,18 @@ updated_at
         : []
     ),
     login: payload.login || 'admin', password_hash: hashPassword(payload.password || crypto.randomBytes(12).toString('base64url')),
-    status: payload.status === 'inativo' ? 'inativo' : (payload.status === 'degustacao' ? 'degustacao' : 'ativo'), plan: payload.plan || 'premium', expires_at: expiresAt || null, license_key: licenseKey,
+    status: payload.status === 'inativo' ? 'inativo' : (payload.status === 'degustacao' ? 'degustacao' : 'ativo'),
+    plan: payload.plan || 'premium',
+    billing_cycle: ['monthly','annual'].includes(payload.billingCycle) ? payload.billingCycle : 'monthly',
+    expires_at: expiresAt || null, license_key: licenseKey,
     custom_domain: payload.customDomain || '', support_config: JSON.stringify(payload.supportConfig || {}), estoque: JSON.stringify(payload.estoque || []),
 products: JSON.stringify(payload.products || []),
 looks: JSON.stringify(payload.looks || []),
 roupas: JSON.stringify(payload.roupas || []), created_at: now, updated_at: now
   });
-  createPayment({storeId:id, gateway:'manual', method:'pix', kind:'subscription', amountCents:cents(payload.amountCents || 9900), status:'pending', dueAt: payload.initialDueAt || todayStr(), notes:'Cobrança inicial automática'});
+  if(payload.createInitialPayment !== false){
+    createPayment({storeId:id, gateway:'manual', method:'pix', kind:'subscription', amountCents:cents(payload.amountCents || 9900), status:'pending', dueAt: payload.initialDueAt || todayStr(), notes:'Cobrança inicial automática'});
+  }
   return getStoreById(id, baseUrl);
 }
 function updateStore(id, payload, baseUrl=''){
@@ -473,7 +481,7 @@ function updateStore(id, payload, baseUrl=''){
   const expiresAt = payload.expiresAt !== undefined ? payload.expiresAt : (current.expires_at || '');
   const licenseKey = generateLicenseKey(id, slug, expiresAt);
   const passwordHash = payload.password ? hashPassword(payload.password) : current.password_hash;
-  db.prepare(`UPDATE stores SET slug=@slug,name=@name,sub=@sub,color=@color,logo=@logo,email=@email,phone=@phone,cpf=@cpf,cnpj=@cnpj,cep=@cep,address=@address,address_number=@address_number,address_complement=@address_complement,neighborhood=@neighborhood,city=@city,state=@state,contract_date=@contract_date,license_start_date=@license_start_date,contract_value_cents=@contract_value_cents,contract_status=@contract_status,producer_payment_methods=@producer_payment_methods,customer_payment_methods=@customer_payment_methods,login=@login,password_hash=@password_hash,status=@status,plan=@plan,expires_at=@expires_at,license_key=@license_key,custom_domain=@custom_domain,support_config=@support_config,
+  db.prepare(`UPDATE stores SET slug=@slug,name=@name,sub=@sub,color=@color,logo=@logo,email=@email,phone=@phone,cpf=@cpf,cnpj=@cnpj,cep=@cep,address=@address,address_number=@address_number,address_complement=@address_complement,neighborhood=@neighborhood,city=@city,state=@state,contract_date=@contract_date,license_start_date=@license_start_date,contract_value_cents=@contract_value_cents,contract_status=@contract_status,producer_payment_methods=@producer_payment_methods,customer_payment_methods=@customer_payment_methods,login=@login,password_hash=@password_hash,status=@status,plan=@plan,billing_cycle=@billing_cycle,expires_at=@expires_at,license_key=@license_key,custom_domain=@custom_domain,support_config=@support_config,
 estoque=@estoque,
 products=@products,
 looks=@looks,
@@ -517,7 +525,11 @@ updated_at=@updated_at WHERE id=@id`).run({
           )
         : (current.customer_payment_methods ?? '[]'),
     login: payload.login ?? current.login, password_hash: passwordHash,
-    status: payload.status === 'inativo' ? 'inativo' : (payload.status === 'degustacao' ? 'degustacao' : (payload.status ?? current.status)), plan: payload.plan ?? current.plan,
+    status: payload.status === 'inativo' ? 'inativo' : (payload.status === 'degustacao' ? 'degustacao' : (payload.status ?? current.status)),
+    plan: payload.plan ?? current.plan,
+    billing_cycle: ['monthly','annual'].includes(payload.billingCycle)
+      ? payload.billingCycle
+      : (current.billing_cycle || 'monthly'),
     expires_at: expiresAt || null, license_key: licenseKey, custom_domain: payload.customDomain ?? current.custom_domain,
 support_config: payload.supportConfig !== undefined ? JSON.stringify(payload.supportConfig || {}) : (current.support_config ?? '{}'),
    
@@ -726,6 +738,189 @@ function updateProducerCheckoutOrder(id, patch={}){
     payment_details_json=@payment_details_json, updated_at=@updated_at
     WHERE id=@id`).run(next);
   return getProducerCheckoutOrderById(id);
+}
+
+
+function activatePaidProducerCheckoutStore(orderId, baseUrl=''){
+  const activate = db.transaction(()=>{
+    const rawOrder =
+      db.prepare(
+        'SELECT * FROM producer_checkout_orders WHERE id = ?'
+      ).get(orderId);
+
+    if(!rawOrder){
+      return {
+        ok:false,
+        code:'order_not_found'
+      };
+    }
+
+    const order =
+      producerCheckoutRowToView(rawOrder);
+
+    if(order.status !== 'paid'){
+      return {
+        ok:false,
+        code:'order_not_paid',
+        order
+      };
+    }
+
+    // Protecao contra Webhook repetido:
+    // se a loja ja foi criada para este pedido,
+    // apenas devolvemos a mesma loja.
+    if(order.createdStoreId){
+      return {
+        ok:true,
+        reused:true,
+        store:getStoreById(
+          order.createdStoreId,
+          baseUrl
+        ),
+        order
+      };
+    }
+
+    const paidDate =
+      order.paidAt
+        ? todayStr(new Date(order.paidAt))
+        : todayStr();
+
+    const billingCycle =
+      order.billingCycle === 'annual'
+        ? 'annual'
+        : 'monthly';
+
+    const expiresAt =
+      addDays(
+        paidDate,
+        billingCycle === 'annual'
+          ? 365
+          : 30
+      );
+
+    const documentDigits =
+      String(order.buyerCpfCnpj || '')
+        .replace(/\D/g, '');
+
+    // Senha interna aleatoria.
+    // O cliente definira a senha definitiva
+    // pelo fluxo seguro de primeiro acesso.
+    const internalPassword =
+      crypto.randomBytes(32)
+        .toString('base64url');
+
+    const store =
+      createStore(
+        {
+          name:order.storeName,
+          email:order.buyerEmail || '',
+          phone:order.buyerPhone || '',
+          cpf:
+            documentDigits.length === 11
+              ? order.buyerCpfCnpj
+              : '',
+          cnpj:
+            documentDigits.length === 14
+              ? order.buyerCpfCnpj
+              : '',
+          contractDate:paidDate,
+          licenseStartDate:paidDate,
+          contractValueCents:
+            Number(order.amountCents || 0),
+          contractStatus:'ativo',
+          login:
+            order.buyerEmail ||
+            'admin',
+          password:internalPassword,
+          status:'ativo',
+          plan:order.plan || 'premium',
+          billingCycle,
+          expiresAt,
+          amountCents:
+            Number(order.amountCents || 0),
+
+          // O pagamento inicial ja foi confirmado
+          // pelo Mercado Pago.
+          createInitialPayment:false
+        },
+        baseUrl
+      );
+
+    if(!store?.id){
+      throw new Error(
+        'Loja nao foi criada para o checkout pago.'
+      );
+    }
+
+    // Mesmo com senha interna aleatoria,
+    // mantemos a protecao de primeiro acesso ativa.
+    db.prepare(
+      `UPDATE stores
+       SET force_password_change = 1,
+           updated_at = ?
+       WHERE id = ?`
+    ).run(
+      new Date().toISOString(),
+      store.id
+    );
+
+    const paymentExternalId =
+      String(
+        order.paymentDetails
+          ?.mercadoPagoPaymentId ||
+        order.externalId ||
+        ''
+      );
+
+    createPayment({
+      storeId:store.id,
+      gateway:'mercadopago',
+      method:order.method || 'pix',
+      kind:'subscription',
+      amountCents:
+        Number(order.amountCents || 0),
+      currency:order.currency || 'BRL',
+      status:'paid',
+      dueAt:paidDate,
+      paidAt:
+        order.paidAt ||
+        new Date().toISOString(),
+      externalId:paymentExternalId,
+      notes:
+        'Assinatura inicial paga pelo checkout do Produtor.'
+    });
+
+    const paymentDetails = {
+      ...(order.paymentDetails || {}),
+      storeActivatedAt:
+        new Date().toISOString(),
+      storeActivationSource:
+        'mercadopago_producer_checkout',
+      firstAccessRequired:true
+    };
+
+    const updatedOrder =
+      updateProducerCheckoutOrder(
+        order.id,
+        {
+          createdStoreId:store.id,
+          paymentDetails
+        }
+      );
+
+    return {
+      ok:true,
+      reused:false,
+      store:getStoreById(
+        store.id,
+        baseUrl
+      ),
+      order:updatedOrder
+    };
+  });
+
+  return activate.immediate();
 }
 
 function customerOrderRowToView(row){
@@ -1078,4 +1273,4 @@ function updateProducerPlan(id, payload={}){
 }
 
 ensureSeedStore();
-module.exports = { db, slugify, uniqueSlug, listStores, getStoreById, getStoreBySlug, getStoreRowById, getStoreRowBySlug, createStore, updateStore, setStorePassword, deleteStore, verifyStoreLogin, licenseStatus: rawLicenseStatus, generateLicenseKey, createPayment, listPayments, updatePaymentStatus, createProducerCheckoutOrder, getProducerCheckoutOrderById, getProducerCheckoutOrderByToken, getProducerCheckoutOrderByExternalId, updateProducerCheckoutOrder, createCustomerOrder, getCustomerOrderById, getCustomerOrderByToken, getCustomerOrderByExternalId, updateCustomerOrder, listCustomerOrdersByStore, listProducerPlans, getProducerPlan, updateProducerPlan, getFinanceSummary, getFinanceChart, syncStoreLicense, currentAiPeriod, getAiUsageMonthly, recordAiUsage };
+module.exports = { db, slugify, uniqueSlug, listStores, getStoreById, getStoreBySlug, getStoreRowById, getStoreRowBySlug, createStore, updateStore, setStorePassword, deleteStore, verifyStoreLogin, licenseStatus: rawLicenseStatus, generateLicenseKey, createPayment, listPayments, updatePaymentStatus, createProducerCheckoutOrder, getProducerCheckoutOrderById, getProducerCheckoutOrderByToken, getProducerCheckoutOrderByExternalId, updateProducerCheckoutOrder, activatePaidProducerCheckoutStore, createCustomerOrder, getCustomerOrderById, getCustomerOrderByToken, getCustomerOrderByExternalId, updateCustomerOrder, listCustomerOrdersByStore, listProducerPlans, getProducerPlan, updateProducerPlan, getFinanceSummary, getFinanceChart, syncStoreLicense, currentAiPeriod, getAiUsageMonthly, recordAiUsage };

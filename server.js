@@ -7,6 +7,14 @@ const path = require('path');
 const fs = require('fs');
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
+const {
+  MercadoPagoConfig,
+  Payment,
+  Preference,
+  Order,
+  WebhookSignatureValidator,
+  InvalidWebhookSignatureError
+} = require('mercadopago');
 const { db: activeDb, listStores, getStoreById, getStoreBySlug, createStore, updateStore, setStorePassword, deleteStore, verifyStoreLogin, createPayment, listPayments, updatePaymentStatus, createProducerCheckoutOrder, getProducerCheckoutOrderById, getProducerCheckoutOrderByToken, getProducerCheckoutOrderByExternalId, updateProducerCheckoutOrder, createCustomerOrder, getCustomerOrderById, getCustomerOrderByToken, getCustomerOrderByExternalId, updateCustomerOrder, listCustomerOrdersByStore, listProducerPlans, getProducerPlan, updateProducerPlan, getFinanceSummary, getFinanceChart, recordAiUsage, getAiUsageMonthly } = require('./db');
 const app = express();
 const PORT = process.env.PORT || 10000;
@@ -23,6 +31,52 @@ if (process.env.NODE_ENV === 'production' && !process.env.SESSION_SECRET) {
 }
 // ===== CONFIGURACAO CENTRAL DOS CHECKOUTS =====
 const CHECKOUT_MODE = String(process.env.CHECKOUT_MODE || 'test').trim().toLowerCase();
+
+// ===== MERCADO PAGO - PRODUTOR / MARKETPLACE =====
+// Nunca coloque Access Token diretamente neste arquivo.
+// No Produtor, as credenciais chegam por variaveis de ambiente.
+// Nos Lojistas, os Access Tokens individuais serao obtidos via OAuth.
+const MP_PRODUCER_ACCESS_TOKEN =
+  String(process.env.MP_PRODUCER_ACCESS_TOKEN || '').trim();
+
+const MP_PRODUCER_PUBLIC_KEY =
+  String(process.env.MP_PRODUCER_PUBLIC_KEY || '').trim();
+
+const MP_PRODUCER_WEBHOOK_SECRET =
+  String(process.env.MP_PRODUCER_WEBHOOK_SECRET || '').trim();
+
+function createMercadoPagoClients(accessToken){
+
+  const token = String(accessToken || '').trim();
+
+  if(!token){
+    return {
+      payment:null,
+      preference:null,
+      order:null
+    };
+  }
+
+  const client = new MercadoPagoConfig({
+    accessToken:token,
+    options:{
+      timeout:10000
+    }
+  });
+
+  return {
+    payment:new Payment(client),
+    preference:new Preference(client),
+    order:new Order(client)
+  };
+
+}
+
+const producerMercadoPago =
+  createMercadoPagoClients(
+    MP_PRODUCER_ACCESS_TOKEN
+  );
+
 
 const CHECKOUT_PAYMENT_METHODS = Object.freeze([
   'pix',
@@ -719,6 +773,14 @@ app.get('/api/public/checkout/config', (req, res) => {
   return res.json({
     ok: true,
     mode: CHECKOUT_MODE,
+    producerPayment: {
+      provider: 'mercadopago',
+      configured: Boolean(
+        MP_PRODUCER_ACCESS_TOKEN &&
+        MP_PRODUCER_PUBLIC_KEY
+      ),
+      publicKey: MP_PRODUCER_PUBLIC_KEY
+    },
     paymentMethods: CHECKOUT_PAYMENT_METHODS,
     features: CHECKOUT_FEATURES,
     producerPlans
@@ -825,6 +887,729 @@ app.post('/api/public/checkout/producer/orders', checkoutLimiter, (req, res) => 
     return res.status(500).json({ error:'Não foi possível iniciar o checkout.' });
   }
 });
+
+
+// ===== MERCADO PAGO PRODUTOR - PIX VIA ORDERS API =====
+app.post(
+  '/api/public/checkout/producer/orders/:token/pay',
+  checkoutLimiter,
+  async (req, res) => {
+    try {
+
+      const token =
+        String(req.params.token || '').trim();
+
+      const order =
+        getProducerCheckoutOrderByToken(token);
+
+      if(!order){
+        return res.status(404).json({
+          error:'Pedido de checkout nao encontrado.'
+        });
+      }
+
+      if(order.status === 'paid'){
+        return res.status(409).json({
+          error:'Este pedido ja foi pago.'
+        });
+      }
+
+      if(order.method !== 'pix'){
+        return res.status(400).json({
+          error:'Nesta etapa somente o pagamento Pix esta habilitado.'
+        });
+      }
+
+      if(!producerMercadoPago.order){
+        return res.status(503).json({
+          error:'Mercado Pago Orders API do Produtor ainda nao esta configurado.'
+        });
+      }
+
+      // Se ja existe uma Order PIX pendente,
+      // nao cria outra cobranca para o mesmo pedido.
+      if(
+        order.gateway === 'mercadopago' &&
+        order.externalId &&
+        order.paymentDetails?.ticketUrl
+      ){
+        return res.json({
+          ok:true,
+          reused:true,
+          order,
+          payment:{
+            orderId:order.externalId,
+            status:
+              order.paymentDetails?.mercadoPagoOrderStatus ||
+              'pending',
+            statusDetail:
+              order.paymentDetails?.mercadoPagoStatusDetail ||
+              '',
+            pix:{
+              qrCode:
+                order.paymentDetails?.qrCode || '',
+              qrCodeBase64:
+                order.paymentDetails?.qrCodeBase64 || '',
+              ticketUrl:
+                order.paymentDetails?.ticketUrl || ''
+            }
+          }
+        });
+      }
+
+      const payerEmail =
+        String(
+          req.body?.payerEmail ||
+          order.buyerEmail ||
+          ''
+        )
+        .trim()
+        .toLowerCase();
+
+      if(!payerEmail){
+        return res.status(400).json({
+          error:'E-mail do pagador e obrigatorio.'
+        });
+      }
+
+      const attemptId =
+        String(req.body?.attemptId || '').trim();
+
+      if(
+        !attemptId ||
+        attemptId.length < 8 ||
+        attemptId.length > 100 ||
+        !/^[A-Za-z0-9._:-]+$/.test(attemptId)
+      ){
+        return res.status(400).json({
+          error:'Identificador da tentativa de pagamento invalido.'
+        });
+      }
+
+      const amount =
+        (Number(order.amountCents || 0) / 100)
+          .toFixed(2);
+
+      const idempotencyKey =
+        crypto
+          .createHash('sha256')
+          .update(
+            `producer-order-pix:${order.id}:${attemptId}`
+          )
+          .digest('hex');
+
+      const payer = {
+        email:payerEmail
+      };
+
+      // Valor oficial do Mercado Pago para teste PIX.
+      // Em producao usamos o nome real do comprador.
+      if(CHECKOUT_MODE === 'test'){
+        payer.first_name = 'APRO';
+      }else if(order.buyerName){
+        payer.first_name =
+          String(order.buyerName)
+            .trim()
+            .split(/\s+/)[0];
+      }
+
+      const mpOrder =
+        await producerMercadoPago.order.create({
+          body:{
+            type:'online',
+            total_amount:amount,
+            external_reference:order.id,
+            processing_mode:'automatic',
+            payer,
+            transactions:{
+              payments:[
+                {
+                  amount,
+                  payment_method:{
+                    id:'pix',
+                    type:'bank_transfer'
+                  }
+                }
+              ]
+            }
+          },
+          requestOptions:{
+            idempotencyKey
+          }
+        });
+
+      const mpPayment =
+        mpOrder?.transactions?.payments?.[0] || {};
+
+      const paymentMethod =
+        mpPayment?.payment_method || {};
+
+      const mpOrderStatus =
+        String(mpOrder?.status || 'pending');
+
+      const mpPaymentStatus =
+        String(mpPayment?.status || '');
+
+      const mpStatusDetail =
+        String(
+          mpPayment?.status_detail ||
+          mpOrder?.status_detail ||
+          ''
+        );
+
+      let internalStatus = 'pending';
+
+      if(
+        mpOrderStatus === 'processed' &&
+        ['accredited','approved'].includes(
+          mpStatusDetail
+        )
+      ){
+        internalStatus = 'paid';
+      }
+
+      if(
+        ['failed','cancelled'].includes(mpOrderStatus) ||
+        ['failed','cancelled','rejected'].includes(mpPaymentStatus)
+      ){
+        internalStatus = 'failed';
+      }
+
+      const paymentDetails = {
+        ...(order.paymentDetails || {}),
+        provider:'mercadopago',
+        api:'orders',
+        attemptId,
+        idempotencyKey,
+
+        mercadoPagoOrderId:
+          mpOrder?.id
+            ? String(mpOrder.id)
+            : '',
+
+        mercadoPagoPaymentId:
+          mpPayment?.id
+            ? String(mpPayment.id)
+            : '',
+
+        mercadoPagoOrderStatus:
+          mpOrderStatus,
+
+        mercadoPagoPaymentStatus:
+          mpPaymentStatus,
+
+        mercadoPagoStatusDetail:
+          mpStatusDetail,
+
+        qrCode:
+          paymentMethod.qr_code || '',
+
+        qrCodeBase64:
+          paymentMethod.qr_code_base64 || '',
+
+        ticketUrl:
+          paymentMethod.ticket_url || ''
+      };
+
+      const updatedOrder =
+        updateProducerCheckoutOrder(
+          order.id,
+          {
+            status:internalStatus,
+
+            // Guardamos o ID da Order do Mercado Pago,
+            // pois o webhook e o GET /v1/orders usam esse ID.
+            externalId:
+              mpOrder?.id
+                ? String(mpOrder.id)
+                : '',
+
+            gateway:'mercadopago',
+
+            checkoutUrl:
+              paymentMethod.ticket_url || '',
+
+            paidAt:
+              internalStatus === 'paid'
+                ? new Date().toISOString()
+                : null,
+
+            paymentDetails
+          }
+        );
+
+      return res.json({
+        ok:true,
+        reused:false,
+        order:updatedOrder,
+        payment:{
+          orderId:
+            mpOrder?.id
+              ? String(mpOrder.id)
+              : '',
+
+          paymentId:
+            mpPayment?.id
+              ? String(mpPayment.id)
+              : '',
+
+          status:mpOrderStatus,
+          paymentStatus:mpPaymentStatus,
+          statusDetail:mpStatusDetail,
+
+          pix:{
+            qrCode:
+              paymentMethod.qr_code || '',
+
+            qrCodeBase64:
+              paymentMethod.qr_code_base64 || '',
+
+            ticketUrl:
+              paymentMethod.ticket_url || ''
+          }
+        }
+      });
+
+    }catch(err){
+
+      console.error(
+        'Erro no PIX Orders API do Produtor:',
+        err
+      );
+
+      return res.status(502).json({
+        error:
+          err?.message ||
+          'Nao foi possivel gerar o Pix via Orders API.'
+      });
+    }
+  }
+);
+
+
+
+// ===== MERCADO PAGO PRODUTOR - CONSULTA SEGURA DA ORDER =====
+app.get(
+  '/api/public/checkout/producer/orders/:token/status',
+  checkoutLimiter,
+  async (req, res) => {
+    try {
+
+      const token = String(req.params.token || '').trim();
+
+      const order =
+        getProducerCheckoutOrderByToken(token);
+
+      if(!order){
+        return res.status(404).json({
+          error:'Pedido de checkout nao encontrado.'
+        });
+      }
+
+      if(!order.externalId){
+        return res.json({
+          ok:true,
+          verified:false,
+          order,
+          message:'Este pedido ainda nao possui uma Order do Mercado Pago.'
+        });
+      }
+
+      if(
+        order.gateway !== 'mercadopago' ||
+        !producerMercadoPago.order
+      ){
+        return res.status(503).json({
+          error:'Consulta Mercado Pago Orders API indisponivel.'
+        });
+      }
+
+      const mpOrder =
+        await producerMercadoPago.order.get({
+          id:String(order.externalId)
+        });
+
+      const mpOrderId =
+        String(mpOrder?.id || '');
+
+      const mpExternalReference =
+        String(mpOrder?.external_reference || '');
+
+      const mpAmountCents =
+        Math.round(
+          Number(mpOrder?.total_amount || 0) * 100
+        );
+
+      // Protecoes: a Order consultada precisa pertencer
+      // exatamente ao nosso pedido e ter o mesmo valor.
+      if(mpOrderId !== String(order.externalId)){
+        return res.status(409).json({
+          error:'ID da Order do Mercado Pago nao corresponde ao pedido local.'
+        });
+      }
+
+      if(mpExternalReference !== String(order.id)){
+        return res.status(409).json({
+          error:'Referencia externa da Order nao corresponde ao pedido local.'
+        });
+      }
+
+      if(mpAmountCents !== Number(order.amountCents || 0)){
+        return res.status(409).json({
+          error:'Valor confirmado pelo Mercado Pago difere do pedido local.'
+        });
+      }
+
+      const mpStatus =
+        String(mpOrder?.status || '');
+
+      const mpStatusDetail =
+        String(mpOrder?.status_detail || '');
+
+      const mpPayment =
+        mpOrder?.transactions?.payments?.[0] || {};
+
+      const mpPaymentStatus =
+        String(mpPayment?.status || '');
+
+      const mpPaymentStatusDetail =
+        String(mpPayment?.status_detail || '');
+
+      const confirmedPaid =
+        mpStatus === 'processed' &&
+        mpStatusDetail === 'accredited';
+
+      let internalStatus = 'pending';
+
+      if(confirmedPaid){
+        internalStatus = 'paid';
+      }else if(
+        [
+          'failed',
+          'canceled',
+          'expired',
+          'refunded',
+          'charged_back'
+        ].includes(mpStatus)
+      ){
+        internalStatus = 'failed';
+      }
+
+      const paymentDetails = {
+        ...(order.paymentDetails || {}),
+        provider:'mercadopago',
+        api:'orders',
+        lastVerifiedAt:new Date().toISOString(),
+        mercadoPagoOrderId:mpOrderId,
+        mercadoPagoPaymentId:
+          mpPayment?.id
+            ? String(mpPayment.id)
+            : (
+                order.paymentDetails?.mercadoPagoPaymentId ||
+                ''
+              ),
+        mercadoPagoOrderStatus:mpStatus,
+        mercadoPagoOrderStatusDetail:mpStatusDetail,
+        mercadoPagoPaymentStatus:mpPaymentStatus,
+        mercadoPagoPaymentStatusDetail:mpPaymentStatusDetail,
+        serverOrderVerified:true,
+        serverAmountVerified:true,
+        serverExternalReferenceVerified:true
+      };
+
+      const paidAt =
+        confirmedPaid
+          ? (
+              order.paidAt ||
+              new Date().toISOString()
+            )
+          : (
+              order.status === 'paid'
+                ? order.paidAt
+                : null
+            );
+
+      const updatedOrder =
+        updateProducerCheckoutOrder(
+          order.id,
+          {
+            status:internalStatus,
+            paidAt,
+            paymentDetails
+          }
+        );
+
+      return res.json({
+        ok:true,
+        verified:true,
+        confirmedPaid,
+        mercadoPago:{
+          orderId:mpOrderId,
+          status:mpStatus,
+          statusDetail:mpStatusDetail,
+          paymentStatus:mpPaymentStatus,
+          paymentStatusDetail:mpPaymentStatusDetail,
+          amountCents:mpAmountCents,
+          externalReference:mpExternalReference
+        },
+        order:updatedOrder
+      });
+
+    }catch(err){
+
+      console.error(
+        'Erro consultando Order Mercado Pago do Produtor:',
+        err
+      );
+
+      return res.status(502).json({
+        error:
+          err?.message ||
+          'Nao foi possivel consultar o pagamento no Mercado Pago.'
+      });
+    }
+  }
+);
+
+
+
+// ===== WEBHOOK MERCADO PAGO - PRODUTOR =====
+app.post(
+  '/api/webhooks/mercadopago/producer',
+  async (req, res) => {
+    try {
+
+      if(!MP_PRODUCER_WEBHOOK_SECRET){
+        return res.status(503).json({
+          error:'Webhook do Mercado Pago ainda nao configurado.'
+        });
+      }
+
+      const xSignature =
+        String(req.headers['x-signature'] || '');
+
+      const xRequestId =
+        String(req.headers['x-request-id'] || '');
+
+      const dataId =
+        String(
+          req.query?.['data.id'] ||
+          req.body?.data?.id ||
+          ''
+        ).trim();
+
+      const eventType =
+        String(
+          req.query?.type ||
+          req.body?.type ||
+          ''
+        ).trim();
+
+      if(!dataId){
+        return res.status(400).json({
+          error:'Webhook sem data.id.'
+        });
+      }
+
+      try {
+
+        WebhookSignatureValidator.validate({
+          xSignature,
+          xRequestId,
+          dataId,
+          secret:MP_PRODUCER_WEBHOOK_SECRET
+        });
+
+      }catch(err){
+
+        if(err instanceof InvalidWebhookSignatureError){
+          return res.status(401).json({
+            error:'Assinatura do Webhook invalida.'
+          });
+        }
+
+        throw err;
+      }
+
+      // Este endpoint pertence exclusivamente
+      // ao fluxo Produtor -> Lojista.
+      if(eventType && eventType !== 'order'){
+        return res.status(200).json({
+          ok:true,
+          ignored:true,
+          reason:'Evento diferente de order.'
+        });
+      }
+
+      const localOrder =
+        getProducerCheckoutOrderByExternalId(dataId);
+
+      // Notificacao valida, mas nao pertence
+      // a um pedido de licenca conhecido.
+      if(!localOrder){
+        return res.status(200).json({
+          ok:true,
+          ignored:true,
+          reason:'Order nao pertence ao checkout do Produtor.'
+        });
+      }
+
+      const notificationId =
+        String(req.body?.id || '');
+
+      const action =
+        String(req.body?.action || '');
+
+      // No sandbox a simulacao serve para validar
+      // recepcao e assinatura. Nao marca pagamento.
+      if(CHECKOUT_MODE === 'test'){
+        const paymentDetails = {
+          ...(localOrder.paymentDetails || {}),
+          lastWebhookAt:new Date().toISOString(),
+          lastWebhookNotificationId:notificationId,
+          lastWebhookAction:action,
+          lastWebhookDataId:dataId,
+          webhookSignatureValidated:true,
+          webhookTestMode:true
+        };
+
+        const updatedOrder =
+          updateProducerCheckoutOrder(
+            localOrder.id,
+            {
+              paymentDetails
+            }
+          );
+
+        return res.status(200).json({
+          ok:true,
+          accepted:true,
+          testMode:true,
+          confirmedPaid:false,
+          order:updatedOrder
+        });
+      }
+
+      if(!producerMercadoPago.order){
+        return res.status(503).json({
+          error:'Mercado Pago Orders API indisponivel.'
+        });
+      }
+
+      // Em producao, nunca confiamos apenas no body
+      // do Webhook para liberar a licenca.
+      const mpOrder =
+        await producerMercadoPago.order.get({
+          id:dataId
+        });
+
+      const mpOrderId =
+        String(mpOrder?.id || '');
+
+      const externalReference =
+        String(mpOrder?.external_reference || '');
+
+      const amountCents =
+        Math.round(
+          Number(mpOrder?.total_amount || 0) * 100
+        );
+
+      if(mpOrderId !== String(localOrder.externalId)){
+        return res.status(409).json({
+          error:'Order do Mercado Pago nao corresponde ao pedido local.'
+        });
+      }
+
+      if(externalReference !== String(localOrder.id)){
+        return res.status(409).json({
+          error:'Referencia externa nao corresponde ao pedido local.'
+        });
+      }
+
+      if(amountCents !== Number(localOrder.amountCents || 0)){
+        return res.status(409).json({
+          error:'Valor da Order diverge do pedido local.'
+        });
+      }
+
+      const mpStatus =
+        String(mpOrder?.status || '');
+
+      const mpStatusDetail =
+        String(mpOrder?.status_detail || '');
+
+      const confirmedPaid =
+        mpStatus === 'processed' &&
+        mpStatusDetail === 'accredited';
+
+      let internalStatus =
+        localOrder.status || 'pending';
+
+      if(confirmedPaid){
+        internalStatus = 'paid';
+      }else if(
+        [
+          'failed',
+          'canceled',
+          'expired'
+        ].includes(mpStatus)
+      ){
+        internalStatus = 'failed';
+      }
+
+      const paymentDetails = {
+        ...(localOrder.paymentDetails || {}),
+        provider:'mercadopago',
+        api:'orders',
+        lastWebhookAt:new Date().toISOString(),
+        lastWebhookNotificationId:notificationId,
+        lastWebhookAction:action,
+        lastWebhookDataId:dataId,
+        webhookSignatureValidated:true,
+        mercadoPagoOrderStatus:mpStatus,
+        mercadoPagoOrderStatusDetail:mpStatusDetail,
+        serverOrderVerified:true,
+        serverAmountVerified:true,
+        serverExternalReferenceVerified:true
+      };
+
+      const updatedOrder =
+        updateProducerCheckoutOrder(
+          localOrder.id,
+          {
+            status:internalStatus,
+            paidAt:
+              confirmedPaid
+                ? (
+                    localOrder.paidAt ||
+                    new Date().toISOString()
+                  )
+                : localOrder.paidAt || null,
+            paymentDetails
+          }
+        );
+
+      return res.status(200).json({
+        ok:true,
+        accepted:true,
+        confirmedPaid,
+        order:updatedOrder
+      });
+
+    }catch(err){
+
+      console.error(
+        'Erro no Webhook Mercado Pago do Produtor:',
+        err
+      );
+
+      return res.status(500).json({
+        error:'Nao foi possivel processar o Webhook.'
+      });
+    }
+  }
+);
+
 
 app.post('/api/public/login', authLimiter, (req,res)=>{
   const { slug, login, password } = req.body || {};

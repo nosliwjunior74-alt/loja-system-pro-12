@@ -1,1 +1,306 @@
-<!DOCTYPE html><html lang="pt-br"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Manual do Painel da Loja</title><style>body{font-family:Arial;background:#fff7fb;color:#4b1d36;margin:0;padding:24px;--brand-color:#e33d8f}.wrap{max-width:980px;margin:0 auto}.card{background:#fff;border-radius:22px;box-shadow:0 14px 34px rgba(227,61,143,.10);padding:24px;margin-bottom:18px}.brand-head{display:flex;align-items:center;gap:14px;margin-bottom:18px}.brand-head img{width:78px;height:78px;object-fit:contain;border-radius:18px;background:#fff;padding:8px;border:1px solid #f1d1e2}h1,h2{color:var(--brand-color)}ol{line-height:1.7}.btn{display:inline-block;padding:12px 16px;border-radius:14px;background:var(--brand-color);color:#fff;text-decoration:none;font-weight:700}</style></head><body><div class="wrap"><div class="card"><div class="brand-head"><img id="brandLogo" src="../assets/default-logo.svg" alt="Logo da loja"><div><h1 id="brandName">Sua Loja</h1><div id="brandSub" style="color:#7f5f70">Manual do painel da loja</div></div></div><p>Este manual ensina como usar o painel da loja passo a passo.</p></div><div class="card"><h2>1. Entrar na loja</h2><ol><li>Abra o link enviado pelo produtor.</li><li>Digite seu login e senha.</li><li>Clique em <strong>Entrar</strong>.</li></ol></div><div class="card"><h2>2. Itens do painel</h2><ol><li><strong>Vitrine / Provador</strong>: mostra a vitrine e o provador da sua loja.</li><li><strong>Painel da Loja</strong>: organiza itens e conteúdos da loja.</li><li><strong>PNG sem Fundo</strong>: remove fundo de imagens.</li><li><strong>Display Pro System</strong>: biblioteca de campanhas, disparo social e calendário.</li><li><strong>Cobrança</strong>: consulta a parte financeira da loja.</li></ol></div><div class="card"><h2>3. Dicas</h2><ol><li>Se a logo ou a cor estiverem erradas, peça ao produtor para atualizar a loja.</li><li>No celular, permita a câmera quando abrir o provador.</li><li>Use o menu lateral para navegar entre as telas.</li></ol></div><div class="card"><a class="btn" href="../dashboard-loja.html">Voltar ao painel</a></div></div><script src='../shared/brand-sync.js'></script><script>(function(){setTimeout(()=>{try{const c=JSON.parse(localStorage.getItem('lojaAtivaConfig')||'{}');if(c.color)document.documentElement.style.setProperty('--brand-color',c.color);const l=document.getElementById('brandLogo');if(l&&c.logo)l.src=c.logo;const n=document.getElementById('brandName');if(n&&c.name)n.textContent=c.name;const s=document.getElementById('brandSub');if(s&&c.sub)s.textContent=c.sub;}catch(e){}},60)})();</script></body></html>
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Manual do Lojista</title>
+<style>
+:root{--brand-color:#e33d8f}
+*{box-sizing:border-box}
+body{margin:0;background:#fff7fb;color:#4b1d36;font-family:Arial,sans-serif;line-height:1.6}
+.wrap{max-width:1050px;margin:auto;padding:24px}
+.card{background:#fff;border:1px solid #f1d5e3;border-radius:20px;padding:22px;margin-bottom:16px;box-shadow:0 10px 28px rgba(159,45,104,.08)}
+.brand-head{display:flex;align-items:center;gap:16px}
+.brand-head img{width:76px;height:76px;object-fit:contain;border-radius:16px;border:1px solid #f0d6e3;padding:7px;background:#fff}
+h1{margin:0;color:var(--brand-color);font-size:27px}
+.subtitle{color:#765568;margin-top:4px}
+.intro{margin-top:18px;background:#fff2f8;border-left:5px solid var(--brand-color);padding:14px;border-radius:12px}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
+.btn{border:0;border-radius:12px;padding:12px 17px;font-weight:800;cursor:pointer;text-decoration:none;display:inline-block}
+.btn-primary{background:var(--brand-color);color:#fff}
+.btn-secondary{background:#fff;color:#8d2f61;border:1px solid #e4b5cc}
+details{background:#fff;border:1px solid #f0d8e4;border-radius:16px;margin-bottom:12px;overflow:hidden}
+summary{cursor:pointer;padding:17px 19px;font-weight:800;color:#8d2f61;background:#fffafd}
+details[open] summary{border-bottom:1px solid #f0d8e4}
+.content{padding:17px 20px}
+.content ol,.content ul{padding-left:23px}
+.tip{background:#f8fbf9;border:1px solid #cfe8d8;border-radius:11px;padding:10px 13px;margin-top:12px;color:#35624a}
+.warning{background:#fff8eb;border:1px solid #ecd8a7;border-radius:11px;padding:10px 13px;margin-top:12px;color:#765b20}
+.footer{text-align:center;color:#876b79;font-size:13px;margin:24px 0}
+@media(max-width:650px){
+ .wrap{padding:12px}
+ .card{padding:17px}
+ .brand-head{align-items:flex-start}
+ h1{font-size:22px}
+ .btn{width:100%;text-align:center}
+}
+@page{size:A4;margin:14mm}
+@media print{
+ body{background:#fff}
+ .wrap{max-width:none;padding:0}
+ .card,details{box-shadow:none}
+ .no-print{display:none!important}
+ details{break-inside:avoid}
+ summary{background:#fff}
+}
+</style>
+</head>
+
+<body>
+<div class="wrap">
+
+<section class="card">
+<div class="brand-head">
+<img id="brandLogo"
+class="brand-logo-dynamic"
+data-brand-logo
+src="../assets/default-logo.svg"
+alt="Logo da loja"
+onerror="this.onerror=null;this.src='../assets/default-logo.svg';">
+<div>
+<h1 id="brandName">Sua Loja</h1>
+<div id="brandSub" class="subtitle">Manual completo do lojista</div>
+</div>
+</div>
+
+<div class="intro">
+Este guia explica a rotina normal da loja, desde o login até cadastro de roupas, estoque, vitrine, catálogo, provador, clientes, pagamentos, WhatsApp e envio do link público.
+</div>
+
+<div class="actions no-print">
+<button class="btn btn-primary" type="button" onclick="baixarPdf()">Baixar em PDF</button>
+<a class="btn btn-secondary" href="../dashboard-loja.html">Voltar ao Painel da Loja</a>
+</div>
+</section>
+
+<details>
+<summary>1. Entrar no Painel da Loja</summary>
+<div class="content">
+<ol>
+<li>Abra o link de acesso fornecido pelo Produtor.</li>
+<li>Digite o login da loja e sua senha.</li>
+<li>Clique em <strong>Entrar</strong>.</li>
+<li>Se o sistema solicitar troca obrigatória de senha, crie uma nova senha antes de continuar.</li>
+</ol>
+<div class="warning"><strong>Segurança:</strong> não compartilhe sua senha com clientes. Se esquecer a senha, solicite a redefinição ao Produtor.</div>
+</div>
+</details>
+
+<details>
+<summary>2. Cadastro de roupas</summary>
+<div class="content">
+<ol>
+<li>Entre na área de cadastro de roupas.</li>
+<li>Informe nome da peça, categoria, tamanho, preço e demais dados disponíveis.</li>
+<li>Adicione a imagem correta da roupa.</li>
+<li>Revise as informações antes de salvar.</li>
+<li>Clique em <strong>Salvar</strong>.</li>
+</ol>
+<div class="tip">Use nomes claros e fotos de boa qualidade para facilitar a identificação no catálogo e no provador.</div>
+</div>
+</details>
+
+<details>
+<summary>3. Estoque</summary>
+<div class="content">
+<ul>
+<li>Confira quantidade disponível de cada produto.</li>
+<li>Atualize o estoque quando entrar mercadoria nova.</li>
+<li>Atualize também quando houver venda, troca ou retirada de peça.</li>
+<li>Evite deixar produto sem estoque aparecendo como disponível.</li>
+</ul>
+</div>
+</details>
+
+<details>
+<summary>4. Vitrine</summary>
+<div class="content">
+<p>A vitrine apresenta os produtos em destaque da loja.</p>
+<ol>
+<li>Escolha quais peças devem aparecer.</li>
+<li>Confira imagem, nome, preço e disponibilidade.</li>
+<li>Abra a vitrine como cliente para validar o resultado.</li>
+</ol>
+</div>
+</details>
+
+<details>
+<summary>5. Catálogo</summary>
+<div class="content">
+<p>O catálogo reúne as roupas disponíveis para consulta do cliente.</p>
+<ul>
+<li>Confira categorias e filtros.</li>
+<li>Verifique se as peças aparecem na categoria correta.</li>
+<li>Confira preços, imagens e tamanhos.</li>
+<li>Teste a abertura do produto e o acesso ao provador quando disponível.</li>
+</ul>
+</div>
+</details>
+
+<details>
+<summary>6. Provador</summary>
+<div class="content">
+<ol>
+<li>Abra a área do Provador.</li>
+<li>No celular ou computador, permita acesso à câmera quando solicitado.</li>
+<li>Escolha a peça que será testada.</li>
+<li>Confira se a câmera, roupa e controles estão funcionando.</li>
+<li>Faça um teste antes de enviar o acesso aos clientes.</li>
+</ol>
+<div class="tip">Se a câmera não abrir, confira a permissão do navegador para uso da câmera.</div>
+</div>
+</details>
+
+<details>
+<summary>7. Tela de descanso</summary>
+<div class="content">
+<p>A tela de descanso pode apresentar imagens, vídeos ou campanhas enquanto o sistema não está sendo utilizado.</p>
+<ul>
+<li>Revise o conteúdo publicado.</li>
+<li>Confirme se vídeos e imagens aparecem corretamente.</li>
+<li>Teste a visualização na tela utilizada pela loja.</li>
+</ul>
+</div>
+</details>
+
+<details>
+<summary>8. Clientes da Loja</summary>
+<div class="content">
+<p>Use a área de clientes para organizar os dados de atendimento disponíveis no sistema.</p>
+<ul>
+<li>Consulte os clientes cadastrados.</li>
+<li>Confira nome, contato e demais informações permitidas.</li>
+<li>Mantenha os dados organizados e atualizados.</li>
+</ul>
+</div>
+</details>
+
+<details>
+<summary>9. Pagamentos</summary>
+<div class="content">
+<p>As formas de pagamento exibidas ao cliente devem corresponder às opções realmente aceitas pela sua loja.</p>
+<ul>
+<li>PIX.</li>
+<li>Cartão de crédito.</li>
+<li>Cartão de débito.</li>
+<li>Dinheiro ou outras formas liberadas no painel.</li>
+</ul>
+<div class="warning"><strong>Importante:</strong> pagamentos das vendas da loja são diferentes da cobrança do plano/licença paga ao Produtor.</div>
+</div>
+</details>
+
+<details>
+<summary>10. WhatsApp e atendimento</summary>
+<div class="content">
+<ul>
+<li>Confira se o número de WhatsApp da loja está correto.</li>
+<li>Use os botões de contato para testar o atendimento.</li>
+<li>Antes de divulgar, confirme se a mensagem abre para o número certo.</li>
+</ul>
+</div>
+</details>
+
+<details>
+<summary>11. Testes antes de divulgar</summary>
+<div class="content">
+<p>Antes de enviar o sistema aos clientes, teste:</p>
+<ul>
+<li>login da loja;</li>
+<li>vitrine;</li>
+<li>catálogo;</li>
+<li>provador;</li>
+<li>tela de descanso;</li>
+<li>WhatsApp;</li>
+<li>imagens e preços;</li>
+<li>estoque;</li>
+<li>visual no computador e no celular.</li>
+</ul>
+</div>
+</details>
+
+<details>
+<summary>12. Link público, copiar e enviar ao cliente</summary>
+<div class="content">
+<ol>
+<li>No Painel da Loja, localize a área do link público.</li>
+<li>Use <strong>Copiar link</strong> quando disponível.</li>
+<li>Abra o link em outra aba para conferir.</li>
+<li>Envie o link ao cliente por WhatsApp, Instagram, QR Code ou outro canal da loja.</li>
+</ol>
+<div class="tip">O cliente final deve receber o link público da loja, e não o endereço administrativo do Painel da Loja.</div>
+</div>
+</details>
+
+<details>
+<summary>13. Rotina normal da loja</summary>
+<div class="content">
+<ol>
+<li>Entrar no painel.</li>
+<li>Conferir produtos e estoque.</li>
+<li>Cadastrar mercadorias novas.</li>
+<li>Atualizar preços e informações quando necessário.</li>
+<li>Conferir vitrine e catálogo.</li>
+<li>Verificar clientes e atendimentos.</li>
+<li>Testar o link público.</li>
+<li>Divulgar produtos e atender os clientes.</li>
+</ol>
+</div>
+</details>
+
+<details>
+<summary>14. Backup, manutenção e suporte</summary>
+<div class="content">
+<p>Se perceber falha, perda de dados ou comportamento diferente do normal:</p>
+<ol>
+<li>Não faça várias alterações tentando corrigir sozinho.</li>
+<li>Anote ou tire um print do problema.</li>
+<li>Informe ao Produtor qual tela apresentou o erro.</li>
+<li>O Produtor poderá verificar backup, restauração, senha e manutenção da loja pelo Painel Mestre.</li>
+</ol>
+</div>
+</details>
+
+<div class="footer">
+Manual do Lojista — Provador Pro System
+</div>
+
+</div>
+
+<script src="../shared/brand-sync.js"></script>
+<script>
+let estadosAntesPdf=[];
+
+function baixarPdf(){
+ const ds=[...document.querySelectorAll('details')];
+ estadosAntesPdf=ds.map(d=>d.open);
+ ds.forEach(d=>d.open=true);
+ setTimeout(()=>window.print(),100);
+}
+
+window.addEventListener('afterprint',()=>{
+ const ds=[...document.querySelectorAll('details')];
+ ds.forEach((d,i)=>d.open=!!estadosAntesPdf[i]);
+});
+
+(function(){
+ setTimeout(()=>{
+  try{
+   const c=JSON.parse(localStorage.getItem('lojaAtivaConfig')||'{}');
+   if(c.color)document.documentElement.style.setProperty('--brand-color',c.color);
+   const logo=document.getElementById('brandLogo');
+   if(logo&&c.logo){
+ const v=String(c.logo).trim();
+ logo.src=/^(https?:|data:|blob:|\/)/i.test(v)
+   ? v
+   : '/'+v.replace(/^(\.\.\/|\.\/)+/,'');
+}
+   const nome=document.getElementById('brandName');
+   if(nome&&c.name)nome.textContent=c.name;
+   const sub=document.getElementById('brandSub');
+   if(sub&&c.sub)sub.textContent=c.sub+' — Manual completo do lojista';
+  }catch(e){}
+ },60);
+})();
+</script>
+</body>
+</html>

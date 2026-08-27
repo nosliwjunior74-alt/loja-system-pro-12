@@ -582,7 +582,8 @@ button.small{
 
 
 <!-- ===== PLANOS E PRECOS DO PRODUTOR ===== -->
-<section class=card id=producerPlansPanel style=margin-bottom:18px>
+<details class=card id=producerPlansPanel style=margin-bottom:18px>
+<summary style="cursor:pointer;font-weight:800;color:#7a3157;font-size:17px;padding:2px 0;">Planos e Pre&ccedil;os <span style="font-size:12px;font-weight:700;color:#9b6b84;margin-left:8px;">Configura&ccedil;&atilde;o global</span></summary>
 <div style=display:flex;justify-content:space-between;gap:16px;align-items:flex-start;flex-wrap:wrap>
 <div><h2 class=section-title style=margin-bottom:4px>Planos e Pre&ccedil;os</h2><p class=section-sub style=margin:0>Valores cobrados pelo Produtor para novas lojas. O checkout usa estes valores diretamente do servidor.</p></div><span class=active-badge>Configura&ccedil;&atilde;o global</span>
 </div>
@@ -592,7 +593,7 @@ button.small{
 <div style=border:1px solid #f1d7e5;border-radius:14px;padding:16px;background:#fffafd><strong style=display:block;color:#7a3157;font-size:16px;margin-bottom:12px>Premium</strong><div class=field><label>Mensal (R$)</label><input id=planPremiumMonthly inputmode=decimal placeholder=297,00></div><div class=field style=margin-top:10px><label>Anual (R$)</label><input id=planPremiumAnnual inputmode=decimal placeholder=2597,00></div><label style=display:flex;align-items:center;gap:8px;margin-top:12px><input id=planPremiumActive type=checkbox style=width:auto>Plano ativo</label></div>
 </div>
 <div class=actions style=padding-bottom:0><button id=saveProducerPlansBtn type=button>Salvar pre&ccedil;os</button></div><p class=status-message id=producerPlanStatus></p>
-</section>
+</details>
 
 <div class="layout">
 
@@ -819,23 +820,32 @@ Formas de pagamento que esta loja aceita dos seus clientes.
 <input id="storeLogin" placeholder="Ex.: admin">
 </div>
 
-<div class="field full">
-<label>Nova senha da loja</label>
-<input id="storePassword" type="password" placeholder="Digite uma nova senha segura" autocomplete="new-password">
-<small style="display:block;margin-top:6px;color:#6b7280;">
-A senha atual nunca é exibida. Use este campo somente para criar ou redefinir a senha.
+<div class="field full" style="border:2px solid #d98ab3;background:#fff6fb;border-radius:16px;padding:18px;box-shadow:0 5px 16px rgba(159,45,104,.08);">
+<div style="font-size:17px;font-weight:800;color:#9f2d68;margin-bottom:6px;">&#128274; Acesso e seguran&ccedil;a da loja</div>
+<div style="font-size:13px;color:#765568;margin-bottom:14px;">Defina aqui a senha inicial ou uma nova senha para o lojista.</div>
+
+<div id="passwordRulesBox" style="background:#fff;border:1px solid #efcadc;border-radius:12px;padding:12px 14px;margin-bottom:14px;">
+<div style="font-size:13px;font-weight:800;color:#7a3157;margin-bottom:8px;">A senha precisa cumprir todas as regras:</div>
+<div id="passwordRuleLength" style="font-size:13px;margin:4px 0;color:#8a6b7b;">○ 10 ou mais caracteres</div>
+<div id="passwordRuleUpper" style="font-size:13px;margin:4px 0;color:#8a6b7b;">○ 1 letra maiúscula</div>
+<div id="passwordRuleLower" style="font-size:13px;margin:4px 0;color:#8a6b7b;">○ 1 letra minúscula</div>
+<div id="passwordRuleNumber" style="font-size:13px;margin:4px 0;color:#8a6b7b;">○ 1 número</div>
+<div id="passwordRuleSymbol" style="font-size:13px;margin:4px 0;color:#8a6b7b;">○ 1 símbolo, como @ # ! $ %</div>
+</div>
+
+<label style="font-weight:800;color:#7a3157;font-size:15px;">Nova senha da loja</label>
+<input id="storePassword" type="password" placeholder="Digite uma nova senha segura" autocomplete="new-password" style="margin-top:7px;border:2px solid #d98ab3;background:#fff;">
+
+<small style="display:block;margin-top:8px;color:#6b7280;line-height:1.5;">
+<strong>Importante:</strong> a senha atual nunca &eacute; exibida. Este campo serve apenas para criar ou redefinir a senha.
 </small>
-</div>
 
-<div class="field full">
-<label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+<label style="display:flex;align-items:center;gap:8px;cursor:pointer;margin-top:14px;font-weight:700;color:#5f4754;">
 <input id="storeForcePasswordChange" type="checkbox" checked style="width:auto;">
-Exigir troca da senha no próximo login
+Exigir troca da senha no pr&oacute;ximo login
 </label>
-</div>
 
-<div class="field full">
-<button class="secondary" id="resetPasswordBtn" type="button">
+<button class="secondary" id="resetPasswordBtn" type="button" style="margin-top:14px;">
 Redefinir senha
 </button>
 </div>
@@ -929,15 +939,81 @@ Abrir Provador
 
 <div class="manuals">
 
-<section class="card manual-card">
-<h3>Manual do Produtor</h3>
-<p>Como cadastrar, selecionar, ativar, desativar e enviar acesso.</p>
+<details class="card manual-card" id="producerSalesManual" style="grid-column:1/-1;">
+<summary style="cursor:pointer;font-weight:800;color:#9f2d68;font-size:17px;">📘 Manual do Produtor — Venda, Cadastro e Entrega da Loja</summary>
+<div style="margin-top:16px;padding:10px 14px;border-radius:12px;background:#fff1f7;border:1px solid #e9b8cf;font-weight:800;color:#8d2f61;">Precisa selecionar loja: SIM</div>
+<div style="margin-top:16px;line-height:1.65;color:#5f4754;">
+<p><strong>Regra principal:</strong> para alterar dados de uma loja existente, primeiro localize e selecione a loja correta. Para cadastrar uma loja nova, use o formul&aacute;rio sem selecionar outra loja.</p>
+
+<h4 style="color:#7a3157;margin:18px 0 6px;">1. Venda do plano</h4>
+<p>Apresente ao cliente os planos dispon&iacute;veis, valores mensais ou anuais e os recursos inclu&iacute;dos. As configura&ccedil;&otilde;es globais de pre&ccedil;o ficam na gaveta <strong>Planos e Pre&ccedil;os</strong>.</p>
+
+<h4 style="color:#7a3157;margin:18px 0 6px;">2. Confirma&ccedil;&atilde;o do pagamento</h4>
+<p>Depois da confirma&ccedil;&atilde;o do pagamento, prossiga para o cadastro da loja. Quando o checkout autom&aacute;tico estiver totalmente integrado, esta etapa poder&aacute; criar e ativar a loja automaticamente.</p>
+
+<h4 style="color:#7a3157;margin:18px 0 6px;">3. Criar uma nova loja</h4>
+<p>Clique em <strong>Nova loja</strong>, preencha os dados do cliente e da empresa e confirme que n&atilde;o existe outra loja selecionada por engano.</p>
+
+<h4 style="color:#7a3157;margin:18px 0 6px;">4. Dados e identidade da loja</h4>
+<p>Preencha nome, subt&iacute;tulo, e-mail, WhatsApp, CPF/CNPJ, endere&ccedil;o, identidade visual, logo e demais informa&ccedil;&otilde;es do cadastro.</p>
+
+<h4 style="color:#7a3157;margin:18px 0 6px;">5. Plano, contrato e cobran&ccedil;a</h4>
+<p>Defina o plano contratado, situa&ccedil;&atilde;o da licen&ccedil;a, datas, dados do contrato e as formas de pagamento relacionadas &agrave;quela loja.</p>
+
+<h4 style="color:#7a3157;margin:18px 0 6px;">6. Login e senha do lojista</h4>
+<p>Configure o login e uma senha inicial segura. A senha antiga nunca &eacute; exibida. Se o cliente esquecer, selecione a loja correta e use a fun&ccedil;&atilde;o de redefini&ccedil;&atilde;o de senha.</p>
+
+<h4 style="color:#7a3157;margin:18px 0 6px;">7. Salvar a loja</h4>
+<p>Revise todos os dados e clique em <strong>Salvar loja</strong>. Depois confirme que a loja aparece em <strong>Lojas cadastradas</strong>.</p>
+
+<h4 style="color:#7a3157;margin:18px 0 6px;">8. Selecionar e testar</h4>
+<p>Abra a gaveta <strong>Lojas cadastradas</strong>, selecione a loja criada e confira identidade, vitrine, cat&aacute;logo, provador, configura&ccedil;&otilde;es e acesso do painel antes da entrega.</p>
+
+<h4 style="color:#7a3157;margin:18px 0 6px;">9. Enviar o acesso ao lojista</h4>
+<p>Com a loja correta selecionada, use os recursos de envio para encaminhar o link de acesso, login e orienta&ccedil;&otilde;es ao cliente pelo canal definido.</p>
+
+<h4 style="color:#7a3157;margin:18px 0 6px;">10. Manuten&ccedil;&atilde;o posterior</h4>
+<p>Para qualquer altera&ccedil;&atilde;o futura, pesquise a loja por nome, CPF ou CNPJ, selecione-a e somente depois modifique cadastro, senha, cobran&ccedil;a, status, backup ou restaura&ccedil;&atilde;o.</p>
+
 <div class="actions">
-<button class="secondary" id="openProducerManual" type="button">
-Abrir manual do produtor
-</button>
+<button class="secondary" id="openProducerManual" type="button">Abrir manual completo em nova aba</button>
+<button class="secondary" id="downloadProducerSalesPdf" type="button">Baixar em PDF</button>
 </div>
-</section>
+</div>
+</details>
+
+<!-- MANUAL GLOBAL DO PRODUTOR -->
+<details class="card manual-card" id="producerGlobalManual" style="grid-column:1/-1;">
+<summary style="cursor:pointer;font-weight:800;color:#9f2d68;font-size:17px;">⚙️ Manual — Configura&ccedil;&otilde;es Globais do Produtor</summary>
+<div style="margin-top:16px;padding:10px 14px;border-radius:12px;background:#f4fbf7;border:1px solid #b9dec8;font-weight:800;color:#2f6f4f;">Precisa selecionar loja: N&Atilde;O</div>
+<div style="margin-top:16px;line-height:1.65;color:#5f4754;">
+<p><strong>Importante:</strong> estas configura&ccedil;&otilde;es pertencem ao sistema inteiro. <strong>N&atilde;o &eacute; necess&aacute;rio selecionar uma loja.</strong></p>
+
+<h4 style="color:#7a3157;margin:18px 0 6px;">1. Planos e Pre&ccedil;os</h4>
+<p>Abra a gaveta <strong>Planos e Pre&ccedil;os</strong> no topo do Painel Mestre. Nela ficam os valores oficiais dos planos Simples, Profissional e Premium.</p>
+
+<h4 style="color:#7a3157;margin:18px 0 6px;">2. Valor mensal e anual</h4>
+<p>Cada plano possui um valor mensal e um valor anual. Altere somente quando desejar mudar o pre&ccedil;o oferecido para novas compras ou renova&ccedil;&otilde;es conforme as regras do checkout.</p>
+
+<h4 style="color:#7a3157;margin:18px 0 6px;">3. Ativar ou desativar um plano</h4>
+<p>Marque <strong>Plano ativo</strong> para permitir a oferta daquele plano. Desmarque quando quiser deix&aacute;-lo temporariamente indispon&iacute;vel para novas compras.</p>
+
+<h4 style="color:#7a3157;margin:18px 0 6px;">4. Salvar os pre&ccedil;os</h4>
+<p>Depois de qualquer altera&ccedil;&atilde;o, clique em <strong>Salvar pre&ccedil;os</strong>. O servidor grava os valores oficiais no banco.</p>
+
+<h4 style="color:#7a3157;margin:18px 0 6px;">5. Rela&ccedil;&atilde;o com o checkout</h4>
+<p>O checkout do Produtor consulta o pre&ccedil;o diretamente no servidor. O valor informado pelo navegador n&atilde;o substitui o valor oficial cadastrado aqui.</p>
+
+<h4 style="color:#7a3157;margin:18px 0 6px;">6. Pagamentos globais</h4>
+<p>As configura&ccedil;&otilde;es gerais do gateway, checkout, regras de parcelamento, PIX, cart&atilde;o e boleto tamb&eacute;m pertencem &agrave; &aacute;rea global. A integra&ccedil;&atilde;o completa do gateway ser&aacute; acrescentada a este manual quando estiver finalizada e testada.</p>
+
+<h4 style="color:#7a3157;margin:18px 0 6px;">7. O que n&atilde;o fazer aqui</h4>
+<p>N&atilde;o use esta &aacute;rea para mudar cadastro, senha, endere&ccedil;o, contrato, pagamento ou configura&ccedil;&otilde;es particulares de uma loja. Para isso, primeiro localize e selecione a loja correta no Painel Mestre.</p>
+<div class="actions">
+<button class="secondary" id="downloadProducerGlobalPdf" type="button">Baixar em PDF</button>
+</div>
+</div>
+</details>
 
 <section class="card manual-card">
 <h3>Manual do Cliente</h3>
@@ -1615,7 +1691,7 @@ const documentDigits=
 .replace(/\D/g,'');
 
 const queryOk=
-Boolean(searchTerm)&&
+!searchTerm||
 (
 hay.includes(searchTerm)||
 (
@@ -2089,6 +2165,84 @@ await loadStores();
 }
 
 
+function getPasswordRules(value){
+
+return {
+length:value.length>=10,
+upper:/[A-Z]/.test(value),
+lower:/[a-z]/.test(value),
+number:/[0-9]/.test(value),
+symbol:/[^A-Za-z0-9\s]/.test(value)
+};
+
+}
+
+
+function passwordIsStrong(value){
+
+const rules=getPasswordRules(value);
+
+return (
+rules.length &&
+rules.upper &&
+rules.lower &&
+rules.number &&
+rules.symbol
+);
+
+}
+
+
+function updatePasswordRules(){
+
+const input=el('storePassword');
+const button=el('resetPasswordBtn');
+
+if(!input)return;
+
+const rules=getPasswordRules(input.value);
+
+const items=[
+['passwordRuleLength',rules.length,'10 ou mais caracteres'],
+['passwordRuleUpper',rules.upper,'1 letra maiúscula'],
+['passwordRuleLower',rules.lower,'1 letra minúscula'],
+['passwordRuleNumber',rules.number,'1 número'],
+['passwordRuleSymbol',rules.symbol,'1 símbolo, como @ # ! $ %']
+];
+
+items.forEach(([id,ok,text])=>{
+
+const item=el(id);
+
+if(!item)return;
+
+item.textContent=
+(ok?'✅ ':'○ ')+text;
+
+item.style.color=
+ok?'#218653':'#8a6b7b';
+
+item.style.fontWeight=
+ok?'700':'400';
+
+});
+
+if(button){
+
+button.disabled=
+!passwordIsStrong(input.value);
+
+button.style.opacity=
+button.disabled?'.55':'1';
+
+button.style.cursor=
+button.disabled?'not-allowed':'pointer';
+
+}
+
+}
+
+
 async function resetStorePassword(){
 
 const id=
@@ -2119,6 +2273,15 @@ throw new Error(
 }
 
 
+if(!passwordIsStrong(password)){
+
+throw new Error(
+'A senha ainda nao cumpre todas as regras de seguranca.'
+);
+
+}
+
+
 await api(
 `/api/admin/stores/${encodeURIComponent(id)}/reset-password`,
 {
@@ -2136,11 +2299,12 @@ forcePasswordChange
 
 
 el('storePassword').value='';
+updatePasswordRules();
 
 el('status').textContent=
 forcePasswordChange
-?'Senha redefinida. A loja dever? trocar a senha no pr?ximo login.'
-:'Senha redefinida com seguran?a.';
+?'Senha redefinida. A loja deverá trocar a senha no próximo login.'
+:'Senha redefinida com segurança.';
 
 await loadStores();
 
@@ -2727,6 +2891,15 @@ resetForm
 );
 
 
+el('storePassword')
+.addEventListener(
+'input',
+updatePasswordRules
+);
+
+updatePasswordRules();
+
+
 el('resetPasswordBtn')
 .addEventListener(
 'click',
@@ -2756,6 +2929,66 @@ el('openProducerManual')
 ()=>window.open(
 'manual/manual-produtor.html',
 '_blank'
+)
+);
+
+
+function printProducerManual(sectionId,title){
+const section=el(sectionId);
+if(!section)return;
+
+const copy=section.cloneNode(true);
+copy.querySelectorAll('button').forEach(button=>button.remove());
+const summary=copy.querySelector('summary');
+if(summary)summary.remove();
+
+const popup=window.open('','_blank');
+if(!popup){
+alert('Permita pop-ups para gerar o PDF do manual.');
+return;
+}
+
+popup.document.open();
+popup.document.write(
+'<!doctype html><html><head><meta charset="utf-8"><title>'+title+'</title>'+
+'<style>'+
+'body{font-family:Arial,sans-serif;color:#3f3340;margin:32px;line-height:1.6;}'+
+'h1{color:#9f2d68;font-size:24px;margin-bottom:20px;}'+
+'h4{color:#7a3157;margin:18px 0 6px;}'+
+'p{margin:7px 0;}'+
+'.actions{display:none!important;}'+
+'@page{size:A4;margin:16mm;}'+
+'@media print{body{margin:0;}button{display:none!important;}}'+
+'</style></head><body>'+
+'<h1>'+title+'</h1>'+
+copy.innerHTML+
+'</body></html>'
+);
+popup.document.close();
+
+popup.addEventListener('load',()=>{
+popup.focus();
+popup.print();
+});
+}
+
+
+el('downloadProducerSalesPdf')
+.addEventListener(
+'click',
+()=>printProducerManual(
+'producerSalesManual',
+'Manual do Produtor - Venda, Cadastro e Entrega da Loja'
+)
+);
+
+
+el('downloadProducerGlobalPdf')
+.addEventListener(
+'click',
+()=>printProducerManual(
+'producerGlobalManual',
+'Manual - Configuracoes Globais do Produtor'
 )
 );
 

@@ -1191,6 +1191,340 @@ app.post(
 
 
 
+
+// ===== MERCADO PAGO PRODUTOR - CARTAO DE CREDITO VIA ORDERS API =====
+app.post(
+  '/api/public/checkout/producer/orders/:token/pay-card',
+  checkoutLimiter,
+  async (req, res) => {
+    try {
+      const token =
+        String(req.params.token || '').trim();
+
+      const order =
+        getProducerCheckoutOrderByToken(token);
+
+      if(!order){
+        return res.status(404).json({
+          error:'Pedido de checkout nao encontrado.'
+        });
+      }
+
+      if(order.status === 'paid'){
+        return res.status(409).json({
+          error:'Este pedido ja foi pago.'
+        });
+      }
+
+      if(order.method !== 'credit_card'){
+        return res.status(400).json({
+          error:'Este pedido nao foi criado para cartao de credito.'
+        });
+      }
+
+      if(!producerMercadoPago.order){
+        return res.status(503).json({
+          error:'Mercado Pago Orders API do Produtor ainda nao esta configurado.'
+        });
+      }
+
+      // Evita nova cobranca se a Order de cartao ja foi criada.
+      if(
+        order.gateway === 'mercadopago' &&
+        order.externalId &&
+        order.paymentDetails?.paymentKind === 'credit_card' &&
+        order.status !== 'failed'
+      ){
+        return res.json({
+          ok:true,
+          reused:true,
+          testMode:CHECKOUT_MODE === 'test',
+          order,
+          payment:{
+            orderId:order.externalId,
+            paymentId:
+              order.paymentDetails?.mercadoPagoPaymentId || '',
+            status:
+              order.paymentDetails?.mercadoPagoOrderStatus || 'pending',
+            paymentStatus:
+              order.paymentDetails?.mercadoPagoPaymentStatus || '',
+            statusDetail:
+              order.paymentDetails?.mercadoPagoStatusDetail || ''
+          }
+        });
+      }
+
+      const cardToken =
+        String(req.body?.cardToken || '').trim();
+
+      const paymentMethodId =
+        String(req.body?.paymentMethodId || '')
+          .trim()
+          .toLowerCase();
+
+      const installments =
+        Math.max(
+          1,
+          Number(req.body?.installments || order.installments || 1) || 1
+        );
+
+      const payerEmail =
+        String(
+          req.body?.payerEmail ||
+          order.buyerEmail ||
+          ''
+        )
+        .trim()
+        .toLowerCase();
+
+      const attemptId =
+        String(req.body?.attemptId || '').trim();
+
+      if(
+        !cardToken ||
+        cardToken.length < 16 ||
+        cardToken.length > 512 ||
+        !/^[A-Za-z0-9._:-]+$/.test(cardToken)
+      ){
+        return res.status(400).json({
+          error:'Token do cartao invalido.'
+        });
+      }
+
+      if(
+        !paymentMethodId ||
+        paymentMethodId.length > 40 ||
+        !/^[a-z0-9_-]+$/.test(paymentMethodId)
+      ){
+        return res.status(400).json({
+          error:'Bandeira do cartao invalida.'
+        });
+      }
+
+      if(
+        installments < 1 ||
+        installments > CHECKOUT_FEATURES.maxInstallments
+      ){
+        return res.status(400).json({
+          error:
+            'Quantidade de parcelas invalida. Maximo: ' +
+            CHECKOUT_FEATURES.maxInstallments +
+            'x.'
+        });
+      }
+
+      if(
+        Number(order.installments || 1) !== installments
+      ){
+        return res.status(409).json({
+          error:'Parcelamento informado difere do pedido criado.'
+        });
+      }
+
+      if(!payerEmail){
+        return res.status(400).json({
+          error:'E-mail do pagador e obrigatorio.'
+        });
+      }
+
+      if(
+        !attemptId ||
+        attemptId.length < 8 ||
+        attemptId.length > 100 ||
+        !/^[A-Za-z0-9._:-]+$/.test(attemptId)
+      ){
+        return res.status(400).json({
+          error:'Identificador da tentativa de pagamento invalido.'
+        });
+      }
+
+      const amount =
+        (Number(order.amountCents || 0) / 100)
+          .toFixed(2);
+
+      const idempotencyKey =
+        crypto
+          .createHash('sha256')
+          .update(
+            'producer-order-card:' +
+            order.id +
+            ':' +
+            attemptId
+          )
+          .digest('hex');
+
+      const payer = {
+        email:
+          CHECKOUT_MODE === 'test'
+            ? 'test@testuser.com'
+            : payerEmail
+      };
+
+      const mpOrder =
+        await producerMercadoPago.order.create({
+          body:{
+            type:'online',
+            total_amount:amount,
+            external_reference:order.id,
+            processing_mode:'automatic',
+            payer,
+            transactions:{
+              payments:[
+                {
+                  amount,
+                  payment_method:{
+                    id:paymentMethodId,
+                    type:'credit_card',
+                    token:cardToken,
+                    installments
+                  }
+                }
+              ]
+            }
+          },
+          requestOptions:{
+            idempotencyKey
+          }
+        });
+
+      const mpPayment =
+        mpOrder?.transactions?.payments?.[0] || {};
+
+      const mpOrderStatus =
+        String(mpOrder?.status || 'pending');
+
+      const mpPaymentStatus =
+        String(mpPayment?.status || '');
+
+      const mpStatusDetail =
+        String(
+          mpPayment?.status_detail ||
+          mpOrder?.status_detail ||
+          ''
+        );
+
+      const approved =
+        mpOrderStatus === 'processed' &&
+        ['accredited','approved'].includes(
+          mpStatusDetail
+        );
+
+      let internalStatus = 'pending';
+
+      // Ambiente de teste nunca libera loja real.
+      if(
+        CHECKOUT_MODE !== 'test' &&
+        approved
+      ){
+        internalStatus = 'paid';
+      }
+
+      if(
+        ['failed','cancelled'].includes(mpOrderStatus) ||
+        ['failed','cancelled','rejected'].includes(mpPaymentStatus)
+      ){
+        internalStatus = 'failed';
+      }
+
+      const paymentDetails = {
+        ...(order.paymentDetails || {}),
+        provider:'mercadopago',
+        api:'orders',
+        paymentKind:'credit_card',
+        attemptId,
+        idempotencyKey,
+
+        cardPaymentMethodId:paymentMethodId,
+        installments,
+
+        mercadoPagoOrderId:
+          mpOrder?.id
+            ? String(mpOrder.id)
+            : '',
+
+        mercadoPagoPaymentId:
+          mpPayment?.id
+            ? String(mpPayment.id)
+            : '',
+
+        mercadoPagoOrderStatus:
+          mpOrderStatus,
+
+        mercadoPagoPaymentStatus:
+          mpPaymentStatus,
+
+        mercadoPagoStatusDetail:
+          mpStatusDetail,
+
+        testApproved:
+          CHECKOUT_MODE === 'test' && approved
+      };
+
+      // Importante: cardToken nao e salvo no banco.
+      const updatedOrder =
+        updateProducerCheckoutOrder(
+          order.id,
+          {
+            status:internalStatus,
+
+            externalId:
+              mpOrder?.id
+                ? String(mpOrder.id)
+                : '',
+
+            gateway:'mercadopago',
+
+            paidAt:
+              internalStatus === 'paid'
+                ? new Date().toISOString()
+                : null,
+
+            paymentDetails
+          }
+        );
+
+      return res.json({
+        ok:true,
+        reused:false,
+        testMode:CHECKOUT_MODE === 'test',
+        approvedInTest:
+          CHECKOUT_MODE === 'test' && approved,
+        order:updatedOrder,
+        payment:{
+          orderId:
+            mpOrder?.id
+              ? String(mpOrder.id)
+              : '',
+
+          paymentId:
+            mpPayment?.id
+              ? String(mpPayment.id)
+              : '',
+
+          status:mpOrderStatus,
+          paymentStatus:mpPaymentStatus,
+          statusDetail:mpStatusDetail,
+          paymentMethodId,
+          installments
+        }
+      });
+
+    }catch(err){
+      console.error(
+        'Erro no cartao Orders API do Produtor:',
+        err
+      );
+
+      return res.status(502).json({
+        error:
+          err?.message ||
+          'Nao foi possivel processar o cartao via Orders API.'
+      });
+    }
+  }
+);
+
+
 // ===== MERCADO PAGO PRODUTOR - CONSULTA SEGURA DA ORDER =====
 app.get(
   '/api/public/checkout/producer/orders/:token/status',

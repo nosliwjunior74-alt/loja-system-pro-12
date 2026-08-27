@@ -6,6 +6,11 @@
     plans: [],
     selectedPlan: null,
     billingCycle: 'monthly',
+    paymentMethod: 'pix',
+    mercadoPago: null,
+    bricksBuilder: null,
+    cardBrickController: null,
+    cardBin: '',
     checkoutToken: '',
     order: null,
     pollingTimer: null
@@ -20,6 +25,7 @@
     form: $('checkout-form'),
     summary: $('checkout-summary'),
     submit: $('checkout-submit'),
+    cardPaymentSection: $('card-payment-section'),
 
     pixSection: $('pix-section'),
     pixQrCode: $('pix-qrcode'),
@@ -245,11 +251,368 @@
     });
   }
 
+  async function unmountCardPaymentBrick() {
+    if (!state.cardBrickController) return;
+
+    try {
+      await state.cardBrickController.unmount();
+    } catch (err) {
+      console.warn('Nao foi possivel desmontar o Brick:', err);
+    }
+
+    state.cardBrickController = null;
+    state.cardBin = '';
+
+    const container = document.getElementById('cardPaymentBrick_container');
+    if (container) container.innerHTML = '';
+  }
+
+  async function mountCardPaymentBrick() {
+    if (!state.selectedPlan) {
+      showAlert('Escolha um plano antes de configurar o cartao.');
+      return;
+    }
+
+    const publicKey =
+      state.config &&
+      state.config.producerPayment &&
+      state.config.producerPayment.publicKey;
+
+    if (!publicKey) {
+      showAlert('Public Key do Mercado Pago nao esta disponivel.');
+      return;
+    }
+
+    if (typeof window.MercadoPago !== 'function') {
+      showAlert('MercadoPago.js nao foi carregado.');
+      return;
+    }
+
+    await unmountCardPaymentBrick();
+
+    if (!state.mercadoPago) {
+      state.mercadoPago =
+        new window.MercadoPago(publicKey, {
+          locale: 'pt-BR'
+        });
+
+      state.bricksBuilder =
+        state.mercadoPago.bricks();
+    }
+
+    const amount =
+      Number(getPlanAmount(state.selectedPlan) || 0) / 100;
+
+    if (!amount || amount <= 0) {
+      showAlert('Valor do plano invalido para pagamento com cartao.');
+      return;
+    }
+
+    const maxInstallments =
+      Math.max(
+        1,
+        Math.min(
+          12,
+          Number(state.config?.features?.maxInstallments || 12)
+        )
+      );
+
+    const settings = {
+      initialization: {
+        amount
+      },
+
+      customization: {
+        paymentMethods: {
+          minInstallments: 1,
+          maxInstallments,
+          types: {
+            excluded: [
+              'debit_card',
+              'prepaid_card'
+            ]
+          }
+        },
+
+        visual: {
+          hidePaymentButton: true
+        }
+      },
+
+      callbacks: {
+        onReady: () => {
+          console.log('Card Payment Brick pronto.');
+        },
+
+        onBinChange: (bin) => {
+          state.cardBin =
+            String(bin || '')
+              .replace(/D/g, '')
+              .slice(0, 8);
+        },
+
+        onSubmit: () => {
+          return Promise.reject(
+            new Error('Processamento do cartao ainda nao liberado.')
+          );
+        },
+
+        onError: (error) => {
+          console.error('Erro no Card Payment Brick:', error);
+          showAlert('Nao foi possivel carregar o formulario do cartao.');
+        }
+      }
+    };
+
+    try {
+      state.cardBrickController =
+        await state.bricksBuilder.create(
+          'cardPayment',
+          'cardPaymentBrick_container',
+          settings
+        );
+    } catch (err) {
+      console.error(err);
+      showAlert('Nao foi possivel iniciar o formulario seguro do cartao.');
+    }
+  }
+
+  function setupPaymentMethodOptions() {
+    document.querySelectorAll('input[name="method"]').forEach((input) => {
+      input.addEventListener('change', async () => {
+        if (!input.checked) return;
+
+        state.paymentMethod = input.value;
+
+        document.querySelectorAll('[data-payment-option]').forEach((option) => {
+          option.classList.toggle(
+            'active',
+            option.dataset.paymentOption === state.paymentMethod
+          );
+        });
+
+        els.cardPaymentSection.hidden =
+          state.paymentMethod !== 'credit_card';
+
+        if (state.paymentMethod === 'credit_card') {
+          els.submit.disabled = false;
+          els.submit.textContent = state.config?.mode === 'test' ? 'Processar cartao de teste' : 'Pagar com cartao';
+
+          await mountCardPaymentBrick();
+        } else {
+          await unmountCardPaymentBrick();
+
+          els.submit.disabled = false;
+          els.submit.textContent = 'Continuar para pagamento';
+        }
+      });
+    });
+  }
+
   function setSubmitting(value) {
     els.submit.disabled = value;
     els.submit.textContent = value
       ? 'Gerando pagamento...'
       : 'Continuar para pagamento';
+  }
+
+  async function processCreditCardCheckout() {
+    const buyerName = $('buyerName').value.trim();
+    const buyerEmail = $('buyerEmail').value.trim().toLowerCase();
+    const buyerPhone = $('buyerPhone').value.trim();
+    const buyerCpfCnpj = $('buyerCpfCnpj').value.trim();
+    const storeName = $('storeName').value.trim();
+
+    if (!buyerName || !buyerEmail || !storeName) {
+      showAlert('Preencha nome, e-mail e nome da loja.');
+      return;
+    }
+
+    if (!state.cardBrickController) {
+      showAlert('Formulario do cartao ainda nao esta pronto.');
+      return;
+    }
+
+    els.submit.disabled = true;
+    els.submit.textContent = 'Processando cartao de teste...';
+
+    try {
+      const cardFormData =
+        await state.cardBrickController.getFormData();
+
+      const cardToken =
+        String(cardFormData?.token || '').trim();
+
+      let paymentMethodId =
+        String(cardFormData?.payment_method_id || '')
+          .trim()
+          .toLowerCase();
+
+      const installments =
+        Math.max(
+          1,
+          Number(cardFormData?.installments || 1) || 1
+        );
+
+      if (
+        !paymentMethodId &&
+        state.mercadoPago &&
+        state.cardBin &&
+        typeof state.mercadoPago.getInstallments === 'function'
+      ) {
+        const amount =
+          (Number(getPlanAmount(state.selectedPlan) || 0) / 100)
+            .toFixed(2);
+
+        const installmentInfo =
+          await state.mercadoPago.getInstallments({
+            amount,
+            bin: state.cardBin,
+            locale: 'pt-BR'
+          });
+
+        paymentMethodId =
+          String(
+            installmentInfo?.[0]?.payment_method_id || ''
+          )
+          .trim()
+          .toLowerCase();
+      }
+
+      if (!cardToken) {
+        throw new Error(
+          'O Mercado Pago nao gerou o token seguro do cartao.'
+        );
+      }
+
+      if (!paymentMethodId) {
+        throw new Error(
+          'A bandeira do cartao nao foi identificada.'
+        );
+      }
+
+      const maxInstallments =
+        Math.max(
+          1,
+          Math.min(
+            12,
+            Number(state.config?.features?.maxInstallments || 12)
+          )
+        );
+
+      if (
+        installments < 1 ||
+        installments > maxInstallments
+      ) {
+        throw new Error(
+          'Escolha uma quantidade de parcelas entre 1x e ' +
+          maxInstallments +
+          'x.'
+        );
+      }
+
+      const created = await api(
+        '/api/public/checkout/producer/orders',
+        {
+          method: 'POST',
+          body: JSON.stringify({
+            buyerName,
+            buyerEmail,
+            buyerPhone,
+            buyerCpfCnpj,
+            storeName,
+            plan: state.selectedPlan.id,
+            billingCycle: state.billingCycle,
+            method: 'credit_card',
+            installments
+          })
+        }
+      );
+
+      const order = created.order || {};
+
+      if (!order.checkoutToken) {
+        throw new Error(
+          'O pedido de cartao foi criado sem token de checkout.'
+        );
+      }
+
+      state.checkoutToken = order.checkoutToken;
+      state.order = order;
+
+      const attemptId =
+        window.crypto &&
+        typeof window.crypto.randomUUID === 'function'
+          ? window.crypto.randomUUID()
+          : 'card-' +
+            Date.now() +
+            '-' +
+            Math.random().toString(16).slice(2);
+
+      const paid = await api(
+        '/api/public/checkout/producer/orders/' +
+        encodeURIComponent(state.checkoutToken) +
+        '/pay-card',
+        {
+          method: 'POST',
+          body: JSON.stringify({
+            cardToken,
+            paymentMethodId,
+            installments,
+            payerEmail: buyerEmail,
+            attemptId
+          })
+        }
+      );
+
+      const payment = paid.payment || {};
+
+      const approvedInTest =
+        paid.approvedInTest === true;
+
+      if (paid.testMode === true) {
+        if (approvedInTest) {
+          showAlert(
+            'Cartao aprovado pelo Mercado Pago no ambiente de teste. ' +
+            'Bandeira: ' +
+            (payment.paymentMethodId || paymentMethodId) +
+            ' | Parcelas: ' +
+            installments +
+            'x. Nenhuma loja real foi liberada.'
+          );
+        } else {
+          showAlert(
+            'Teste do cartao processado. Status: ' +
+            (payment.status || 'nao informado') +
+            ' | Detalhe: ' +
+            (payment.statusDetail || 'nao informado') +
+            '. Nenhuma loja real foi liberada.'
+          );
+        }
+
+        return;
+      }
+
+      showAlert(
+        'Pagamento com cartao enviado para confirmacao.'
+      );
+
+      startStatusPolling();
+
+    } catch (err) {
+      console.error('Pagamento com cartao:', err);
+
+      showAlert(
+        err.message ||
+        'Nao foi possivel processar o cartao.'
+      );
+    } finally {
+      els.submit.disabled = false;
+      els.submit.textContent =
+        state.config?.mode === 'test'
+          ? 'Processar cartao de teste'
+          : 'Pagar com cartao';
+    }
   }
 
   async function submitCheckout(event) {
@@ -258,6 +621,16 @@
 
     if (!state.selectedPlan) {
       showAlert('Escolha um plano antes de continuar.');
+      return;
+    }
+
+    if (state.paymentMethod === 'credit_card') {
+      await processCreditCardCheckout();
+      return;
+    }
+
+    if (state.paymentMethod !== 'pix') {
+      showAlert('Forma de pagamento ainda nao liberada.');
       return;
     }
 
@@ -558,6 +931,7 @@
   }
 
   setupBillingButtons();
+  setupPaymentMethodOptions();
 
   els.form.addEventListener('submit', submitCheckout);
   els.copyPix.addEventListener('click', copyPixCode);

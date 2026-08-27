@@ -74,10 +74,26 @@
             <strong>Forma de pagamento</strong>
             <p>Pagamento seguro processado pelo Mercado Pago.</p>
           </div>
-          <label class="payment-option active">
-            <input type="radio" name="method" value="pix" checked>
-            <span>PIX</span>
-          </label>
+          <div class="payment-options">
+            <label class="payment-option active" data-payment-option="pix">
+              <input type="radio" name="method" value="pix" checked>
+              <span>PIX</span>
+            </label>
+
+            <label class="payment-option" data-payment-option="credit_card">
+              <input type="radio" name="method" value="credit_card">
+              <span>Cartao de credito</span>
+            </label>
+          </div>
+        </div>
+
+        <div id="card-payment-section" class="card-payment-section" hidden>
+          <div class="card-payment-heading">
+            <strong>Pagamento com cartao de credito</strong>
+            <p>Os dados do cartao serao processados com seguranca pelo Mercado Pago.</p>
+          </div>
+
+          <div id="cardPaymentBrick_container"></div>
         </div>
 
         <div id="checkout-summary" class="checkout-summary"></div>
@@ -146,6 +162,7 @@
 
   </main>
 
+  <script src="https://sdk.mercadopago.com/js/v2"></script>
   <script src="/js/checkout.js"></script>
 </body>
 </html>

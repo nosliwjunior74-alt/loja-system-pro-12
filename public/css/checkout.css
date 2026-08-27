@@ -559,3 +559,61 @@ textarea:focus{
     text-align:center;
   }
 }
+
+
+/* ===== CARTAO DE CREDITO - CHECKOUT ===== */
+
+.payment-options{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  justify-content:flex-end;
+}
+
+.payment-options .payment-option{
+  min-width:150px;
+}
+
+.card-payment-section{
+  margin-top:20px;
+  padding:20px;
+  border:1px solid var(--line);
+  border-radius:16px;
+  background:#fffafd;
+}
+
+.card-payment-heading{
+  margin-bottom:16px;
+}
+
+.card-payment-heading strong{
+  display:block;
+  margin-bottom:5px;
+  color:var(--ink);
+  font-size:16px;
+}
+
+.card-payment-heading p{
+  margin:0;
+  color:var(--muted);
+  font-size:13px;
+}
+
+#cardPaymentBrick_container{
+  min-height:80px;
+}
+
+@media (max-width:580px){
+  .payment-options{
+    width:100%;
+    flex-direction:column;
+  }
+
+  .payment-options .payment-option{
+    width:100%;
+  }
+
+  .card-payment-section{
+    padding:15px;
+  }
+}

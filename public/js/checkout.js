@@ -902,6 +902,37 @@
     }
   }
 
+
+  function getFirstAccessTokenFromHash() {
+    const hash =
+      String(window.location.hash || '')
+        .replace(/^#/, '');
+
+    if (!hash) {
+      return '';
+    }
+
+    const params =
+      new URLSearchParams(hash);
+
+    return String(
+      params.get('first-access') || ''
+    ).trim();
+  }
+
+  async function resumeFirstAccessFromLink() {
+    const token =
+      getFirstAccessTokenFromHash();
+
+    if (!token) {
+      return;
+    }
+
+    state.checkoutToken = token;
+
+    await checkPaymentStatus();
+  }
+
   async function loadConfig() {
     try {
       const config = await api('/api/public/checkout/config');
@@ -938,6 +969,7 @@
   els.firstAccessForm.addEventListener('submit', submitFirstAccess);
 
   loadConfig();
+  resumeFirstAccessFromLink();
 
   window.addEventListener('beforeunload', stopStatusPolling);
 })();

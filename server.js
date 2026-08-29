@@ -15,7 +15,91 @@ const {
   WebhookSignatureValidator,
   InvalidWebhookSignatureError
 } = require('mercadopago');
-const { db: activeDb, listStores, getStoreById, getStoreBySlug, createStore, updateStore, setStorePassword, deleteStore, verifyStoreLogin, createPayment, listPayments, updatePaymentStatus, createProducerCheckoutOrder, getProducerCheckoutOrderById, getProducerCheckoutOrderByToken, getProducerCheckoutOrderByExternalId, updateProducerCheckoutOrder, activatePaidProducerCheckoutStore, createCustomerOrder, getCustomerOrderById, getCustomerOrderByToken, getCustomerOrderByExternalId, updateCustomerOrder, listCustomerOrdersByStore, listProducerPlans, getProducerPlan, updateProducerPlan, getFinanceSummary, getFinanceChart, recordAiUsage, getAiUsageMonthly } = require('./db');
+const { db: activeDb, listStores, getStoreById, getStoreBySlug, createStore, updateStore, setStorePassword, deleteStore, verifyStoreLogin, createPayment, listPayments, updatePaymentStatus, createProducerCheckoutOrder, getProducerCheckoutOrderById, getProducerCheckoutOrderByToken, getProducerCheckoutOrderByExternalId, updateProducerCheckoutOrder, claimProducerCheckoutActivationNotification, completeProducerCheckoutActivationNotification, failProducerCheckoutActivationNotification, activatePaidProducerCheckoutStore, createCustomerOrder, getCustomerOrderById, getCustomerOrderByToken, getCustomerOrderByExternalId, updateCustomerOrder, listCustomerOrdersByStore, listProducerPlans, getProducerPlan, updateProducerPlan, getFinanceSummary, getFinanceChart, recordAiUsage, getAiUsageMonthly } = require('./db');
+const { runPostPaymentFlow } = require('./modules/pro-commerce/post-payment');
+
+async function runProducerCheckoutPostPayment(order, req){
+  const origin =
+    String(
+      baseUrl(req) ||
+      BASE_URL ||
+      ''
+    ).replace(/\/+$/, '');
+
+  const flow =
+    await runPostPaymentFlow({
+      order,
+      baseUrl:origin,
+      brandName:'Provador Pro System',
+
+      activateStore:
+        activatePaidProducerCheckoutStore,
+
+      buildFirstAccessUrl:({ order:activatedOrder })=>{
+        const token =
+          String(
+            activatedOrder?.checkoutToken ||
+            order?.checkoutToken ||
+            ''
+          ).trim();
+
+        if(!token){
+          throw new Error(
+            'Token de primeiro acesso nao encontrado.'
+          );
+        }
+
+        if(!origin){
+          throw new Error(
+            'URL publica do sistema nao encontrada.'
+          );
+        }
+
+        return (
+          origin +
+          '/checkout.html#first-access=' +
+          encodeURIComponent(token)
+        );
+      },
+
+      claimNotification:(channel)=>
+        claimProducerCheckoutActivationNotification(
+          order.id,
+          channel
+        ),
+
+      completeNotification:(channel, result)=>
+        completeProducerCheckoutActivationNotification(
+          order.id,
+          channel,
+          result
+        ),
+
+      failNotification:(channel, result)=>
+        failProducerCheckoutActivationNotification(
+          order.id,
+          channel,
+          result
+        )
+    });
+
+  if(flow?.notifications?.email?.ok === false){
+    console.warn(
+      'E-mail de ativacao nao enviado:',
+      flow.notifications.email.error || 'erro_desconhecido'
+    );
+  }
+
+  if(flow?.notifications?.whatsapp?.ok === false){
+    console.warn(
+      'WhatsApp de ativacao nao enviado:',
+      flow.notifications.whatsapp.error || 'erro_desconhecido'
+    );
+  }
+
+  return flow;
+}
+
 const app = express();
 const PORT = process.env.PORT || 10000;
 const BASE_URL = process.env.BASE_URL || '';
@@ -1612,9 +1696,15 @@ app.get(
       const mpPaymentStatusDetail =
         String(mpPayment?.status_detail || '');
 
-      const confirmedPaid =
+      const gatewayConfirmedPaid =
         mpStatus === 'processed' &&
         mpStatusDetail === 'accredited';
+
+      // Sandbox pode retornar pagamento aprovado,
+      // mas nunca deve ativar uma loja real.
+      const confirmedPaid =
+        CHECKOUT_MODE !== 'test' &&
+        gatewayConfirmedPaid;
 
       let internalStatus = 'pending';
 
@@ -1679,16 +1769,21 @@ app.get(
       let activation = null;
 
       if(confirmedPaid){
-        activation =
-          activatePaidProducerCheckoutStore(
-            order.id,
-            baseUrl(req)
+        const postPayment =
+          await runProducerCheckoutPostPayment(
+            updatedOrder,
+            req
           );
+
+        activation =
+          postPayment?.activation || null;
 
         if(!activation?.ok){
           throw new Error(
             `Pagamento confirmado, mas a ativacao da loja falhou: ${
-              activation?.code || 'erro_desconhecido'
+              postPayment?.code ||
+              activation?.code ||
+              'erro_desconhecido'
             }`
           );
         }
@@ -2029,9 +2124,15 @@ app.post(
       const mpStatusDetail =
         String(mpOrder?.status_detail || '');
 
-      const confirmedPaid =
+      const gatewayConfirmedPaid =
         mpStatus === 'processed' &&
         mpStatusDetail === 'accredited';
+
+      // Sandbox pode retornar pagamento aprovado,
+      // mas nunca deve ativar uma loja real.
+      const confirmedPaid =
+        CHECKOUT_MODE !== 'test' &&
+        gatewayConfirmedPaid;
 
       let internalStatus =
         localOrder.status || 'pending';
@@ -2083,16 +2184,21 @@ app.post(
       let activation = null;
 
       if(confirmedPaid){
-        activation =
-          activatePaidProducerCheckoutStore(
-            localOrder.id,
-            baseUrl(req)
+        const postPayment =
+          await runProducerCheckoutPostPayment(
+            updatedOrder,
+            req
           );
+
+        activation =
+          postPayment?.activation || null;
 
         if(!activation?.ok){
           throw new Error(
             `Pagamento confirmado, mas a ativacao da loja falhou: ${
-              activation?.code || 'erro_desconhecido'
+              postPayment?.code ||
+              activation?.code ||
+              'erro_desconhecido'
             }`
           );
         }

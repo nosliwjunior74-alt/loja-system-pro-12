@@ -1,0 +1,16 @@
+node_modules/
+data/
+data-restore-test/
+backups/
+BACKUP_*/
+backup-*/
+*.sqlite
+*.sqlite-*
+*.bak*
+temp_*
+.env
+.env.*
+$env
+login_loja_teste.js
+painel_mestre_teste.js
+python

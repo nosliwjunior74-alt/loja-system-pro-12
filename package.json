@@ -15,7 +15,8 @@
     "express-rate-limit": "^7.5.0",
     "express-session": "^1.18.1",
     "helmet": "^8.1.0",
-    "mercadopago": "^3.5.1"
+    "mercadopago": "^3.5.1",
+    "nodemailer": "^9.0.6"
   },
   "engines": {
     "node": ">=18"

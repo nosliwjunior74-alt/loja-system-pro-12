@@ -741,6 +741,307 @@ function updateProducerCheckoutOrder(id, patch={}){
 }
 
 
+/* ===== NOTIFICACOES POS-PAGAMENTO DO CHECKOUT DO PRODUTOR ===== */
+
+function normalizeProducerNotificationChannel(channel){
+  const value = String(channel || '').trim().toLowerCase();
+
+  if(value !== 'email' && value !== 'whatsapp'){
+    throw new Error('Canal de notificacao invalido.');
+  }
+
+  return value;
+}
+
+function readProducerPostPaymentNotifications(paymentDetails){
+  const details =
+    paymentDetails &&
+    typeof paymentDetails === 'object' &&
+    !Array.isArray(paymentDetails)
+      ? { ...paymentDetails }
+      : {};
+
+  const current =
+    details.postPaymentNotifications &&
+    typeof details.postPaymentNotifications === 'object' &&
+    !Array.isArray(details.postPaymentNotifications)
+      ? { ...details.postPaymentNotifications }
+      : {};
+
+  return {
+    details,
+    notifications: current
+  };
+}
+
+function claimProducerCheckoutActivationNotification(orderId, channel){
+  const safeChannel =
+    normalizeProducerNotificationChannel(channel);
+
+  const claim = db.transaction(() => {
+    const row = db.prepare(
+      'SELECT * FROM producer_checkout_orders WHERE id = ?'
+    ).get(orderId);
+
+    if(!row){
+      return {
+        claimed:false,
+        reason:'order_not_found'
+      };
+    }
+
+    const order =
+      producerCheckoutRowToView(row);
+
+    if(order.status !== 'paid' || !order.createdStoreId){
+      return {
+        claimed:false,
+        reason:'store_not_activated',
+        order
+      };
+    }
+
+    const {
+      details,
+      notifications
+    } = readProducerPostPaymentNotifications(
+      order.paymentDetails
+    );
+
+    const previous =
+      notifications[safeChannel] &&
+      typeof notifications[safeChannel] === 'object' &&
+      !Array.isArray(notifications[safeChannel])
+        ? { ...notifications[safeChannel] }
+        : {};
+
+    if(previous.status === 'sent' || previous.sentAt){
+      return {
+        claimed:false,
+        reason:'already_sent',
+        order
+      };
+    }
+
+    if(previous.status === 'sending' && previous.claimedAt){
+      const claimedAtMs =
+        Date.parse(previous.claimedAt);
+
+      if(
+        Number.isFinite(claimedAtMs) &&
+        Date.now() - claimedAtMs < 10 * 60 * 1000
+      ){
+        return {
+          claimed:false,
+          reason:'in_progress',
+          order
+        };
+      }
+    }
+
+    const now =
+      new Date().toISOString();
+
+    notifications[safeChannel] = {
+      ...previous,
+      status:'sending',
+      claimedAt:now,
+      attempts:
+        Math.max(0, Number(previous.attempts || 0)) + 1,
+      lastError:''
+    };
+
+    details.postPaymentNotifications =
+      notifications;
+
+    db.prepare(`
+      UPDATE producer_checkout_orders
+      SET payment_details_json = ?,
+          updated_at = ?
+      WHERE id = ?
+    `).run(
+      JSON.stringify(details),
+      now,
+      order.id
+    );
+
+    return {
+      claimed:true,
+      reason:'claimed',
+      order:getProducerCheckoutOrderById(order.id)
+    };
+  });
+
+  return claim.immediate();
+}
+
+function completeProducerCheckoutActivationNotification(
+  orderId,
+  channel,
+  result={}
+){
+  const safeChannel =
+    normalizeProducerNotificationChannel(channel);
+
+  const complete = db.transaction(() => {
+    const row = db.prepare(
+      'SELECT * FROM producer_checkout_orders WHERE id = ?'
+    ).get(orderId);
+
+    if(!row){
+      return {
+        ok:false,
+        reason:'order_not_found'
+      };
+    }
+
+    const order =
+      producerCheckoutRowToView(row);
+
+    const {
+      details,
+      notifications
+    } = readProducerPostPaymentNotifications(
+      order.paymentDetails
+    );
+
+    const previous =
+      notifications[safeChannel] &&
+      typeof notifications[safeChannel] === 'object' &&
+      !Array.isArray(notifications[safeChannel])
+        ? { ...notifications[safeChannel] }
+        : {};
+
+    if(previous.status === 'sent' || previous.sentAt){
+      return {
+        ok:true,
+        reused:true,
+        order
+      };
+    }
+
+    const now =
+      new Date().toISOString();
+
+    notifications[safeChannel] = {
+      ...previous,
+      status:'sent',
+      sentAt:now,
+      messageId:String(
+        result.messageId ||
+        previous.messageId ||
+        ''
+      ),
+      lastError:''
+    };
+
+    details.postPaymentNotifications =
+      notifications;
+
+    db.prepare(`
+      UPDATE producer_checkout_orders
+      SET payment_details_json = ?,
+          updated_at = ?
+      WHERE id = ?
+    `).run(
+      JSON.stringify(details),
+      now,
+      order.id
+    );
+
+    return {
+      ok:true,
+      reused:false,
+      order:getProducerCheckoutOrderById(order.id)
+    };
+  });
+
+  return complete.immediate();
+}
+
+function failProducerCheckoutActivationNotification(
+  orderId,
+  channel,
+  result={}
+){
+  const safeChannel =
+    normalizeProducerNotificationChannel(channel);
+
+  const fail = db.transaction(() => {
+    const row = db.prepare(
+      'SELECT * FROM producer_checkout_orders WHERE id = ?'
+    ).get(orderId);
+
+    if(!row){
+      return {
+        ok:false,
+        reason:'order_not_found'
+      };
+    }
+
+    const order =
+      producerCheckoutRowToView(row);
+
+    const {
+      details,
+      notifications
+    } = readProducerPostPaymentNotifications(
+      order.paymentDetails
+    );
+
+    const previous =
+      notifications[safeChannel] &&
+      typeof notifications[safeChannel] === 'object' &&
+      !Array.isArray(notifications[safeChannel])
+        ? { ...notifications[safeChannel] }
+        : {};
+
+    if(previous.status === 'sent' || previous.sentAt){
+      return {
+        ok:true,
+        reused:true,
+        order
+      };
+    }
+
+    const now =
+      new Date().toISOString();
+
+    notifications[safeChannel] = {
+      ...previous,
+      status:'failed',
+      failedAt:now,
+      lastError:String(
+        result.error ||
+        'Falha no envio da notificacao.'
+      ).slice(0, 1000)
+    };
+
+    details.postPaymentNotifications =
+      notifications;
+
+    db.prepare(`
+      UPDATE producer_checkout_orders
+      SET payment_details_json = ?,
+          updated_at = ?
+      WHERE id = ?
+    `).run(
+      JSON.stringify(details),
+      now,
+      order.id
+    );
+
+    return {
+      ok:true,
+      reused:false,
+      order:getProducerCheckoutOrderById(order.id)
+    };
+  });
+
+  return fail.immediate();
+}
+
+
 function activatePaidProducerCheckoutStore(orderId, baseUrl=''){
   const activate = db.transaction(()=>{
     const rawOrder =
@@ -1273,4 +1574,4 @@ function updateProducerPlan(id, payload={}){
 }
 
 ensureSeedStore();
-module.exports = { db, slugify, uniqueSlug, listStores, getStoreById, getStoreBySlug, getStoreRowById, getStoreRowBySlug, createStore, updateStore, setStorePassword, deleteStore, verifyStoreLogin, licenseStatus: rawLicenseStatus, generateLicenseKey, createPayment, listPayments, updatePaymentStatus, createProducerCheckoutOrder, getProducerCheckoutOrderById, getProducerCheckoutOrderByToken, getProducerCheckoutOrderByExternalId, updateProducerCheckoutOrder, activatePaidProducerCheckoutStore, createCustomerOrder, getCustomerOrderById, getCustomerOrderByToken, getCustomerOrderByExternalId, updateCustomerOrder, listCustomerOrdersByStore, listProducerPlans, getProducerPlan, updateProducerPlan, getFinanceSummary, getFinanceChart, syncStoreLicense, currentAiPeriod, getAiUsageMonthly, recordAiUsage };
+module.exports = { db, slugify, uniqueSlug, listStores, getStoreById, getStoreBySlug, getStoreRowById, getStoreRowBySlug, createStore, updateStore, setStorePassword, deleteStore, verifyStoreLogin, licenseStatus: rawLicenseStatus, generateLicenseKey, createPayment, listPayments, updatePaymentStatus, createProducerCheckoutOrder, getProducerCheckoutOrderById, getProducerCheckoutOrderByToken, getProducerCheckoutOrderByExternalId, updateProducerCheckoutOrder, claimProducerCheckoutActivationNotification, completeProducerCheckoutActivationNotification, failProducerCheckoutActivationNotification, activatePaidProducerCheckoutStore, createCustomerOrder, getCustomerOrderById, getCustomerOrderByToken, getCustomerOrderByExternalId, updateCustomerOrder, listCustomerOrdersByStore, listProducerPlans, getProducerPlan, updateProducerPlan, getFinanceSummary, getFinanceChart, syncStoreLicense, currentAiPeriod, getAiUsageMonthly, recordAiUsage };

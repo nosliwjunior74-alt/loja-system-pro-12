@@ -158,3 +158,176 @@ iframe{flex:1;width:100%;min-height:calc(100vh - 72px);border:0;background:#fff}
     min-height:calc(100vh - 68px);
   }
 }
+
+/* === PRO UI 2026: Painel do Lojista === */
+body{
+  background:#f7f3f6;
+}
+
+.sidebar{
+  background:
+    radial-gradient(circle at top left, color-mix(in srgb, var(--brand-color, #e33d8f) 10%, transparent), transparent 32%),
+    linear-gradient(180deg,#fff 0%,#fff9fc 100%);
+  border-right:1px solid rgba(92,46,68,.10);
+  box-shadow:12px 0 34px rgba(84,45,64,.06);
+}
+
+.brand{
+  padding:15px;
+  border-radius:20px;
+  border:1px solid rgba(111,68,89,.10);
+  box-shadow:0 14px 36px rgba(91,46,68,.08);
+}
+
+.brand-logo{
+  width:62px;
+  height:62px;
+  flex-basis:62px;
+  border-radius:16px;
+  box-shadow:0 8px 22px rgba(86,43,64,.08);
+}
+
+.status-wrap{
+  margin-top:10px;
+}
+
+.license-box{
+  margin-top:8px;
+  padding:9px 10px;
+  border-radius:12px;
+  background:rgba(255,255,255,.72);
+  border:1px solid rgba(111,68,89,.08);
+}
+
+.menu{
+  gap:16px;
+}
+
+.menu-group{
+  gap:7px;
+  padding:10px;
+  background:rgba(255,255,255,.54);
+  border:1px solid rgba(111,68,89,.07);
+  border-radius:16px;
+}
+
+.menu-label{
+  padding:2px 8px 5px;
+  font-size:10px;
+  letter-spacing:.12em;
+  color:#8f7180;
+}
+
+.menu-btn{
+  position:relative;
+  min-height:44px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding:10px 12px;
+  border-radius:12px;
+  border:1px solid transparent;
+  color:#563b48;
+  background:transparent;
+}
+
+.menu-btn:hover{
+  background:#fff;
+  border-color:rgba(111,68,89,.10);
+  box-shadow:0 8px 20px rgba(89,46,67,.07);
+}
+
+.menu-btn.active{
+  background:linear-gradient(135deg,var(--brand-color, var(--pink-4)),color-mix(in srgb,var(--brand-color, var(--pink-4)) 78%, #9f255f));
+  color:#fff;
+  border-color:transparent;
+  box-shadow:0 10px 24px color-mix(in srgb,var(--brand-color, var(--pink-4)) 24%, transparent);
+}
+
+.menu-btn.active::before{
+  content:'';
+  position:absolute;
+  left:-10px;
+  top:10px;
+  bottom:10px;
+  width:4px;
+  border-radius:999px;
+  background:var(--brand-color, var(--pink-4));
+}
+
+.menu-icon{
+  width:24px;
+  height:24px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  margin-right:0;
+  border-radius:8px;
+  background:rgba(255,255,255,.72);
+}
+
+.menu-btn.active .menu-icon{
+  background:rgba(255,255,255,.17);
+}
+
+.client-tools{
+  padding-top:2px;
+}
+
+.action-btn.full{
+  border-radius:12px;
+}
+
+.topbar{
+  min-height:76px;
+  padding:14px 24px;
+  background:rgba(255,255,255,.88);
+  border-bottom:1px solid rgba(111,68,89,.09);
+  box-shadow:0 8px 26px rgba(89,46,67,.04);
+}
+
+.topbar strong{
+  font-size:19px;
+  letter-spacing:-.01em;
+}
+
+.main-area{
+  background:#f7f3f6;
+}
+
+.main-area > div[style*="position:relative"]{
+  margin:14px;
+  width:auto !important;
+  height:calc(100vh - 104px) !important;
+  overflow:hidden;
+  border-radius:20px;
+  background:#fff;
+  border:1px solid rgba(111,68,89,.09);
+  box-shadow:0 18px 46px rgba(78,39,58,.08);
+}
+
+#appFrame{
+  display:block;
+  background:#fff;
+}
+
+@media(max-width:760px){
+  .sidebar{
+    box-shadow:18px 0 42px rgba(55,28,41,.16);
+  }
+
+  .menu-group{
+    padding:9px;
+  }
+
+  .main-area > div[style*="position:relative"]{
+    margin:8px;
+    height:calc(100vh - 84px) !important;
+    border-radius:14px;
+  }
+
+  .topbar{
+    padding-right:12px;
+  }
+}
+/* === FIM PRO UI 2026 === */

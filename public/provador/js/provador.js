@@ -6,7 +6,7 @@ function previewItem(item){const img=document.getElementById('landingLook'); con
 async function nextHome(){const items=await Estoque.visible(); const max=Math.max(0,Math.ceil(items.length/UI.pageSize)-1); UI.page=Math.min(max,UI.page+1); await renderHome();}
 async function prevHome(){UI.page=Math.max(0,UI.page-1); await renderHome();}
 async function renderCatalogo(){await AppStore.ensureSeed(); const items=await Estoque.visible(); UI.page=Math.min(UI.page,Math.max(0,Math.ceil(items.length/UI.pageSize)-1)); await UI.renderTrack('catalogTrack',items,'abrirProvadorItem');}
-async function abrirProvadorItem(id){const item=await Estoque.byId(id); if(item){AppStore.setSelected(item); location.href='provador.html';}}
+async function abrirProvadorItem(id){const item=await Estoque.byId(id); if(item){AppStore.setSelected(item); if(window.ProNavigation){ProNavigation.go('provador.html');}else{location.href='provador.html';}}}
 async function nextCatalog(){const items=await Estoque.visible(); const max=Math.max(0,Math.ceil(items.length/UI.pageSize)-1); UI.page=Math.min(max,UI.page+1); await renderCatalogo();}
 async function prevCatalog(){UI.page=Math.max(0,UI.page-1); await renderCatalogo();}
 async function initProvador(){await AppStore.ensureSeed(); const items = await carregarLooksOnline();
@@ -28,7 +28,7 @@ UI.page=Math.min(
 alert('LOOKS CARREGADOS: ' + items.length);
                               const selected=AppStore.getSelected()||items[0]; if(selected) await selecionarLook(selected.id); }
 if (window.CameraModule) {
-    CameraModule.start();
+    CameraModule.start('video','poseCanvas','cameraTip');
 }
 carregarClientesSelect();
 async function selecionarLook(id){

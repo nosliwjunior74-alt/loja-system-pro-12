@@ -59,12 +59,26 @@
       </div>
 
       <nav class='menu'>
-        <button class='menu-btn active' data-url='provador/index.html'>👗 Vitrine / Provador</button>
-        <button class='menu-btn' data-url='provador/admin.html'>📦 Painel da Loja</button>
-        <button class='menu-btn' data-url='remover_fundo/index.html'>🖼️ PNG sem Fundo</button>
-        <button class='menu-btn' data-url='display_pro/loja.html'>📲 Display Pro System</button>
-        <button class='menu-btn' data-url='manual/manual-painel-cliente.html'>📘 Manual</button>
-        <button class='menu-btn' data-url='configuracao-cobranca.html'>💳 Cobrança</button>
+        <div class='menu-group'>
+          <div class='menu-label'>Experiencia da Loja</div>
+          <button class='menu-btn active' data-url='provador/index.html'><span class='menu-icon'>🛍️</span>Vitrine</button>
+          <button class='menu-btn' data-url='provador/catalogo.html'><span class='menu-icon'>📖</span>Catalogo</button>
+          <button class='menu-btn' data-url='provador/provador.html'><span class='menu-icon'>👗</span>Provador</button>
+          <button class='menu-btn' data-url='provador/descanso.html'><span class='menu-icon'>📺</span>Tela / Descanso</button>
+        </div>
+
+        <div class='menu-group'>
+          <div class='menu-label'>Gestao</div>
+          <button class='menu-btn' data-url='provador/admin.html'><span class='menu-icon'>📦</span>Administracao da Loja</button>
+          <button class='menu-btn' data-url='remover_fundo/index.html'><span class='menu-icon'>🖼️</span>PNG sem Fundo</button>
+          <button class='menu-btn' data-url='display_pro/loja.html'><span class='menu-icon'>📲</span>Gerenciar Display</button>
+        </div>
+
+        <div class='menu-group'>
+          <div class='menu-label'>Negocio</div>
+          <button class='menu-btn' data-url='configuracao-cobranca.html'><span class='menu-icon'>💳</span>Cobranca</button>
+          <button class='menu-btn' data-url='manual/manual-painel-cliente.html'><span class='menu-icon'>📘</span>Manual</button>
+        </div>
       </nav>
 
       <div class='client-tools'>
@@ -157,8 +171,29 @@ console.log('LocalStorageManager=', window.LocalStorageManager);
       return status || 'Ativa';
     }
 
+    function normalizeMenuUrl(url){
+      try{
+        const parsed = new URL(url, location.href);
+        return parsed.pathname.replace(/^\/+/, '');
+      }catch(e){
+        return String(url || '').split('?')[0].split('#')[0].replace(/^\/+/, '');
+      }
+    }
+
     function activateButtonForUrl(url){
-      buttons.forEach(b => b.classList.toggle('active', b.dataset.url === url));
+      const current = normalizeMenuUrl(url);
+      let activeButton = null;
+
+      document.querySelectorAll('.sidebar .menu .menu-btn').forEach(b => {
+        const target = normalizeMenuUrl(b.dataset.url);
+        const active = !!target && (current === target || current.endsWith('/' + target));
+        b.classList.toggle('active', active);
+        if(active) activeButton = b;
+      });
+
+      if(activeButton && title){
+        title.textContent = activeButton.textContent.trim();
+      }
     }
 
     buttons.forEach(btn => btn.addEventListener('click', () => {
@@ -172,6 +207,20 @@ if (lojaSlug) {
 }
       title.textContent = btn.textContent.trim();
     }));
+
+    frame.addEventListener('load', () => {
+      const overviewBtn = document.getElementById('adminOverviewBtn');
+
+      if(overviewBtn?.classList.contains('active')){
+        return;
+      }
+
+      try{
+        activateButtonForUrl(frame.contentWindow.location.href);
+      }catch(e){
+        activateButtonForUrl(frame.getAttribute('src') || '');
+      }
+    });
 
     window.addEventListener('message', (ev) => {
       if(ev?.data?.type === 'open-url' && ev.data.url){

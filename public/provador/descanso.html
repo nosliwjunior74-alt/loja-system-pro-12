@@ -447,7 +447,7 @@
     let currentObjectUrl = null;
 
     function fittingUrl(){
-      return 'index.html' +
+      return 'provador.html' +
         (
           slug
             ? '?loja=' + encodeURIComponent(slug)
@@ -465,11 +465,11 @@
     }
 
     backToFitting.onclick = ()=>{
-      location.href = fittingUrl();
+      if(window.ProNavigation){ ProNavigation.back('provador.html'); } else { location.href = fittingUrl(); }
     };
 
     backToAdmin.onclick = ()=>{
-      location.href = adminUrl();
+      if(window.ProNavigation){ ProNavigation.go('admin.html'); } else { location.href = adminUrl(); }
     };
 
     function cleanupMedia(){
@@ -778,5 +778,6 @@
   })();
   </script>
 
+<script src="../shared/pro-navigation.js"></script>
 </body>
 </html>

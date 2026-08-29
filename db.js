@@ -839,6 +839,25 @@ function claimProducerCheckoutActivationNotification(orderId, channel){
       }
     }
 
+    // Evita novas tentativas a cada consulta de status/webhook.
+    // Depois de uma falha, aguarda 30 minutos antes de tentar novamente.
+    if(previous.status === 'failed' && previous.failedAt){
+      const failedAtMs = Date.parse(previous.failedAt);
+      const retryCooldownMs = 30 * 60 * 1000;
+
+      if(
+        Number.isFinite(failedAtMs) &&
+        Date.now() - failedAtMs < retryCooldownMs
+      ){
+        return {
+          claimed:false,
+          reason:'retry_cooldown',
+          retryAt:new Date(failedAtMs + retryCooldownMs).toISOString(),
+          order
+        };
+      }
+    }
+
     const now =
       new Date().toISOString();
 

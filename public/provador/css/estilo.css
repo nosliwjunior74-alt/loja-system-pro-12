@@ -378,7 +378,7 @@ body.home .tv{
 }
 
 .catalog-page .actions{
-  grid-template-columns:repeat(3,1fr);
+  grid-template-columns:repeat(2,1fr);
   gap:12px;
   padding:16px 20px 22px;
 }

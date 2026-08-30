@@ -2,6 +2,128 @@
 <style>
 :root{--brand:#e33d8f;--ink:#2d1b24;--muted:#796772;--line:#eadfe5}*{box-sizing:border-box}body{margin:0;background:#f8f4f6;color:var(--ink);font-family:Segoe UI,Arial,sans-serif}button{font:inherit;cursor:pointer}.top{position:sticky;top:0;z-index:20;display:flex;justify-content:space-between;align-items:center;gap:14px;padding:12px 24px;background:#fffffff2;backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}.brand{display:flex;align-items:center;gap:10px;min-width:0}.brand img{width:52px;height:52px;object-fit:contain;border:1px solid var(--line);border-radius:15px;padding:5px;background:#fff}.brand h1{font-size:19px;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.brand p{font-size:12px;color:var(--muted);margin:3px 0 0}.nav{display:flex;gap:8px}.nav button,.cta{border:0;border-radius:13px;padding:11px 15px;font-weight:800}.nav button{background:#fff;border:1px solid var(--line);color:#664757}.nav .main,.cta.main,.try{background:var(--brand);color:#fff;border-color:var(--brand)}main{max-width:1400px;margin:auto;padding:28px}.hero{display:grid;grid-template-columns:.9fr 1.1fr;min-height:62vh;background:#fff;border:1px solid var(--line);border-radius:28px;overflow:hidden;box-shadow:0 22px 60px #4b273b16}.copy{display:flex;flex-direction:column;justify-content:center;padding:clamp(28px,5vw,70px)}.eyebrow{color:var(--brand);font-size:12px;font-weight:900;letter-spacing:.13em;text-transform:uppercase}.copy h2{font-size:clamp(38px,5vw,70px);line-height:1;margin:12px 0 16px;letter-spacing:-.04em}.copy p{color:var(--muted);font-size:17px;line-height:1.6}.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:22px}.cta.dark{background:#26181f;color:#fff}.cta.light{background:#fff;border:1px solid var(--line);color:#674858}.visual{position:relative;min-height:430px;background:linear-gradient(145deg,#fff2f8,#eee5ea)}.visual>img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;padding:36px}.tag{position:absolute;top:18px;left:18px;background:#21171cdd;color:#fff;padding:8px 12px;border-radius:999px;font-size:11px;font-weight:900}.product{position:absolute;left:18px;right:18px;bottom:18px;background:#fffffff0;border:1px solid #fff;border-radius:16px;padding:12px 14px;display:flex;justify-content:space-between;align-items:center;gap:10px}.product span{display:block;color:var(--muted);font-size:12px;margin-top:3px}.product button{border:0;background:transparent;color:var(--brand);font-weight:900}.sec{margin-top:26px}.secHead{display:flex;justify-content:space-between;align-items:end;margin-bottom:12px}.secHead h3{font-size:24px;margin:0}.secHead p{font-size:13px;color:var(--muted);margin:4px 0 0}.secHead button{border:0;background:transparent;color:var(--brand);font-weight:900}.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}.card{background:#fff;border:1px solid var(--line);border-radius:20px;overflow:hidden;box-shadow:0 10px 30px #4b273b10}.pic{aspect-ratio:4/5;background:#faf6f8}.pic img{width:100%;height:100%;object-fit:contain;padding:14px}.info{padding:12px}.info strong{display:block}.info small{color:var(--muted)}.cardBtns{display:flex;gap:8px;margin-top:10px}.cardBtns button{flex:1;border:0;border-radius:10px;padding:9px;font-weight:800}.show{background:#f2e9ee;color:#674858}.empty{grid-column:1/-1;padding:35px;text-align:center;background:#fff;border:1px dashed var(--line);border-radius:18px;color:var(--muted)}.drawerBtn{position:fixed;right:18px;bottom:18px;z-index:40;border:0;border-radius:999px;background:#251820;color:#fff;padding:13px 17px;font-weight:900;box-shadow:0 12px 28px #0004}.shade{position:fixed;inset:0;z-index:50;background:#20141a77;opacity:0;visibility:hidden;transition:.2s}.drawer{position:fixed;z-index:51;right:0;top:0;bottom:0;width:min(430px,92vw);background:#fff;transform:translateX(102%);transition:.22s;box-shadow:-20px 0 55px #0003;display:flex;flex-direction:column}.open .shade{opacity:1;visibility:visible}.open .drawer{transform:none}.dHead{padding:18px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center}.dHead h3{margin:0}.dHead button{border:0;border-radius:10px;width:36px;height:36px;font-size:20px}.dList{padding:12px;overflow:auto;display:grid;gap:9px}.dItem{display:grid;grid-template-columns:66px 1fr auto;align-items:center;gap:10px;border:1px solid var(--line);border-radius:14px;padding:8px}.dItem img{width:66px;height:80px;object-fit:contain;background:#f8f4f6;border-radius:10px}.dItem small{display:block;color:var(--muted)}.dItem button{border:0;border-radius:9px;padding:9px;background:var(--brand);color:#fff;font-weight:800}
 @media(max-width:900px){.hero{grid-template-columns:1fr}.visual{min-height:50vh}.grid{grid-template-columns:repeat(2,1fr)}}@media(max-width:600px){.top{padding:10px 12px}.brand img{width:44px;height:44px}.brand h1{font-size:16px}.nav button:not(.main){display:none}main{padding:10px}.hero{border-radius:20px}.copy{padding:24px 18px}.copy h2{font-size:40px}.visual{min-height:46vh}.grid{gap:9px}.card{border-radius:15px}.info{padding:9px}.show{display:none}}@media(orientation:portrait) and (min-width:700px){.hero{grid-template-columns:1fr}.grid{grid-template-columns:repeat(3,1fr)}}
+
+/* HERO VITRINE IMPACTO 2026 */
+.hero{
+  position:relative;
+  background:
+    radial-gradient(circle at 72% 22%,rgba(255,92,166,.30),transparent 30%),
+    radial-gradient(circle at 18% 92%,rgba(255,255,255,.08),transparent 34%),
+    linear-gradient(125deg,#1f1119 0%,#46182f 48%,#7a2050 100%);
+  border:1px solid rgba(255,255,255,.10);
+  box-shadow:0 28px 70px rgba(55,17,37,.28);
+}
+
+.hero .copy{
+  position:relative;
+  z-index:2;
+}
+
+.hero .eyebrow{
+  color:#ff75b6;
+  font-size:13px;
+  letter-spacing:.16em;
+}
+
+.hero .copy h2{
+  color:#fff;
+  max-width:650px;
+  text-shadow:0 10px 34px rgba(0,0,0,.24);
+}
+
+.hero .copy p{
+  color:rgba(255,255,255,.80);
+  max-width:590px;
+  font-size:18px;
+}
+
+.hero .actions{
+  margin-top:28px;
+}
+
+.hero .cta{
+  min-height:48px;
+  padding:13px 20px;
+  transition:transform .18s ease,filter .18s ease,box-shadow .18s ease;
+}
+
+.hero .cta:hover{
+  transform:translateY(-2px);
+}
+
+.hero .cta.main{
+  background:var(--brand);
+  color:#fff;
+  box-shadow:0 13px 30px rgba(227,61,143,.28);
+}
+
+.hero .cta.dark{
+  background:#fff;
+  color:#391827;
+  border:1px solid rgba(255,255,255,.75);
+  box-shadow:0 12px 28px rgba(0,0,0,.14);
+}
+
+.hero .cta.light{
+  background:#25D366;
+  border:1px solid #25D366;
+  color:#fff;
+  box-shadow:0 13px 30px rgba(37,211,102,.26);
+}
+
+.hero .cta.light:hover{
+  background:#20bd5a;
+  border-color:#20bd5a;
+}
+
+.hero .visual{
+  position:relative;
+  overflow:hidden;
+  background:
+    radial-gradient(circle at center,rgba(255,255,255,.16),transparent 52%),
+    linear-gradient(145deg,rgba(255,255,255,.08),rgba(255,255,255,.02));
+}
+
+.hero .visual::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:linear-gradient(90deg,rgba(38,13,26,.16),transparent 28%);
+  pointer-events:none;
+  z-index:1;
+}
+
+.hero .visual>img{
+  z-index:0;
+  padding:20px;
+  filter:drop-shadow(0 22px 28px rgba(0,0,0,.20));
+}
+
+.hero .tag{
+  z-index:3;
+  background:rgba(24,12,18,.78);
+  backdrop-filter:blur(8px);
+}
+
+.hero .product{
+  z-index:3;
+  background:rgba(255,255,255,.94);
+  backdrop-filter:blur(14px);
+  box-shadow:0 18px 40px rgba(0,0,0,.18);
+}
+
+@media(max-width:900px){
+  .hero{
+    background:
+      radial-gradient(circle at 82% 16%,rgba(255,92,166,.25),transparent 28%),
+      linear-gradient(145deg,#211119,#651b43);
+  }
+
+  .hero .copy p{
+    font-size:16px;
+  }
+}
+
 </style></head><body>
 <header class="top"><div class="brand"><img id="logo" src="imagens/logo.png" alt=""><div><h1 id="name">Sua Loja</h1><p id="sub">Moda, novidades e estilo</p></div></div><div class="nav"><button onclick="catalogo()">Catálogo</button><button onclick="abrirDrawer()">Looks</button><button class="main" onclick="irLoja()">Loja</button></div></header>
 <main>
@@ -104,6 +226,53 @@ function aplicarMarca(store){
   document.title=n+' - Vitrine';
 }
 
+
+function aplicarCampanhaVitrine(store){
+  const heroEl=document.querySelector('.hero');
+  const eyebrowEl=document.querySelector('.hero .eyebrow');
+  const titleEl=document.querySelector('.hero .copy h2');
+  const descriptionEl=document.querySelector('.hero .copy p');
+
+  if(!heroEl || !eyebrowEl || !titleEl || !descriptionEl) return;
+
+  const official={
+    eyebrow:'Vitrine da loja',
+    title:'Descubra seu próximo look.',
+    description:'Novidades, destaques e peças escolhidas para você. Selecione um modelo e leve-o direto para o provador virtual.'
+  };
+
+  const active=Boolean(store?.vitrinePromoActive);
+  const validColor=v=>/^#[0-9a-f]{6}$/i.test(String(v||''));
+
+  if(!active){
+    eyebrowEl.textContent=official.eyebrow;
+    titleEl.textContent=official.title;
+    descriptionEl.textContent=official.description;
+    heroEl.style.removeProperty('background');
+    eyebrowEl.style.removeProperty('color');
+    titleEl.style.removeProperty('color');
+    descriptionEl.style.removeProperty('color');
+    return;
+  }
+
+  eyebrowEl.textContent=(store?.vitrinePromoEyebrow || official.eyebrow).trim();
+  titleEl.textContent=(store?.vitrinePromoTitle || official.title).trim();
+  descriptionEl.textContent=(store?.vitrinePromoDescription || official.description).trim();
+
+  const textColor=validColor(store?.vitrinePromoTextColor) ? store.vitrinePromoTextColor : '#ffffff';
+  const bgStart=validColor(store?.vitrinePromoBgStart) ? store.vitrinePromoBgStart : '#1f1119';
+  const bgEnd=validColor(store?.vitrinePromoBgEnd) ? store.vitrinePromoBgEnd : '#7a2050';
+
+  heroEl.style.background=
+    'radial-gradient(circle at 72% 22%,rgba(255,92,166,.30),transparent 30%),'+
+    'radial-gradient(circle at 18% 92%,rgba(255,255,255,.08),transparent 34%),'+
+    'linear-gradient(125deg,'+bgStart+' 0%,'+bgEnd+' 100%)';
+
+  eyebrowEl.style.color=textColor;
+  titleEl.style.color=textColor;
+  descriptionEl.style.color=textColor;
+}
+
 function selecionar(item){
   if(!item) return;
   if(window.AppStore?.setSelected) AppStore.setSelected(item);
@@ -134,18 +303,28 @@ function renderizar(){
   const grid=document.getElementById('grid');
   const list=document.getElementById('drawerList');
   const hero=VitrinePro.featured;
+  const vitrineHeroImage=VitrinePro.store?.vitrineHeroImage || '';
 
   if(hero){
     const heroImg=document.getElementById('heroImg');
-    heroImg.src=imagem(hero) || '';
-    heroImg.style.display=imagem(hero)?'block':'none';
+    const heroVisual=vitrineHeroImage || imagem(hero) || '';
+    heroImg.src=heroVisual;
+    heroImg.style.display=heroVisual?'block':'none';
     document.getElementById('heroName').textContent=nome(hero);
     document.getElementById('heroCategory').textContent=categoria(hero)+(preco(hero)?' · '+preco(hero):'');
     document.getElementById('heroTry').onclick=()=>selecionar(hero);
     document.getElementById('heroMiniTry').onclick=()=>selecionar(hero);
   }else{
     const heroImg=document.getElementById('heroImg');
-    if(heroImg){ heroImg.removeAttribute('src'); heroImg.style.display='none'; }
+    if(heroImg){
+      if(vitrineHeroImage){
+        heroImg.src=vitrineHeroImage;
+        heroImg.style.display='block';
+      }else{
+        heroImg.removeAttribute('src');
+        heroImg.style.display='none';
+      }
+    }
     const tag=document.querySelector('.visual .tag');
     if(tag) tag.style.display='none';
     const heroTry=document.getElementById('heroTry');
@@ -153,11 +332,11 @@ function renderizar(){
     if(heroTry){ heroTry.disabled=true; heroTry.style.display='none'; }
     if(heroMiniTry){ heroMiniTry.disabled=true; heroMiniTry.style.display='none'; }
     document.getElementById('heroName').textContent='Sua vitrine está pronta';
-    document.getElementById('heroCategory').textContent='Cadastre roupas para exibir aqui';
+    document.getElementById('heroCategory').textContent='Novidades e inspirações serão apresentadas aqui.';
   }
 
   if(!items.length){
-    grid.innerHTML='<div class="empty">Nenhuma roupa cadastrada nesta loja ainda.</div>';
+    grid.innerHTML='<div class="empty">Novas peças serão adicionadas em breve.</div>';
     list.innerHTML='<div class="empty">Nenhum look disponível.</div>';
     return;
   }
@@ -236,6 +415,7 @@ async function carregarVitrine(){
     VitrinePro.items=itensDaLoja(store);
     VitrinePro.featured=VitrinePro.items.find(x=>imagem(x)) || VitrinePro.items[0] || null;
     aplicarMarca(store);
+    aplicarCampanhaVitrine(store);
     renderizar();
   }catch(e){
     console.error('Erro ao carregar Vitrine Pro:',e);

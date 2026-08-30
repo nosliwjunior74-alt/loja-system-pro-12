@@ -5,6 +5,12 @@
     logo: '../assets/default-logo.svg',
     color: '#e33d8f'
   };
+  function normalizeBrandLogo(src){
+    const v=String(src||'').trim();
+    if(!v) return '/assets/default-logo.svg';
+    if(/^(?:https?:|data:|blob:|\/)/i.test(v)) return v;
+    return '/' + v.replace(/^(?:\.\.\/|\.\/)+/,'');
+  }
   function safeJson(v){ try { return JSON.parse(v || '{}'); } catch(e){ return {}; } }
   async function getCfg(){
     try {
@@ -35,6 +41,7 @@
   function applyImage(el, src, alt){ if (!el) return; el.src = src; el.alt = alt; el.style.display = ''; }
   async function apply(){
     const cfg = await getCfg();
+    cfg.logo = normalizeBrandLogo(cfg.logo);
     document.documentElement.style.setProperty('--brand-color', cfg.color);
     document.documentElement.style.setProperty('--pink-4', cfg.color);
     document.documentElement.style.setProperty('--cor-principal', cfg.color);

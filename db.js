@@ -97,6 +97,14 @@ function ensureTables(){
 try { db.exec("ALTER TABLE stores ADD COLUMN products TEXT"); } catch(e) {}
 try { db.exec("ALTER TABLE stores ADD COLUMN looks TEXT"); } catch(e) {}
 try { db.exec("ALTER TABLE stores ADD COLUMN roupas TEXT"); } catch(e) {}
+try { db.exec("ALTER TABLE stores ADD COLUMN vitrine_hero_image TEXT"); } catch(e) {}
+try { db.exec("ALTER TABLE stores ADD COLUMN vitrine_promo_eyebrow TEXT"); } catch(e) {}
+try { db.exec("ALTER TABLE stores ADD COLUMN vitrine_promo_title TEXT"); } catch(e) {}
+try { db.exec("ALTER TABLE stores ADD COLUMN vitrine_promo_description TEXT"); } catch(e) {}
+try { db.exec("ALTER TABLE stores ADD COLUMN vitrine_promo_text_color TEXT"); } catch(e) {}
+try { db.exec("ALTER TABLE stores ADD COLUMN vitrine_promo_bg_start TEXT"); } catch(e) {}
+try { db.exec("ALTER TABLE stores ADD COLUMN vitrine_promo_bg_end TEXT"); } catch(e) {}
+try { db.exec("ALTER TABLE stores ADD COLUMN vitrine_promo_active INTEGER DEFAULT 0"); } catch(e) {}
 }
 ensureTables();
 // ===== CHECKOUTS SEPARADOS: PRODUTOR E LOJISTAS =====
@@ -259,6 +267,14 @@ function rowToStore(row, baseUrl=''){
   const synced = syncStoreLicense(row.id) || row;
   const store = {
     id: synced.id, slug: synced.slug, name: synced.name, sub: synced.sub || '', color: synced.color || '#e33d8f', logo: synced.logo || 'assets/default-logo.svg',
+    vitrineHeroImage: synced.vitrine_hero_image || '',
+    vitrinePromoEyebrow: synced.vitrine_promo_eyebrow || '',
+    vitrinePromoTitle: synced.vitrine_promo_title || '',
+    vitrinePromoDescription: synced.vitrine_promo_description || '',
+    vitrinePromoTextColor: synced.vitrine_promo_text_color || '',
+    vitrinePromoBgStart: synced.vitrine_promo_bg_start || '',
+    vitrinePromoBgEnd: synced.vitrine_promo_bg_end || '',
+    vitrinePromoActive: Boolean(synced.vitrine_promo_active),
     email: synced.email || '', phone: synced.phone || '', cpf: synced.cpf || '', cnpj: synced.cnpj || '',
     cep: synced.cep || '', address: synced.address || '', addressNumber: synced.address_number || '',
     addressComplement: synced.address_complement || '', neighborhood: synced.neighborhood || '',
@@ -481,13 +497,21 @@ function updateStore(id, payload, baseUrl=''){
   const expiresAt = payload.expiresAt !== undefined ? payload.expiresAt : (current.expires_at || '');
   const licenseKey = generateLicenseKey(id, slug, expiresAt);
   const passwordHash = payload.password ? hashPassword(payload.password) : current.password_hash;
-  db.prepare(`UPDATE stores SET slug=@slug,name=@name,sub=@sub,color=@color,logo=@logo,email=@email,phone=@phone,cpf=@cpf,cnpj=@cnpj,cep=@cep,address=@address,address_number=@address_number,address_complement=@address_complement,neighborhood=@neighborhood,city=@city,state=@state,contract_date=@contract_date,license_start_date=@license_start_date,contract_value_cents=@contract_value_cents,contract_status=@contract_status,producer_payment_methods=@producer_payment_methods,customer_payment_methods=@customer_payment_methods,login=@login,password_hash=@password_hash,status=@status,plan=@plan,billing_cycle=@billing_cycle,expires_at=@expires_at,license_key=@license_key,custom_domain=@custom_domain,support_config=@support_config,
+  db.prepare(`UPDATE stores SET slug=@slug,name=@name,sub=@sub,color=@color,logo=@logo,vitrine_hero_image=@vitrine_hero_image,vitrine_promo_eyebrow=@vitrine_promo_eyebrow,vitrine_promo_title=@vitrine_promo_title,vitrine_promo_description=@vitrine_promo_description,vitrine_promo_text_color=@vitrine_promo_text_color,vitrine_promo_bg_start=@vitrine_promo_bg_start,vitrine_promo_bg_end=@vitrine_promo_bg_end,vitrine_promo_active=@vitrine_promo_active,email=@email,phone=@phone,cpf=@cpf,cnpj=@cnpj,cep=@cep,address=@address,address_number=@address_number,address_complement=@address_complement,neighborhood=@neighborhood,city=@city,state=@state,contract_date=@contract_date,license_start_date=@license_start_date,contract_value_cents=@contract_value_cents,contract_status=@contract_status,producer_payment_methods=@producer_payment_methods,customer_payment_methods=@customer_payment_methods,login=@login,password_hash=@password_hash,status=@status,plan=@plan,billing_cycle=@billing_cycle,expires_at=@expires_at,license_key=@license_key,custom_domain=@custom_domain,support_config=@support_config,
 estoque=@estoque,
 products=@products,
 looks=@looks,
 roupas=@roupas,
 updated_at=@updated_at WHERE id=@id`).run({
     id, slug, name: payload.name ?? current.name, sub: payload.sub ?? current.sub, color: payload.color ?? current.color, logo: payload.logo ?? current.logo,
+    vitrine_hero_image: payload.vitrineHeroImage !== undefined ? payload.vitrineHeroImage : (current.vitrine_hero_image ?? ''),
+    vitrine_promo_eyebrow: payload.vitrinePromoEyebrow !== undefined ? payload.vitrinePromoEyebrow : (current.vitrine_promo_eyebrow ?? ''),
+    vitrine_promo_title: payload.vitrinePromoTitle !== undefined ? payload.vitrinePromoTitle : (current.vitrine_promo_title ?? ''),
+    vitrine_promo_description: payload.vitrinePromoDescription !== undefined ? payload.vitrinePromoDescription : (current.vitrine_promo_description ?? ''),
+    vitrine_promo_text_color: payload.vitrinePromoTextColor !== undefined ? payload.vitrinePromoTextColor : (current.vitrine_promo_text_color ?? ''),
+    vitrine_promo_bg_start: payload.vitrinePromoBgStart !== undefined ? payload.vitrinePromoBgStart : (current.vitrine_promo_bg_start ?? ''),
+    vitrine_promo_bg_end: payload.vitrinePromoBgEnd !== undefined ? payload.vitrinePromoBgEnd : (current.vitrine_promo_bg_end ?? ''),
+    vitrine_promo_active: payload.vitrinePromoActive !== undefined ? (payload.vitrinePromoActive ? 1 : 0) : (current.vitrine_promo_active ?? 0),
     email: payload.email ?? current.email, phone: payload.phone ?? current.phone, cpf: payload.cpf ?? current.cpf ?? '', cnpj: payload.cnpj ?? current.cnpj ?? '',
     cep: payload.cep ?? current.cep ?? '',
     address: payload.address ?? current.address ?? '',

@@ -94,14 +94,54 @@
             </div>
             <div class='tool-actions'>
               <button class='action-btn full' id='changeLogoBtn' type='button'>🖼️ Trocar logo</button>
+              <button class='action-btn full' id='changeHeroImageBtn' type='button'>Trocar imagem da Vitrine</button>
               <div class='tool-info'>A etiqueta de status, o status da licença e a data de expiração são mostrados logo acima, no topo do painel.</div>
             </div>
+          </div>
+          <div class='divider'></div>
+          <h3>Vitrine &amp; Campanhas</h3>
+          <p>Edite somente o conteudo da campanha. O layout profissional da Vitrine permanece protegido.</p>
+          <div class='tool-grid' id='vitrineCampaignFields'>
+            <div class='tool-field'>
+              <label for='vitrinePromoEyebrow'>Chamada pequena</label>
+              <input id='vitrinePromoEyebrow' type='text' maxlength='80' value='Vitrine da loja' placeholder='Ex.: Oferta da semana'>
+            </div>
+            <div class='tool-field'>
+              <label for='vitrinePromoTitle'>Titulo principal</label>
+              <input id='vitrinePromoTitle' type='text' maxlength='140' value='Descubra seu proximo look.' placeholder='Ex.: Toda a colecao com 20% OFF'>
+            </div>
+            <div class='tool-field'>
+              <label for='vitrinePromoDescription'>Descricao</label>
+              <textarea id='vitrinePromoDescription' maxlength='400' rows='4' placeholder='Escreva a chamada da campanha'>Novidades, destaques e pecas escolhidas para voce. Selecione um modelo e leve-o direto para o provador virtual.</textarea>
+            </div>
+            <div class='tool-field'>
+              <label for='vitrinePromoTextColor'>Cor principal do texto</label>
+              <input id='vitrinePromoTextColor' type='color' value='#ffffff'>
+            </div>
+            <div class='tool-field'>
+              <label for='vitrinePromoBgStart'>Cor inicial do fundo</label>
+              <input id='vitrinePromoBgStart' type='color' value='#1f1119'>
+            </div>
+            <div class='tool-field'>
+              <label for='vitrinePromoBgEnd'>Cor final do fundo</label>
+              <input id='vitrinePromoBgEnd' type='color' value='#7a2050'>
+            </div>
+            <label class='tool-info' style='display:flex;align-items:center;gap:9px'>
+              <input id='vitrinePromoActive' type='checkbox'>
+              Campanha promocional ativa
+            </label>
+            <div class='tool-actions'>
+              <button class='action-btn full' id='saveVitrineCampaignBtn' type='button'>Salvar / Atualizar Vitrine</button>
+              <button class='action-btn full' id='restoreOfficialVitrineBtn' type='button'>Usar chamada oficial</button>
+            </div>
+            <div class='tool-info'>Sem campanha ativa, a Vitrine volta automaticamente para a chamada oficial preservada.</div>
           </div>
         </div>
       </div>
 
       <div class='actions action-stack'>
         <input id='clientLogoFile' type='file' accept='image/*' style='display:none'>
+        <input id='clientHeroImageFile' type='file' accept='image/*' style='display:none'>
         <button class='action-btn' id='logoutBtn' type='button'>⎋ Sair</button>
       </div>
     </aside>
@@ -149,7 +189,18 @@ console.log('LocalStorageManager=', window.LocalStorageManager);
     const title = document.getElementById('currentTitle');
     const changeLogoBtn = document.getElementById('changeLogoBtn');
     const clientLogoFile = document.getElementById('clientLogoFile');
+    const changeHeroImageBtn = document.getElementById('changeHeroImageBtn');
+    const clientHeroImageFile = document.getElementById('clientHeroImageFile');
     const clientColorInput = document.getElementById('clientColorInput');
+    const vitrinePromoEyebrow = document.getElementById('vitrinePromoEyebrow');
+    const vitrinePromoTitle = document.getElementById('vitrinePromoTitle');
+    const vitrinePromoDescription = document.getElementById('vitrinePromoDescription');
+    const vitrinePromoTextColor = document.getElementById('vitrinePromoTextColor');
+    const vitrinePromoBgStart = document.getElementById('vitrinePromoBgStart');
+    const vitrinePromoBgEnd = document.getElementById('vitrinePromoBgEnd');
+    const vitrinePromoActive = document.getElementById('vitrinePromoActive');
+    const saveVitrineCampaignBtn = document.getElementById('saveVitrineCampaignBtn');
+    const restoreOfficialVitrineBtn = document.getElementById('restoreOfficialVitrineBtn');
     const toggleClientToolsBtn = document.getElementById('toggleClientToolsBtn');
     const clientToolsPanel = document.getElementById('clientToolsPanel');
     let currentStore = null;
@@ -279,6 +330,13 @@ applyStore(store, false);
       document.documentElement.style.setProperty('--pink-4', store.color || '#e33d8f');
       document.documentElement.style.setProperty('--brand-color', store.color || '#e33d8f');
       clientColorInput.value = store.color || '#e33d8f';
+      if(vitrinePromoEyebrow) vitrinePromoEyebrow.value = store.vitrinePromoEyebrow || 'Vitrine da loja';
+      if(vitrinePromoTitle) vitrinePromoTitle.value = store.vitrinePromoTitle || 'Descubra seu proximo look.';
+      if(vitrinePromoDescription) vitrinePromoDescription.value = store.vitrinePromoDescription || 'Novidades, destaques e pecas escolhidas para voce. Selecione um modelo e leve-o direto para o provador virtual.';
+      if(vitrinePromoTextColor) vitrinePromoTextColor.value = /^#[0-9a-f]{6}$/i.test(store.vitrinePromoTextColor || '') ? store.vitrinePromoTextColor : '#ffffff';
+      if(vitrinePromoBgStart) vitrinePromoBgStart.value = /^#[0-9a-f]{6}$/i.test(store.vitrinePromoBgStart || '') ? store.vitrinePromoBgStart : '#1f1119';
+      if(vitrinePromoBgEnd) vitrinePromoBgEnd.value = /^#[0-9a-f]{6}$/i.test(store.vitrinePromoBgEnd || '') ? store.vitrinePromoBgEnd : '#7a2050';
+      if(vitrinePromoActive) vitrinePromoActive.checked = Boolean(store.vitrinePromoActive);
 
       const badge = document.getElementById('storeStatusBadge');
       const st = store.status || 'ativo';
@@ -360,6 +418,87 @@ return data.store;
           }
         };
         reader.readAsDataURL(file);
+      });
+    }
+
+    if(changeHeroImageBtn && clientHeroImageFile){
+      changeHeroImageBtn.addEventListener('click', () => clientHeroImageFile.click());
+      clientHeroImageFile.addEventListener('change', async () => {
+        const file = clientHeroImageFile.files && clientHeroImageFile.files[0];
+        if(!file) return;
+
+        if(!String(file.type || '').startsWith('image/')){
+          alert('Selecione um arquivo de imagem valido.');
+          clientHeroImageFile.value = '';
+          return;
+        }
+
+        if(file.size > 2000000){
+          alert('A imagem da Vitrine deve ter no maximo 2 MB.');
+          clientHeroImageFile.value = '';
+          return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = async () => {
+          try {
+            const updatedStore = await persistClientBranding({
+              vitrineHeroImage: reader.result
+            });
+            if(updatedStore) applyStore(updatedStore, currentOnline);
+            alert('Imagem principal da Vitrine atualizada com sucesso.');
+          } catch(error) {
+            alert(error.message || 'Nao foi possivel trocar a imagem da Vitrine.');
+          } finally {
+            clientHeroImageFile.value = '';
+          }
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+
+    if(saveVitrineCampaignBtn){
+      saveVitrineCampaignBtn.addEventListener('click', async () => {
+        try {
+          const updatedStore = await persistClientBranding({
+            vitrinePromoEyebrow: (vitrinePromoEyebrow?.value || '').trim(),
+            vitrinePromoTitle: (vitrinePromoTitle?.value || '').trim(),
+            vitrinePromoDescription: (vitrinePromoDescription?.value || '').trim(),
+            vitrinePromoTextColor: vitrinePromoTextColor?.value || '#ffffff',
+            vitrinePromoBgStart: vitrinePromoBgStart?.value || '#1f1119',
+            vitrinePromoBgEnd: vitrinePromoBgEnd?.value || '#7a2050',
+            vitrinePromoActive: Boolean(vitrinePromoActive?.checked)
+          });
+          if(updatedStore) applyStore(updatedStore, currentOnline);
+          alert(vitrinePromoActive?.checked
+            ? 'Campanha da Vitrine atualizada com sucesso.'
+            : 'Configuracao salva. A chamada oficial permanece ativa.');
+        } catch(error) {
+          alert(error.message || 'Nao foi possivel atualizar a Vitrine.');
+        }
+      });
+    }
+
+    if(restoreOfficialVitrineBtn){
+      restoreOfficialVitrineBtn.addEventListener('click', async () => {
+        const official = {
+          vitrinePromoEyebrow: 'Vitrine da loja',
+          vitrinePromoTitle: 'Descubra seu proximo look.',
+          vitrinePromoDescription: 'Novidades, destaques e pecas escolhidas para voce. Selecione um modelo e leve-o direto para o provador virtual.',
+          vitrinePromoTextColor: '#ffffff',
+          vitrinePromoBgStart: '#1f1119',
+          vitrinePromoBgEnd: '#7a2050',
+          vitrinePromoActive: false
+        };
+
+        try {
+          const updatedStore = await persistClientBranding(official);
+          if(updatedStore) applyStore(updatedStore, currentOnline);
+          alert('Chamada oficial da Vitrine restaurada.');
+        } catch(error) {
+          alert(error.message || 'Nao foi possivel restaurar a chamada oficial.');
+        }
       });
     }
 

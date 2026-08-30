@@ -1,4 +1,4 @@
-
+﻿
 window.WhatsAppModule={
   open(phone=''){
     const txt=encodeURIComponent('Foto do look pronta. Abra o WhatsApp Web e anexe a imagem salva.');
@@ -6,5 +6,6 @@ window.WhatsAppModule={
     if(phone){const clean=String(phone).replace(/\D/g,''); if(clean) url=`https://wa.me/55${clean}?text=${txt}`;}
     window.open(url,'_blank');
   },
-  saveAndOpen(phone=''){CameraModule.savePhoto(); setTimeout(()=>this.open(phone),700);}
+  saveAndOpen(phone=''){CameraModule.savePhoto('poseCanvas'); setTimeout(()=>this.open(phone),700);}
 };
+

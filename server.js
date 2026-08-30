@@ -2453,6 +2453,14 @@ res.json({
     sub: store.sub || '',
     color: store.color || '#e33d8f',
     logo: store.logo || 'assets/default-logo.svg',
+    vitrineHeroImage: store.vitrineHeroImage || '',
+    vitrinePromoEyebrow: store.vitrinePromoEyebrow || '',
+    vitrinePromoTitle: store.vitrinePromoTitle || '',
+    vitrinePromoDescription: store.vitrinePromoDescription || '',
+    vitrinePromoTextColor: store.vitrinePromoTextColor || '',
+    vitrinePromoBgStart: store.vitrinePromoBgStart || '',
+    vitrinePromoBgEnd: store.vitrinePromoBgEnd || '',
+    vitrinePromoActive: Boolean(store.vitrinePromoActive),
     phone: store.phone || '',
     status: store.status || 'inativo',
     licenseStatus: store.licenseStatus || '',
@@ -2629,6 +2637,47 @@ if (typeof req.body?.logo === 'string') {
         payload.logo = logo;
     }
 }
+
+if (typeof req.body?.vitrineHeroImage === 'string') {
+  const vitrineHeroImage = req.body.vitrineHeroImage.trim();
+
+  if (
+    vitrineHeroImage === '' ||
+    (
+      vitrineHeroImage.startsWith('data:image/') &&
+      vitrineHeroImage.length < 3000000
+    )
+  ) {
+    payload.vitrineHeroImage = vitrineHeroImage;
+  }
+}
+
+if(typeof req.body?.vitrinePromoEyebrow === 'string')
+  payload.vitrinePromoEyebrow = req.body.vitrinePromoEyebrow.trim().slice(0, 80);
+
+if(typeof req.body?.vitrinePromoTitle === 'string')
+  payload.vitrinePromoTitle = req.body.vitrinePromoTitle.trim().slice(0, 140);
+
+if(typeof req.body?.vitrinePromoDescription === 'string')
+  payload.vitrinePromoDescription = req.body.vitrinePromoDescription.trim().slice(0, 400);
+
+if(typeof req.body?.vitrinePromoTextColor === 'string'){
+  const value = req.body.vitrinePromoTextColor.trim();
+  if(/^#[0-9a-f]{6}$/i.test(value)) payload.vitrinePromoTextColor = value;
+}
+
+if(typeof req.body?.vitrinePromoBgStart === 'string'){
+  const value = req.body.vitrinePromoBgStart.trim();
+  if(/^#[0-9a-f]{6}$/i.test(value)) payload.vitrinePromoBgStart = value;
+}
+
+if(typeof req.body?.vitrinePromoBgEnd === 'string'){
+  const value = req.body.vitrinePromoBgEnd.trim();
+  if(/^#[0-9a-f]{6}$/i.test(value)) payload.vitrinePromoBgEnd = value;
+}
+
+if(typeof req.body?.vitrinePromoActive === 'boolean')
+  payload.vitrinePromoActive = req.body.vitrinePromoActive;
 
 if(typeof req.body?.phone === 'string'){
   payload.phone = req.body.phone.trim().slice(0, 30);

@@ -323,7 +323,7 @@
           <img
             id="restMainLogo"
             class="rest-logo"
-            src="imagens/logo.png"
+            src="/assets/default-logo.svg"
             alt="Logo da loja"
           >
         </div>
@@ -355,14 +355,6 @@
       >
         &larr; Voltar ao Provador
       </button>
-
-      <button
-        id="backToAdmin"
-        class="rest-back"
-        type="button"
-      >
-        &#9881; Voltar ao Painel da Loja
-      </button>
     </div>
 
     <div
@@ -371,7 +363,7 @@
     >
       <img
         id="restSmallLogo"
-        src="imagens/logo.png"
+        src="/assets/default-logo.svg"
         alt=""
       >
       <span id="restSmallName">
@@ -432,11 +424,7 @@
 
     const backToFitting =
       document.getElementById('backToFitting');
-
-    const backToAdmin =
-      document.getElementById('backToAdmin');
-
-    let playlist = [];
+let playlist = [];
     let settings = {
       imageSeconds:6,
       fitMode:'cover'
@@ -467,12 +455,7 @@
     backToFitting.onclick = ()=>{
       if(window.ProNavigation){ ProNavigation.back('provador.html'); } else { location.href = fittingUrl(); }
     };
-
-    backToAdmin.onclick = ()=>{
-      if(window.ProNavigation){ ProNavigation.go('admin.html'); } else { location.href = adminUrl(); }
-    };
-
-    function cleanupMedia(){
+function cleanupMedia(){
       if(currentTimer){
         clearTimeout(currentTimer);
         currentTimer = null;
@@ -493,11 +476,24 @@
 
     function setBrand(store){
       const fallbackLogo =
-        'imagens/logo.png';
+        '/assets/default-logo.svg';
+
+      const rawLogo =
+        store && store.logo
+          ? String(store.logo).trim()
+          : '';
+
+      const isAbsoluteLogo =
+        /^(?:https?:|data:|blob:)/i.test(rawLogo) ||
+        rawLogo.startsWith('/');
+
+      let cleanLogo = rawLogo;
+      while(cleanLogo.startsWith('../')) cleanLogo = cleanLogo.slice(3);
+      while(cleanLogo.startsWith('./')) cleanLogo = cleanLogo.slice(2);
 
       const logo =
-        store && store.logo
-          ? store.logo
+        rawLogo
+          ? (isAbsoluteLogo ? rawLogo : '/' + cleanLogo)
           : fallbackLogo;
 
       const name =

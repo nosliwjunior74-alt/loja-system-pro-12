@@ -1,5 +1,11 @@
 (function(){
   const DEFAULTS = {name:'Sua Loja', sub:'Dashboard Integrado Multi-Loja', logo:'../assets/default-logo.svg', color:'#e33d8f'};
+  function normalizeBrandLogo(src){
+    const v=String(src||'').trim();
+    if(!v) return '/assets/default-logo.svg';
+    if(/^(?:https?:|data:|blob:|\/)/i.test(v)) return v;
+    return '/' + v.replace(/^(?:\.\.\/|\.\/)+/,'');
+  }
   function localCfg(){
     try{
       const st = window.parent?.LocalStoreManager?.getActive?.() || window.LocalStoreManager?.getActive?.();
@@ -13,6 +19,7 @@
   }
   async function apply(){
     const cfg = await fetchCfg();
+    cfg.logo = normalizeBrandLogo(cfg.logo);
     document.documentElement.style.setProperty('--brand-color', cfg.color || DEFAULTS.color);
     document.documentElement.style.setProperty('--pink-4', cfg.color || DEFAULTS.color);
     document.querySelectorAll('[data-brand-name], .brand-name').forEach(el => el.textContent = cfg.name || DEFAULTS.name);

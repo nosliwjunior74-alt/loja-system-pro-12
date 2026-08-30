@@ -25,7 +25,15 @@ window.CameraModule = {
       video.srcObject = stream;
       await video.play();
 
-      if (tip) tip.textContent = 'Câmera ativa.';
+      if (tip) {
+        tip.textContent = 'Câmera ativa.';
+        tip.classList.remove('is-idle');
+        setTimeout(()=>{
+          if (tip.textContent === 'Câmera ativa.') {
+            tip.classList.add('is-idle');
+          }
+        }, 1800);
+      }
       this.drawLoop(video, canvas);
       this.initPose(video, canvas, tip);
 

@@ -113,7 +113,7 @@ function buildActivationEmail(data = {}) {
     `${brandName} - pagamento confirmado e loja ativada`;
 
   const text = [
-    `Ol?, ${recipientName}!`,
+    `Olá, ${recipientName}!`,
     '',
     'Seu pagamento foi confirmado com sucesso.',
     `Loja: ${storeName}`,
@@ -121,12 +121,12 @@ function buildActivationEmail(data = {}) {
     `Ciclo: ${billingCycle}`,
     `Valor: ${amount}`,
     '',
-    'Sua loja j? foi ativada.',
+    'Sua loja já foi ativada.',
     '',
     'Para concluir o primeiro acesso e criar sua senha, utilize o link seguro abaixo:',
     firstAccessUrl,
     '',
-    'Por seguran?a, nenhuma senha ? enviada por e-mail.',
+    'Por segurança, nenhuma senha é enviada por e-mail.',
     '',
     `Equipe ${brandName}`
   ].join('\n');
@@ -146,11 +146,11 @@ function buildActivationEmail(data = {}) {
         Pagamento confirmado
       </h1>
 
-      <p>Ol?, <strong>${safeName}</strong>!</p>
+      <p>Olá, <strong>${safeName}</strong>!</p>
 
       <p>
         Seu pagamento foi confirmado e sua loja
-        <strong>${safeStore}</strong> j? foi ativada.
+        <strong>${safeStore}</strong> já foi ativada.
       </p>
 
       <div style="background:#faf4f7;border-radius:12px;padding:18px;margin:22px 0;">
@@ -161,7 +161,7 @@ function buildActivationEmail(data = {}) {
 
       <p>
         Para concluir seu primeiro acesso e criar sua senha,
-        clique no bot?o abaixo:
+        clique no botão abaixo:
       </p>
 
       <p style="margin:28px 0;text-align:center;">
@@ -174,7 +174,7 @@ function buildActivationEmail(data = {}) {
       </p>
 
       <p style="font-size:13px;color:#666;">
-        Por seguran?a, nenhuma senha ? enviada por e-mail ou WhatsApp.
+        Por segurança, nenhuma senha é enviada por e-mail ou WhatsApp.
       </p>
 
       <p style="margin-top:28px;">
@@ -247,9 +247,152 @@ async function sendActivationEmail(data = {}) {
   }
 }
 
+
+function buildManualWelcomeEmail(data = {}) {
+  const brandName =
+    String(data.brandName || DEFAULT_BRAND || 'Provador Pro System').trim();
+
+  const recipientName =
+    String(data.recipientName || 'Cliente').trim();
+
+  const storeName =
+    String(data.storeName || '').trim();
+
+  const plan =
+    String(data.plan || '').trim();
+
+  const loginUrl =
+    String(data.loginUrl || '').trim();
+
+  const safeBrand = escapeHtml(brandName);
+  const safeName = escapeHtml(recipientName);
+  const safeStore = escapeHtml(storeName);
+  const safePlan = escapeHtml(plan);
+  const safeUrl = escapeHtml(loginUrl);
+
+  const subject =
+    `${brandName} - sua loja está pronta para o primeiro acesso`;
+
+  const text = [
+    `Olá, ${recipientName}!`,
+    '',
+    `Sua loja ${storeName} foi criada e liberada no ${brandName}.`,
+    plan ? `Plano: ${plan}` : '',
+    '',
+    'Use o link abaixo para acessar sua loja:',
+    loginUrl,
+    '',
+    'Utilize a senha inicial informada pelo administrador.',
+    'No primeiro login, o sistema solicitará a criação de uma nova senha.',
+    '',
+    'Por segurança, nenhuma senha é enviada por e-mail ou WhatsApp.',
+    '',
+    `Equipe ${brandName}`
+  ].filter(Boolean).join('\n');
+
+  const html = `
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+</head>
+<body style="margin:0;padding:0;background:#f6f6f6;font-family:Arial,sans-serif;color:#222;">
+  <div style="max-width:620px;margin:0 auto;padding:28px 16px;">
+    <div style="background:#ffffff;border-radius:16px;padding:32px;box-shadow:0 4px 20px rgba(0,0,0,.07);">
+      <h1 style="margin:0 0 20px;font-size:24px;">Bem-vindo ao ${safeBrand}</h1>
+      <p>Olá, <strong>${safeName}</strong>!</p>
+      <p>Sua loja <strong>${safeStore}</strong> foi criada e liberada.</p>
+      ${safePlan ? `<p><strong>Plano:</strong> ${safePlan}</p>` : ''}
+      <p>
+        Use o botão abaixo para fazer seu primeiro acesso.
+        Utilize a senha inicial informada pelo administrador.
+        No primeiro login, o sistema solicitará a criação de uma nova senha.
+      </p>
+      <p style="margin:28px 0;text-align:center;">
+        <a
+          href="${safeUrl}"
+          style="display:inline-block;padding:14px 24px;border-radius:10px;background:#c44577;color:#ffffff;text-decoration:none;font-weight:bold;"
+        >
+          Acessar minha loja
+        </a>
+      </p>
+      <p style="font-size:13px;color:#666;">
+        Por segurança, nenhuma senha é enviada por e-mail ou WhatsApp.
+      </p>
+      <p style="margin-top:28px;">Equipe ${safeBrand}</p>
+    </div>
+  </div>
+</body>
+</html>`;
+
+  return {
+    subject,
+    text,
+    html
+  };
+}
+
+async function sendManualWelcomeEmail(data = {}) {
+  const to = String(data.to || '').trim().toLowerCase();
+  const loginUrl = String(data.loginUrl || '').trim();
+
+  if (!to) {
+    return {
+      ok: false,
+      error: 'E-mail do cliente nao informado.'
+    };
+  }
+
+  if (!loginUrl) {
+    return {
+      ok: false,
+      error: 'Link de acesso da loja nao informado.'
+    };
+  }
+
+  if (!isEmailConfigured()) {
+    return {
+      ok: false,
+      error: 'Envio de e-mail nao configurado no servidor.'
+    };
+  }
+
+  try {
+    const message = buildManualWelcomeEmail(data);
+
+    const info = await getTransporter().sendMail({
+      from: EMAIL_FROM,
+      to,
+      replyTo: EMAIL_REPLY_TO || undefined,
+      subject: message.subject,
+      text: message.text,
+      html: message.html
+    });
+
+    return {
+      ok: true,
+      messageId: String(info.messageId || ''),
+      accepted: Array.isArray(info.accepted)
+        ? info.accepted.map(String)
+        : []
+    };
+  } catch (err) {
+    return {
+      ok: false,
+      error: String(
+        err?.message ||
+        'Falha ao enviar e-mail de boas-vindas.'
+      )
+    };
+  }
+}
+
 module.exports = {
   isEmailConfigured,
   getEmailConfigStatus,
   buildActivationEmail,
-  sendActivationEmail
+  sendActivationEmail,
+  buildManualWelcomeEmail,
+  sendManualWelcomeEmail
 };

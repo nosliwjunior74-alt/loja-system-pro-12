@@ -800,6 +800,28 @@ Formas de pagamento que esta loja aceita dos seus clientes.
 </label>
 </div>
 
+<div class="field full" id="paymentAdminCompact" style="margin-top:6px;padding:12px 14px;border:1px solid #ead3df;border-radius:12px;background:#fffafd;">
+  <div style="display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;">
+    <strong style="color:#7a3157;">Cobrança da loja selecionada</strong>
+    <span id="confianca72Status" style="font-size:12px;color:#765568;">Confiança 72h: não ativa</span>
+  </div>
+  <div id="cobrancaLojaList" style="margin-top:8px;font-size:13px;color:#5f4a57;">Selecione uma loja para carregar a cobrança.</div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">
+    <button id="btnTrust72" type="button" disabled>Confiar 72h</button>
+    <button id="btnCancelTrust" type="button" disabled>Cancelar confiança</button>
+  </div>
+
+  <div style="margin-top:12px;padding-top:10px;border-top:1px dashed #ead3df;">
+    <div style="display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;">
+      <strong style="color:#7a3157;font-size:13px;">Recuperação do checkout</strong>
+      <button id="btnRefreshCheckoutRecovery" type="button" style="width:auto;padding:6px 9px;">Atualizar</button>
+    </div>
+    <div id="checkoutRecoveryList" style="margin-top:8px;font-size:13px;color:#5f4a57;">
+      Carregando pedidos que precisam de atenção...
+    </div>
+  </div>
+</div>
+
 </div>
 </div>
 </details>
@@ -2079,6 +2101,24 @@ const password=
 el('storePassword').value.trim();
 
 
+if(!id){
+  const rawName=el('storeName').value.trim();
+  const email=el('storeEmail').value.trim().toLowerCase();
+  const phone=el('storePhone').value.trim();
+
+  if(!rawName){
+    throw new Error('Digite o nome da loja.');
+  }
+
+  if(!email || !email.includes('@') || !email.includes('.')){
+    throw new Error('Digite um e-mail valido do lojista.');
+  }
+
+  if(!phone){
+    throw new Error('Digite o WhatsApp do lojista com DDD e numero.');
+  }
+}
+
 if(
 !id &&
 !password
@@ -2379,6 +2419,8 @@ fillForm(store);
 render();
 
 syncParent(store);
+
+await loadPaymentAdminCompact(store);
 
 
 el('status').textContent=
@@ -3076,6 +3118,329 @@ function brlToCents(value,label){
   return Math.round(amount*100);
 }
 
+
+function escapeHtml(value){
+  return String(value==null?'':value)
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;')
+    .replace(/'/g,'&#39;');
+}
+
+async function loadPaymentAdminCompact(store=null){
+  const listEl=el('cobrancaLojaList');
+  const trustEl=el('confianca72Status');
+  const trustBtn=el('btnTrust72');
+  const cancelBtn=el('btnCancelTrust');
+
+  if(!listEl||!trustEl||!trustBtn||!cancelBtn)return;
+
+  const selected=store||getActiveStore()||null;
+
+  if(!selected){
+    listEl.textContent='Selecione uma loja para carregar a cobrança.';
+    trustEl.textContent='Confiança 72h: não ativa';
+    trustBtn.disabled=true;
+    cancelBtn.disabled=true;
+    return;
+  }
+
+  const untilText=String(selected.trustAccessUntil||'').trim();
+  const untilDate=untilText?new Date(untilText):null;
+  const trustActive=Boolean(
+    untilDate &&
+    !Number.isNaN(untilDate.getTime()) &&
+    untilDate>new Date()
+  );
+
+  trustEl.textContent=trustActive
+    ? `Confiança 72h ativa até ${untilDate.toLocaleString('pt-BR')}`
+    : 'Confiança 72h: não ativa';
+
+  trustBtn.disabled=true;
+  cancelBtn.disabled=!online||!trustActive;
+
+  if(!online){
+    listEl.textContent='Controle de cobrança disponível somente no modo online.';
+    return;
+  }
+
+  try{
+    const data=await api(
+      '/api/admin/payments?storeId='+
+      encodeURIComponent(selected.id)
+    );
+
+    const payments=Array.isArray(data.payments)
+      ? data.payments
+      : [];
+
+    const openPayment=payments.find(
+      payment=>
+        payment.status==='pending' ||
+        payment.status==='overdue'
+    );
+
+    if(!openPayment){
+      listEl.textContent='Nenhuma cobrança pendente ou vencida.';
+      trustBtn.disabled=true;
+      return;
+    }
+
+    trustBtn.disabled=
+      !online ||
+      trustActive ||
+      selected.licenseStatus==='ativa';
+
+    const amount=
+      (Number(openPayment.amountCents||0)/100)
+        .toLocaleString('pt-BR',{
+          style:'currency',
+          currency:'BRL'
+        });
+
+    const due=openPayment.dueAt
+      ? new Date(openPayment.dueAt+'T12:00:00')
+          .toLocaleDateString('pt-BR')
+      : 'sem vencimento';
+
+    const statusLabel=
+      openPayment.status==='overdue'
+        ? 'Vencida'
+        : 'Pendente';
+
+    listEl.innerHTML=
+      `<span><strong>${statusLabel}:</strong> ${amount} · venc. ${due}</span> `+
+      `<button id="btnConfirmManualPayment" type="button" style="width:auto;margin-left:8px;padding:7px 10px;">Confirmar pagamento</button>`;
+
+    el('btnConfirmManualPayment')
+      .addEventListener(
+        'click',
+        ()=>confirmManualPayment(openPayment.id)
+          .catch(e=>el('status').textContent=e.message)
+      );
+
+  }catch(e){
+    listEl.textContent=e.message||'Não foi possível carregar a cobrança.';
+  }
+}
+
+async function confirmManualPayment(paymentId){
+  if(!activeStoreId){
+    throw new Error('Selecione uma loja antes de confirmar o pagamento.');
+  }
+
+  if(!window.confirm(
+    'Confirma que você verificou o recebimento deste pagamento?'
+  )){
+    return;
+  }
+
+  await api(
+    '/api/admin/payments/'+
+    encodeURIComponent(paymentId)+
+    '/mark-paid',
+    {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({})
+    }
+  );
+
+  await loadStores();
+  await loadPaymentAdminCompact(getActiveStore());
+
+  el('status').textContent=
+    'Pagamento confirmado manualmente e licença atualizada.';
+}
+
+async function grantSelectedStoreTrust72(){
+  if(!activeStoreId){
+    throw new Error('Selecione uma loja antes de liberar por confiança.');
+  }
+
+  const reason=window.prompt(
+    'Motivo da liberação por confiança:',
+    'Comprovante enviado pelo lojista; aguardando confirmação do pagamento.'
+  );
+
+  if(reason===null)return;
+
+  if(!window.confirm(
+    'Liberar esta loja por confiança durante 72 horas?'
+  )){
+    return;
+  }
+
+  await api(
+    '/api/admin/stores/'+
+    encodeURIComponent(activeStoreId)+
+    '/trust-access',
+    {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({reason:String(reason||'').trim()})
+    }
+  );
+
+  await loadStores();
+  await loadPaymentAdminCompact(getActiveStore());
+
+  el('status').textContent=
+    'Loja liberada por confiança durante 72 horas.';
+}
+
+async function cancelSelectedStoreTrust(){
+  if(!activeStoreId){
+    throw new Error('Selecione uma loja antes de cancelar a confiança.');
+  }
+
+  if(!window.confirm(
+    'Cancelar agora a liberação temporária por confiança?'
+  )){
+    return;
+  }
+
+  await api(
+    '/api/admin/stores/'+
+    encodeURIComponent(activeStoreId)+
+    '/trust-access/cancel',
+    {method:'POST'}
+  );
+
+  await loadStores();
+  await loadPaymentAdminCompact(getActiveStore());
+
+  el('status').textContent=
+    'Liberação por confiança cancelada.';
+}
+
+
+async function loadCheckoutRecovery(){
+  const listEl=el('checkoutRecoveryList');
+  const refreshBtn=el('btnRefreshCheckoutRecovery');
+
+  if(!listEl||!refreshBtn)return;
+
+  if(!online){
+    listEl.textContent='Recuperação do checkout disponível somente no modo online.';
+    refreshBtn.disabled=true;
+    return;
+  }
+
+  refreshBtn.disabled=true;
+  listEl.textContent='Carregando pedidos que precisam de atenção...';
+
+  try{
+    const data=await api('/api/admin/producer-checkout/recovery');
+    const orders=Array.isArray(data?.orders)?data.orders:[];
+
+    if(!orders.length){
+      listEl.textContent='Nenhum pedido do checkout precisa de recuperação.';
+      return;
+    }
+
+    const visible=orders.slice(0,5);
+
+    listEl.innerHTML=
+      visible.map(order=>{
+        const amount=
+          (Number(order.amountCents||0)/100)
+            .toLocaleString('pt-BR',{
+              style:'currency',
+              currency:'BRL'
+            });
+
+        const paid=order.status==='paid';
+        const statusLabel=paid
+          ? 'Pago · liberação pendente'
+          : 'Pagamento pendente';
+        const action=paid
+          ? 'retry-activation'
+          : 'confirm-paid';
+        const actionLabel=paid
+          ? 'Repetir liberação'
+          : 'Confirmar pagamento e liberar';
+
+        const contact=[
+          String(order.buyerEmail||'').trim(),
+          String(order.buyerPhone||'').trim()
+        ].filter(Boolean).join(' · ');
+
+        return (
+          '<div style="padding:8px 0;border-bottom:1px solid #f1dfe8;">'+
+            '<div><strong>'+escapeHtml(order.storeName||'Loja')+'</strong> · '+
+              escapeHtml(amount)+' · '+escapeHtml(statusLabel)+'</div>'+
+            (contact
+              ? '<div style="margin-top:2px;font-size:12px;color:#765568;">'+
+                  escapeHtml(contact)+
+                '</div>'
+              : '')+
+            '<button type="button" '+
+              'data-checkout-recovery-id="'+escapeHtml(order.id||'')+'" '+
+              'data-checkout-recovery-action="'+escapeHtml(action)+'" '+
+              'style="width:auto;margin-top:6px;padding:6px 9px;">'+
+              escapeHtml(actionLabel)+
+            '</button>'+
+          '</div>'
+        );
+      }).join('')+
+      (
+        orders.length>visible.length
+          ? '<div style="margin-top:7px;font-size:12px;color:#765568;">Mais '+
+              escapeHtml(String(orders.length-visible.length))+
+              ' pedido(s). Resolva os exibidos e clique em Atualizar.</div>'
+          : ''
+      );
+
+    listEl
+      .querySelectorAll('[data-checkout-recovery-id]')
+      .forEach(button=>{
+        button.addEventListener('click',()=>{
+          recoverProducerCheckoutOrder(
+            button.dataset.checkoutRecoveryId,
+            button.dataset.checkoutRecoveryAction
+          ).catch(e=>{
+            el('status').textContent=
+              e.message||'Não foi possível recuperar o pedido.';
+          });
+        });
+      });
+
+  }catch(e){
+    listEl.textContent=
+      e.message||'Não foi possível carregar a recuperação do checkout.';
+  }finally{
+    refreshBtn.disabled=false;
+  }
+}
+
+async function recoverProducerCheckoutOrder(orderId,action){
+  const confirmPaid=action==='confirm-paid';
+
+  const question=confirmPaid
+    ? 'Confirma que você verificou o recebimento deste pagamento? A loja será liberada pelo fluxo normal de pós-pagamento.'
+    : 'Repetir agora a liberação deste pedido que já está marcado como pago?';
+
+  if(!window.confirm(question))return;
+
+  const endpoint=
+    '/api/admin/producer-checkout/orders/'+
+    encodeURIComponent(orderId)+
+    '/'+
+    (confirmPaid?'confirm-paid':'retry-activation');
+
+  await api(endpoint,{method:'POST'});
+
+  await loadStores();
+  await loadCheckoutRecovery();
+
+  el('status').textContent=confirmPaid
+    ? 'Pagamento confirmado e liberação da loja processada.'
+    : 'Liberação do pedido pago processada novamente.';
+}
+
 async function loadProducerPlans(){
   const status=el('producerPlanStatus');
   try{
@@ -3121,8 +3486,13 @@ async function saveProducerPlans(){
 
 el('saveProducerPlansBtn').addEventListener('click',()=>saveProducerPlans().catch(e=>el('producerPlanStatus').textContent=e.message));
 
+el('btnTrust72').addEventListener('click',()=>grantSelectedStoreTrust72().catch(e=>el('status').textContent=e.message));
+el('btnCancelTrust').addEventListener('click',()=>cancelSelectedStoreTrust().catch(e=>el('status').textContent=e.message));
+el('btnRefreshCheckoutRecovery').addEventListener('click',()=>loadCheckoutRecovery().catch(e=>el('status').textContent=e.message));
+
 loadStores();
 loadProducerPlans();
+loadCheckoutRecovery();
 
 </script>
 

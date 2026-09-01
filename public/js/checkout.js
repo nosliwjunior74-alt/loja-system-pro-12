@@ -423,8 +423,8 @@
     const buyerCpfCnpj = $('buyerCpfCnpj').value.trim();
     const storeName = $('storeName').value.trim();
 
-    if (!buyerName || !buyerEmail || !storeName) {
-      showAlert('Preencha nome, e-mail e nome da loja.');
+    if (!buyerName || !buyerEmail || !buyerPhone || !storeName) {
+      showAlert('Preencha nome, e-mail, WhatsApp e nome da loja.');
       return;
     }
 
@@ -640,8 +640,8 @@
     const buyerCpfCnpj = $('buyerCpfCnpj').value.trim();
     const storeName = $('storeName').value.trim();
 
-    if (!buyerName || !buyerEmail || !storeName) {
-      showAlert('Preencha nome, e-mail e nome da loja.');
+    if (!buyerName || !buyerEmail || !buyerPhone || !storeName) {
+      showAlert('Preencha nome, e-mail, WhatsApp e nome da loja.');
       return;
     }
 

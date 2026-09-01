@@ -316,6 +316,13 @@ if(!store){
   return;
 }
 
+if(!store.initialSetupCompleted){
+  location.href=
+    '/configuracao-inicial-loja.html?loja='+
+    encodeURIComponent(store.slug);
+  return;
+}
+
 applyStore(store, false);
     }
 

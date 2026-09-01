@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Configuração Inicial da Loja</title>
+<style>
+:root{--brand:#e33d8f;--soft:rgba(227,61,143,.16)}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;font-family:Arial,sans-serif;color:#fff;background:linear-gradient(135deg,#101014 0%,#1b1020 48%,var(--brand) 140%);display:grid;place-items:center;padding:22px}
+.card{width:100%;max-width:760px;background:rgba(22,22,28,.95);border:1px solid rgba(255,255,255,.08);border-radius:26px;padding:30px;box-shadow:0 18px 45px rgba(0,0,0,.32)}
+h1{margin:0 0 8px;font-size:28px}.lead{margin:0 0 24px;color:#f5d7e6}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}.full{grid-column:1/-1}
+label{display:block;margin:0 0 7px;font-size:13px;font-weight:700;color:#f5d7e6}
+input{width:100%;border:1px solid #ddd;border-radius:16px;padding:14px 15px;font-size:15px;outline:none}
+input:focus{border-color:var(--brand);box-shadow:0 0 0 3px var(--soft)}
+button{width:100%;border:0;border-radius:16px;padding:15px;margin-top:22px;font-size:15px;font-weight:700;background:var(--brand);color:#fff;cursor:pointer}
+button:disabled{opacity:.55;cursor:not-allowed}
+#msg{min-height:20px;margin-top:14px;text-align:center;color:#ffd7e9}
+.note{margin-top:18px;padding:14px 16px;border-radius:16px;background:rgba(255,255,255,.06);color:#f5cfe0;font-size:13px}
+@media(max-width:650px){.grid{grid-template-columns:1fr}.full{grid-column:auto}.card{padding:22px}}
+</style>
+</head>
+<body>
+<main class="card">
+<h1>Configure sua loja</h1>
+<p class="lead">Confirme os dados principais antes de entrar no painel.</p>
+
+<form id="setupForm">
+<div class="grid">
+<div class="full">
+<label for="storeName">Nome da Loja *</label>
+<input id="storeName" maxlength="120" required>
+</div>
+
+<div>
+<label for="storeEmail">E-mail *</label>
+<input id="storeEmail" type="email" autocomplete="email" maxlength="180" required>
+</div>
+
+<div>
+<label for="storePhone">WhatsApp *</label>
+<input id="storePhone" type="tel" autocomplete="tel" maxlength="30" required>
+</div>
+
+<div class="full">
+<label for="storeColor">Cor principal</label>
+<input id="storeColor" type="color" value="#e33d8f">
+</div>
+</div>
+
+<button id="saveBtn" type="submit">Concluir configuração e entrar no painel</button>
+<div id="msg"></div>
+</form>
+
+<div class="note">Esses dados poderão ser alterados depois no painel da loja.</div>
+</main>
+
+<script>
+let store=null;
+
+function loginUrl(){
+  const slug=new URLSearchParams(location.search).get('loja')||store?.slug||'';
+  return slug?'/login-loja.html?loja='+encodeURIComponent(slug):'/login-loja.html';
+}
+
+function dashboardUrl(){
+  return '/dashboard-loja.html?loja='+encodeURIComponent(store.slug);
+}
+
+async function loadStore(){
+  try{
+    const r=await fetch('/api/public/session-store',{credentials:'include'});
+    const data=await r.json().catch(()=>({}));
+    if(!r.ok||!data.store){
+      location.href=loginUrl();
+      return;
+    }
+
+    store=data.store;
+
+    if(store.initialSetupCompleted){
+      location.href=dashboardUrl();
+      return;
+    }
+
+    document.getElementById('storeName').value=store.name||'';
+    document.getElementById('storeEmail').value=store.email||'';
+    document.getElementById('storePhone').value=store.phone||'';
+    document.getElementById('storeColor').value=store.color||'#e33d8f';
+    document.documentElement.style.setProperty('--brand',document.getElementById('storeColor').value);
+  }catch(err){
+    location.href=loginUrl();
+  }
+}
+
+document.getElementById('storeColor').addEventListener('input',event=>{
+  document.documentElement.style.setProperty('--brand',event.target.value);
+});
+
+document.getElementById('setupForm').addEventListener('submit',async event=>{
+  event.preventDefault();
+
+  const msg=document.getElementById('msg');
+  const btn=document.getElementById('saveBtn');
+
+  const name=document.getElementById('storeName').value.trim();
+  const email=document.getElementById('storeEmail').value.trim().toLowerCase();
+  const phone=document.getElementById('storePhone').value.trim();
+  const color=document.getElementById('storeColor').value;
+
+  if(!name||!email||!phone){
+    msg.textContent='Preencha Nome da Loja, E-mail e WhatsApp.';
+    return;
+  }
+
+  btn.disabled=true;
+  msg.textContent='Salvando configuração...';
+
+  try{
+    const r=await fetch('/api/public/store-branding',{
+      method:'PUT',
+      headers:{'Content-Type':'application/json'},
+      credentials:'include',
+      body:JSON.stringify({name,email,phone,color,initialSetupCompleted:true})
+    });
+
+    const data=await r.json().catch(()=>({}));
+
+    if(!r.ok||!data.store){
+      throw new Error(data.error||'Não foi possível salvar a configuração.');
+    }
+
+    store=data.store;
+    sessionStorage.setItem('STORE_SESSION',JSON.stringify({id:store.id,slug:store.slug}));
+    location.href=dashboardUrl();
+  }catch(err){
+    msg.textContent=err.message||'Erro ao salvar configuração.';
+    btn.disabled=false;
+  }
+});
+
+loadStore();
+</script>
+</body>
+</html>

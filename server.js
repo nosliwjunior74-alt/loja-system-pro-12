@@ -15,8 +15,10 @@ const {
   WebhookSignatureValidator,
   InvalidWebhookSignatureError
 } = require('mercadopago');
-const { db: activeDb, listStores, getStoreById, getStoreBySlug, createStore, updateStore, setStorePassword, deleteStore, verifyStoreLogin, createPayment, listPayments, updatePaymentStatus, createProducerCheckoutOrder, getProducerCheckoutOrderById, getProducerCheckoutOrderByToken, getProducerCheckoutOrderByExternalId, updateProducerCheckoutOrder, claimProducerCheckoutActivationNotification, completeProducerCheckoutActivationNotification, failProducerCheckoutActivationNotification, activatePaidProducerCheckoutStore, createCustomerOrder, getCustomerOrderById, getCustomerOrderByToken, getCustomerOrderByExternalId, updateCustomerOrder, listCustomerOrdersByStore, listProducerPlans, getProducerPlan, updateProducerPlan, getFinanceSummary, getFinanceChart, recordAiUsage, getAiUsageMonthly } = require('./db');
+const { db: activeDb, listStores, getStoreById, getStoreBySlug, createStore, updateStore, setStorePassword, deleteStore, verifyStoreLogin, createPayment, listPayments, updatePaymentStatus, createProducerCheckoutOrder, listProducerCheckoutOrders, getProducerCheckoutOrderById, getProducerCheckoutOrderByToken, getProducerCheckoutOrderByExternalId, updateProducerCheckoutOrder, claimProducerCheckoutActivationNotification, completeProducerCheckoutActivationNotification, failProducerCheckoutActivationNotification, activatePaidProducerCheckoutStore, createCustomerOrder, getCustomerOrderById, getCustomerOrderByToken, getCustomerOrderByExternalId, updateCustomerOrder, listCustomerOrdersByStore, listProducerPlans, getProducerPlan, updateProducerPlan, getFinanceSummary, getFinanceChart, grantTrustAccess, cancelTrustAccess, recordAiUsage, getAiUsageMonthly } = require('./db');
 const { runPostPaymentFlow } = require('./modules/pro-commerce/post-payment');
+const { normalizePhone, sendManualWelcomeWhatsApp } = require('./modules/pro-commerce/notifications/whatsapp');
+const { sendManualWelcomeEmail } = require('./modules/pro-commerce/notifications/email');
 
 async function runProducerCheckoutPostPayment(order, req){
   const origin =
@@ -721,8 +723,176 @@ app.get('/api/admin/session', (req,res)=>{
   res.json({ ok:true, username:ADMIN_USER, activeStore: active });
 });
 app.get('/api/admin/stores', requireAdminApi, (req,res)=> res.json({ stores:listStores(baseUrl(req)), activeStoreId:req.session.activeStoreId || '' }));
-app.post('/api/admin/stores', requireAdminApi, (req,res)=>{ const store = createStore(req.body || {}, baseUrl(req)); req.session.activeStoreId = store.id; res.status(201).json({ store }); });
+app.post('/api/admin/stores', requireAdminApi, async (req,res)=>{
+  const body = req.body || {};
+
+  const name = String(body.name || '').trim();
+  const email = String(body.email || '').trim().toLowerCase();
+  const phone = normalizePhone(body.phone);
+  const password = String(body.password || '');
+
+  if(!name){
+    return res.status(400).json({
+      error:'Nome da loja e obrigatorio.'
+    });
+  }
+
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){
+    return res.status(400).json({
+      error:'E-mail do lojista invalido.'
+    });
+  }
+
+  if(!phone){
+    return res.status(400).json({
+      error:'WhatsApp do lojista invalido. Informe DDD e numero.'
+    });
+  }
+
+  if(!strongPassword(password)){
+    return res.status(400).json({
+      error:'A senha inicial precisa ter 10+ caracteres, letra maiuscula, minuscula, numero e simbolo.'
+    });
+  }
+
+  const created = createStore(
+    {
+      ...body,
+      name,
+      email,
+      phone,
+      password,
+      initialSetupCompleted:false
+    },
+    baseUrl(req)
+  );
+
+  const store =
+    setStorePassword(created.id, password, true) ||
+    created;
+
+  req.session.activeStoreId = store.id;
+
+  const origin =
+    String(
+      baseUrl(req) ||
+      BASE_URL ||
+      ''
+    ).replace(/\/+$/, '');
+
+  const loginUrl =
+    `${origin}/login-loja.html?loja=${encodeURIComponent(store.slug)}`;
+
+  const welcomeData = {
+    recipientName:
+      String(body.recipientName || store.name || 'Cliente').trim(),
+    storeName:store.name,
+    plan:store.plan,
+    loginUrl,
+    brandName:'Provador Pro System'
+  };
+
+  const [emailResult, whatsappResult] =
+    await Promise.all([
+      sendManualWelcomeEmail({
+        ...welcomeData,
+        to:store.email
+      }),
+      sendManualWelcomeWhatsApp({
+        ...welcomeData,
+        to:store.phone
+      })
+    ]);
+
+  if(!emailResult.ok){
+    console.warn(
+      'Boas-vindas manual por e-mail nao enviada:',
+      emailResult.error
+    );
+  }
+
+  if(!whatsappResult.ok){
+    console.warn(
+      'Boas-vindas manual por WhatsApp nao enviada:',
+      whatsappResult.error
+    );
+  }
+
+  res.status(201).json({
+    store,
+    welcome:{
+      email:emailResult,
+      whatsapp:whatsappResult
+    }
+  });
+});
 app.put('/api/admin/stores/:id', requireAdminApi, (req,res)=>{ const store = updateStore(req.params.id, req.body || {}, baseUrl(req)); if(!store) return res.status(404).json({ error:'Loja não encontrada' }); res.json({ store }); });
+app.post('/api/admin/stores/:id/trust-access', requireAdminApi, (req,res)=>{
+  const currentStore = getStoreById(req.params.id, baseUrl(req));
+
+  if(!currentStore){
+    return res.status(404).json({
+      error:'Loja nao encontrada.'
+    });
+  }
+
+  const trustUntil = String(currentStore.trustAccessUntil || '').trim();
+  const trustExpiry = trustUntil ? new Date(trustUntil) : null;
+  const trustAlreadyActive = Boolean(
+    trustExpiry &&
+    !Number.isNaN(trustExpiry.getTime()) &&
+    trustExpiry > new Date()
+  );
+
+  if(trustAlreadyActive){
+    return res.status(400).json({
+      error:'Esta loja ja possui liberacao por confianca 72h ativa.'
+    });
+  }
+
+  const openPayment = listPayments({ storeId:req.params.id }).find(
+    payment=>payment.status==='pending' || payment.status==='overdue'
+  );
+
+  if(!openPayment){
+    return res.status(400).json({
+      error:'Nao existe cobranca pendente ou vencida para esta loja.'
+    });
+  }
+
+  if(currentStore.licenseStatus === 'ativa'){
+    return res.status(400).json({
+      error:'Esta loja ja possui licenca ativa. Confianca 72h nao e necessaria.'
+    });
+  }
+
+  const store = grantTrustAccess(
+    req.params.id,
+    ADMIN_USER,
+    String(req.body?.reason || '').trim()
+  );
+
+  res.json({
+    ok:true,
+    hours:72,
+    store
+  });
+});
+
+app.post('/api/admin/stores/:id/trust-access/cancel', requireAdminApi, (req,res)=>{
+  const store = cancelTrustAccess(req.params.id);
+
+  if(!store){
+    return res.status(404).json({
+      error:'Loja nao encontrada.'
+    });
+  }
+
+  res.json({
+    ok:true,
+    store
+  });
+});
 app.post('/api/admin/stores/:id/reset-password', requireAdminApi, (req,res)=>{
   const store = getStoreById(req.params.id, baseUrl(req));
 
@@ -839,10 +1009,198 @@ app.get('/api/admin/finance/summary', requireAdminApi, (req,res)=> res.json(getF
 app.get('/api/admin/finance/chart', requireAdminApi, (req,res)=> res.json(getFinanceChart(6)));
 app.get('/api/admin/payments', requireAdminApi, (req,res)=> res.json({ payments: listPayments({ storeId: req.query.storeId || '', status: req.query.status || '' }) }));
 app.post('/api/admin/payments', requireAdminApi, (req,res)=> { const payment = createPayment(req.body || {}); res.status(201).json({ payment }); });
-app.post('/api/admin/payments/:id/mark-paid', requireAdminApi, (req,res)=> { const payment = updatePaymentStatus(req.params.id, 'paid', req.body || {}); if(!payment) return res.status(404).json({ error:'Cobrança não encontrada' }); res.json({ payment }); });
+app.post('/api/admin/payments/:id/mark-paid', requireAdminApi, (req,res)=>{
+  const current =
+    listPayments({}).find(
+      payment=>String(payment.id)===String(req.params.id)
+    );
+
+  if(!current){
+    return res.status(404).json({
+      error:'Cobrança não encontrada'
+    });
+  }
+
+  const confirmedAt =
+    String(req.body?.paidAt || new Date().toISOString());
+
+  const auditNote =
+    `Pagamento confirmado manualmente pelo produtor ${ADMIN_USER} em ${new Date(confirmedAt).toLocaleString('pt-BR')}.`;
+
+  const notes =
+    [current.notes, auditNote]
+      .filter(Boolean)
+      .join('\n');
+
+  const payment =
+    updatePaymentStatus(
+      req.params.id,
+      'paid',
+      {
+        ...(req.body || {}),
+        paidAt:confirmedAt,
+        confirmationSource:'manual_producer',
+        confirmedBy:ADMIN_USER,
+        notes
+      }
+    );
+
+  res.json({
+    ok:true,
+    source:'manual_producer',
+    payment
+  });
+});
 app.post('/api/admin/payments/:id/mark-overdue', requireAdminApi, (req,res)=> { const payment = updatePaymentStatus(req.params.id, 'overdue', req.body || {}); if(!payment) return res.status(404).json({ error:'Cobrança não encontrada' }); res.json({ payment }); });
 app.post('/api/admin/payments/:id/send-whatsapp', requireAdminApi, async (req,res)=>{ const payment = listPayments({}).find(p=>p.id===req.params.id); if(!payment) return res.status(404).json({ error:'Cobrança não encontrada' }); const store = getStoreById(payment.storeId, baseUrl(req)); if(!store) return res.status(404).json({ error:'Loja não encontrada' }); const result = await sendWhatsAppCharge(store, payment, req); if(!result.ok) return res.status(400).json(result); const updated = updatePaymentStatus(payment.id, payment.status, { whatsappSentAt:new Date().toISOString(), whatsappMessageId:result.messageId, remindersCount:(payment.remindersCount||0)+1, notes:`Cobrança enviada por WhatsApp em ${new Date().toLocaleString('pt-BR')}` }); return res.json({ ok:true, payment:updated }); });
 app.post('/api/admin/payments/send-whatsapp-due', requireAdminApi, async (req,res)=>{ await runAutomaticChargeReminders(req); res.json({ ok:true }); });
+
+// Recuperacao administrativa de pedidos do checkout do Produtor.
+// Mantem o fluxo compacto no Painel Mestre e permite:
+// 1) confirmar manualmente um pagamento ainda pendente;
+// 2) repetir a ativacao de um pedido ja pago cuja loja nao foi liberada.
+app.get('/api/admin/producer-checkout/recovery', requireAdminApi, (req,res)=>{
+  const orders =
+    listProducerCheckoutOrders({ onlyUnactivated:true })
+      .filter(order=>['pending','paid'].includes(order.status))
+      .sort((a,b)=>String(b.createdAt || '').localeCompare(String(a.createdAt || '')));
+
+  res.json({ orders });
+});
+
+app.post('/api/admin/producer-checkout/orders/:id/confirm-paid', requireAdminApi, async (req,res)=>{
+  const order =
+    getProducerCheckoutOrderById(req.params.id);
+
+  if(!order){
+    return res.status(404).json({
+      error:'Pedido do checkout nao encontrado.'
+    });
+  }
+
+  if(order.status !== 'pending'){
+    return res.status(400).json({
+      error:
+        order.status === 'paid'
+          ? 'Este pedido ja esta marcado como pago. Use repetir liberacao se necessario.'
+          : 'Somente pedidos pendentes podem ser confirmados manualmente.'
+    });
+  }
+
+  const confirmedAt = new Date().toISOString();
+  const paymentDetails = {
+    ...(order.paymentDetails || {}),
+    manualPaymentConfirmed:true,
+    manualPaymentConfirmedAt:confirmedAt,
+    manualPaymentConfirmedBy:ADMIN_USER,
+    manualPaymentConfirmationSource:'manual_producer'
+  };
+
+  const paidOrder =
+    updateProducerCheckoutOrder(
+      order.id,
+      {
+        status:'paid',
+        paidAt:confirmedAt,
+        paymentDetails
+      }
+    );
+
+  try{
+    const postPayment =
+      await runProducerCheckoutPostPayment(
+        paidOrder,
+        req
+      );
+
+    const activation =
+      postPayment?.activation || null;
+
+    if(!activation?.ok){
+      return res.status(500).json({
+        error:'Pagamento confirmado, mas a liberacao automatica da loja falhou. O pedido permaneceu pago e pode ter a liberacao repetida.',
+        paid:true,
+        order:getProducerCheckoutOrderById(order.id)
+      });
+    }
+
+    return res.json({
+      ok:true,
+      source:'manual_producer',
+      activation,
+      order:activation.order || getProducerCheckoutOrderById(order.id)
+    });
+  }catch(err){
+    console.error('Erro na confirmacao manual do checkout do Produtor:', err);
+    return res.status(500).json({
+      error:'Pagamento confirmado, mas a liberacao da loja falhou. O pedido permaneceu pago e pode ter a liberacao repetida.',
+      paid:true,
+      order:getProducerCheckoutOrderById(order.id)
+    });
+  }
+});
+
+app.post('/api/admin/producer-checkout/orders/:id/retry-activation', requireAdminApi, async (req,res)=>{
+  const order =
+    getProducerCheckoutOrderById(req.params.id);
+
+  if(!order){
+    return res.status(404).json({
+      error:'Pedido do checkout nao encontrado.'
+    });
+  }
+
+  if(order.status !== 'paid'){
+    return res.status(400).json({
+      error:'Somente pedidos ja pagos podem repetir a liberacao.'
+    });
+  }
+
+  const retryAt = new Date().toISOString();
+  const paymentDetails = {
+    ...(order.paymentDetails || {}),
+    manualActivationRetryAt:retryAt,
+    manualActivationRetryBy:ADMIN_USER
+  };
+
+  const auditedOrder =
+    updateProducerCheckoutOrder(
+      order.id,
+      { paymentDetails }
+    );
+
+  try{
+    const postPayment =
+      await runProducerCheckoutPostPayment(
+        auditedOrder,
+        req
+      );
+
+    const activation =
+      postPayment?.activation || null;
+
+    if(!activation?.ok){
+      return res.status(500).json({
+        error:'Nao foi possivel liberar a loja deste pedido pago.',
+        order:getProducerCheckoutOrderById(order.id)
+      });
+    }
+
+    return res.json({
+      ok:true,
+      source:'manual_activation_retry',
+      activation,
+      order:activation.order || getProducerCheckoutOrderById(order.id)
+    });
+  }catch(err){
+    console.error('Erro repetindo liberacao do checkout do Produtor:', err);
+    return res.status(500).json({
+      error:'Nao foi possivel repetir a liberacao da loja.',
+      order:getProducerCheckoutOrderById(order.id)
+    });
+  }
+});
+
 // ===== ROTAS PUBLICAS DE CHECKOUT - CONFIG =====
 app.get('/api/public/checkout/config', (req, res) => {
   const producerPlans = listProducerPlans().map(plan => ({
@@ -887,12 +1245,18 @@ app.post('/api/public/checkout/producer/orders', checkoutLimiter, (req, res) => 
     const installments = Math.max(1, Number(body.installments || 1) || 1);
     const secondaryAmountCents = Math.max(0, Math.round(Number(body.secondaryAmountCents || 0) || 0));
 
-    if (!buyerName || !buyerEmail || !storeName || !plan) {
-      return res.status(400).json({ error:'Nome do comprador, e-mail, nome da loja e plano são obrigatórios.' });
+    if (!buyerName || !buyerEmail || !buyerPhone || !storeName || !plan) {
+      return res.status(400).json({ error:'Nome do comprador, e-mail, WhatsApp, nome da loja e plano são obrigatórios.' });
     }
 
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(buyerEmail)) {
       return res.status(400).json({ error:'E-mail inválido.' });
+    }
+
+    const normalizedBuyerPhone = normalizePhone(buyerPhone);
+
+    if (!normalizedBuyerPhone) {
+      return res.status(400).json({ error:'WhatsApp inválido. Informe DDD e número.' });
     }
 
 // ===== CHECKOUT PRECO MENSAL ANUAL DO BANCO =====
@@ -942,7 +1306,7 @@ app.post('/api/public/checkout/producer/orders', checkoutLimiter, (req, res) => 
     const order = createProducerCheckoutOrder({
       buyerName,
       buyerEmail,
-      buyerPhone,
+      buyerPhone: normalizedBuyerPhone,
       buyerCpfCnpj,
       storeName,
       plan,
@@ -2624,6 +2988,31 @@ app.put('/api/public/store-branding', (req,res)=>{
   if(!current) return res.status(404).json({ error:'Loja não encontrada' });
  const payload = {};
 
+if(typeof req.body?.name === 'string'){
+  const name = req.body.name.trim().slice(0, 120);
+
+  if(!name){
+    return res.status(400).json({
+      error:'Nome da loja e obrigatorio.'
+    });
+  }
+
+  payload.name = name;
+}
+
+if(typeof req.body?.email === 'string'){
+  const email =
+    req.body.email.trim().toLowerCase().slice(0, 180);
+
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){
+    return res.status(400).json({
+      error:'E-mail invalido.'
+    });
+  }
+
+  payload.email = email;
+}
+
 if(typeof req.body?.color === 'string')
   payload.color = req.body.color;
 
@@ -2680,7 +3069,22 @@ if(typeof req.body?.vitrinePromoActive === 'boolean')
   payload.vitrinePromoActive = req.body.vitrinePromoActive;
 
 if(typeof req.body?.phone === 'string'){
-  payload.phone = req.body.phone.trim().slice(0, 30);
+  const phone =
+    normalizePhone(
+      req.body.phone.trim().slice(0, 30)
+    );
+
+  if(!phone){
+    return res.status(400).json({
+      error:'WhatsApp invalido. Informe DDD e numero.'
+    });
+  }
+
+  payload.phone = phone;
+}
+
+if(req.body?.initialSetupCompleted === true){
+  payload.initialSetupCompleted = true;
 }
 
 if(

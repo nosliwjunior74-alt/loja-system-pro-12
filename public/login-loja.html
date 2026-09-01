@@ -410,7 +410,8 @@
   }));
 
   location.href =
-    'dashboard-loja.html?loja=' +
+    (data.store.initialSetupCompleted ? 'dashboard-loja.html' : 'configuracao-inicial-loja.html') +
+    '?loja=' +
     encodeURIComponent(data.store.slug);
 
   }catch(err){
@@ -474,7 +475,8 @@ async function trocarSenhaObrigatoria(){
     );
 
     location.href =
-      'dashboard-loja.html?loja=' +
+      (data.store.initialSetupCompleted ? 'dashboard-loja.html' : 'configuracao-inicial-loja.html') +
+      '?loja=' +
       encodeURIComponent(data.store.slug);
 
   }catch(err){

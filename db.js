@@ -26,10 +26,25 @@ function generateLicenseKey(storeId, slug, expiresAt){
   return `LSP-${sig.slice(0,4)}-${sig.slice(4,8)}-${sig.slice(8,12)}-${sig.slice(12,16)}`;
 }
 function rawLicenseStatus(store){
+  const now = new Date();
+  const trustUntil = String(store.trust_access_until || '').trim();
+  const trustActive = Number(store.trust_access_active || 0) === 1;
+
+  if (trustActive && trustUntil) {
+    const trustExpiry = new Date(trustUntil);
+
+    if (
+      !Number.isNaN(trustExpiry.getTime()) &&
+      trustExpiry > now
+    ) {
+      return 'ativa';
+    }
+  }
+
   if (store.status === 'degustacao') return 'em degustação';
   if (store.status !== 'ativo') return 'inativa';
   if (!store.expires_at) return 'ativa';
-  const now = new Date();
+
   const exp = new Date(store.expires_at + 'T23:59:59');
   return exp >= now ? 'ativa' : 'expirada';
 }
@@ -217,12 +232,21 @@ maybeAddColumn('stores','license_start_date','TEXT');
 maybeAddColumn('stores','contract_value_cents','INTEGER DEFAULT 0');
 maybeAddColumn('stores','contract_status','TEXT DEFAULT "ativo"');
 maybeAddColumn('stores','force_password_change','INTEGER DEFAULT 0');
+maybeAddColumn('stores','initial_setup_completed','INTEGER NOT NULL DEFAULT 1');
+maybeAddColumn('stores','trust_access_granted_at','TEXT');
+maybeAddColumn('stores','trust_access_until','TEXT');
+maybeAddColumn('stores','trust_access_granted_by','TEXT');
+maybeAddColumn('stores','trust_access_reason','TEXT');
+maybeAddColumn('stores','trust_access_previous_status','TEXT');
+maybeAddColumn('stores','trust_access_active','INTEGER NOT NULL DEFAULT 0');
 maybeAddColumn('stores','producer_payment_methods',"TEXT DEFAULT '[\"pix\"]'");
 maybeAddColumn('stores','customer_payment_methods',"TEXT DEFAULT '[]'");
 maybeAddColumn('payments','notes','TEXT');
 maybeAddColumn('payments','whatsapp_sent_at','TEXT');
 maybeAddColumn('payments','whatsapp_message_id','TEXT');
 maybeAddColumn('payments','reminders_count','INTEGER DEFAULT 0');
+maybeAddColumn('payments','confirmation_source','TEXT');
+maybeAddColumn('payments','confirmed_by','TEXT');
 // CAMPOS EXTRAS DOS CHECKOUTS
 maybeAddColumn('producer_checkout_orders','installments','INTEGER DEFAULT 1');
 maybeAddColumn('producer_checkout_orders','secondary_method','TEXT DEFAULT ""');
@@ -246,20 +270,107 @@ function uniqueSlug(base, ignoreId=''){
     out = `${slug}-${count++}`;
   }
 }
+function grantTrustAccess(storeId, grantedBy='admin', reason=''){
+  const row = db.prepare('SELECT * FROM stores WHERE id = ?').get(storeId);
+  if(!row) return null;
+
+  const now = new Date();
+  const until = new Date(now.getTime() + (72 * 60 * 60 * 1000));
+
+  db.prepare(`
+    UPDATE stores
+    SET trust_access_granted_at = ?,
+        trust_access_until = ?,
+        trust_access_granted_by = ?,
+        trust_access_reason = ?,
+        trust_access_previous_status = ?,
+        trust_access_active = 1,
+        updated_at = ?
+    WHERE id = ?
+  `).run(
+    now.toISOString(),
+    until.toISOString(),
+    String(grantedBy || 'admin').trim() || 'admin',
+    String(reason || '').trim(),
+    row.status || '',
+    now.toISOString(),
+    storeId
+  );
+
+  return getStoreById(storeId);
+}
+
+function cancelTrustAccess(storeId){
+  const row = db.prepare('SELECT * FROM stores WHERE id = ?').get(storeId);
+  if(!row) return null;
+
+  const now = new Date().toISOString();
+
+  db.prepare(`
+    UPDATE stores
+    SET trust_access_until = ?,
+        trust_access_active = 0,
+        updated_at = ?
+    WHERE id = ?
+  `).run(now, now, storeId);
+
+  return getStoreById(storeId);
+}
+
 function syncStoreLicense(storeId){
   const row = db.prepare('SELECT * FROM stores WHERE id = ?').get(storeId);
   if(!row) return null;
+
+  const now = new Date();
   let status = row.status;
+
+  const trustActive = Number(row.trust_access_active || 0) === 1;
+  const trustUntil = String(row.trust_access_until || '').trim();
+
+  if (trustActive && trustUntil) {
+    const trustExpiry = new Date(trustUntil);
+
+    if (
+      !Number.isNaN(trustExpiry.getTime()) &&
+      trustExpiry <= now
+    ) {
+      const openPaymentCount = db.prepare(
+        "SELECT COUNT(*) c FROM payments WHERE store_id = ? AND status IN ('pending','overdue')"
+      ).get(storeId).c;
+
+      if (openPaymentCount > 0) {
+        status = 'inativo';
+      }
+
+      db.prepare(`
+        UPDATE stores
+        SET trust_access_active = 0,
+            updated_at = ?
+        WHERE id = ?
+      `).run(now.toISOString(), storeId);
+    }
+  }
+
   if (row.expires_at) {
     const exp = new Date(row.expires_at + 'T23:59:59');
-    if (exp < new Date()) status = 'inativo';
+    if (exp < now) status = 'inativo';
   }
-  const overdueCount = db.prepare("SELECT COUNT(*) c FROM payments WHERE store_id = ? AND status = 'overdue'").get(storeId).c;
+
+  const overdueCount = db.prepare(
+    "SELECT COUNT(*) c FROM payments WHERE store_id = ? AND status = 'overdue'"
+  ).get(storeId).c;
+
   if (overdueCount > 0 && row.expires_at) {
     const exp = new Date(row.expires_at + 'T23:59:59');
-    if (exp < new Date()) status = 'inativo';
+    if (exp < now) status = 'inativo';
   }
-  if (status !== row.status) db.prepare('UPDATE stores SET status = ?, updated_at = ? WHERE id = ?').run(status, new Date().toISOString(), storeId);
+
+  if (status !== row.status) {
+    db.prepare(
+      'UPDATE stores SET status = ?, updated_at = ? WHERE id = ?'
+    ).run(status, now.toISOString(), storeId);
+  }
+
   return db.prepare('SELECT * FROM stores WHERE id = ?').get(storeId);
 }
 function rowToStore(row, baseUrl=''){
@@ -284,6 +395,12 @@ function rowToStore(row, baseUrl=''){
     contractValueCents: synced.contract_value_cents || 0,
     contractStatus: synced.contract_status || 'ativo',
     forcePasswordChange: Boolean(synced.force_password_change),
+    initialSetupCompleted: Boolean(synced.initial_setup_completed),
+    trustAccessGrantedAt: synced.trust_access_granted_at || '',
+    trustAccessUntil: synced.trust_access_until || '',
+    trustAccessGrantedBy: synced.trust_access_granted_by || '',
+    trustAccessReason: synced.trust_access_reason || '',
+    trustAccessPreviousStatus: synced.trust_access_previous_status || '',
     login: synced.login, status: synced.status, plan: synced.plan || 'premium',
     billingCycle: synced.billing_cycle || 'monthly',
     expiresAt: synced.expires_at || '',
@@ -341,6 +458,7 @@ function paymentRowToView(row){
     amountCents: row.amount_cents, amount: (row.amount_cents/100).toFixed(2), currency: row.currency,
     status: row.status, dueAt: row.due_at || '', paidAt: row.paid_at || '', externalId: row.external_id || '', notes: row.notes || '',
     whatsappSentAt: row.whatsapp_sent_at || '', whatsappMessageId: row.whatsapp_message_id || '', remindersCount: row.reminders_count || 0,
+    confirmationSource: row.confirmation_source || '', confirmedBy: row.confirmed_by || '',
     createdAt: row.created_at, updatedAt: row.updated_at || ''
   };
 }
@@ -422,6 +540,7 @@ producer_payment_methods,
 customer_payment_methods,
 login,
 password_hash,
+initial_setup_completed,
 status,
 plan,
 billing_cycle,
@@ -441,7 +560,7 @@ updated_at
 @cep,@address,@address_number,@address_complement,@neighborhood,@city,@state,
 @contract_date,@license_start_date,@contract_value_cents,@contract_status,
 @producer_payment_methods,@customer_payment_methods,@login,
-@password_hash,@status,@plan,@billing_cycle,@expires_at,@license_key,
+@password_hash,@initial_setup_completed,@status,@plan,@billing_cycle,@expires_at,@license_key,
 @custom_domain,
 @support_config,
 @estoque,
@@ -477,6 +596,7 @@ updated_at
         : []
     ),
     login: payload.login || 'admin', password_hash: hashPassword(payload.password || crypto.randomBytes(12).toString('base64url')),
+    initial_setup_completed: payload.initialSetupCompleted === true ? 1 : 0,
     status: payload.status === 'inativo' ? 'inativo' : (payload.status === 'degustacao' ? 'degustacao' : 'ativo'),
     plan: payload.plan || 'premium',
     billing_cycle: ['monthly','annual'].includes(payload.billingCycle) ? payload.billingCycle : 'monthly',
@@ -497,7 +617,7 @@ function updateStore(id, payload, baseUrl=''){
   const expiresAt = payload.expiresAt !== undefined ? payload.expiresAt : (current.expires_at || '');
   const licenseKey = generateLicenseKey(id, slug, expiresAt);
   const passwordHash = payload.password ? hashPassword(payload.password) : current.password_hash;
-  db.prepare(`UPDATE stores SET slug=@slug,name=@name,sub=@sub,color=@color,logo=@logo,vitrine_hero_image=@vitrine_hero_image,vitrine_promo_eyebrow=@vitrine_promo_eyebrow,vitrine_promo_title=@vitrine_promo_title,vitrine_promo_description=@vitrine_promo_description,vitrine_promo_text_color=@vitrine_promo_text_color,vitrine_promo_bg_start=@vitrine_promo_bg_start,vitrine_promo_bg_end=@vitrine_promo_bg_end,vitrine_promo_active=@vitrine_promo_active,email=@email,phone=@phone,cpf=@cpf,cnpj=@cnpj,cep=@cep,address=@address,address_number=@address_number,address_complement=@address_complement,neighborhood=@neighborhood,city=@city,state=@state,contract_date=@contract_date,license_start_date=@license_start_date,contract_value_cents=@contract_value_cents,contract_status=@contract_status,producer_payment_methods=@producer_payment_methods,customer_payment_methods=@customer_payment_methods,login=@login,password_hash=@password_hash,status=@status,plan=@plan,billing_cycle=@billing_cycle,expires_at=@expires_at,license_key=@license_key,custom_domain=@custom_domain,support_config=@support_config,
+  db.prepare(`UPDATE stores SET slug=@slug,name=@name,sub=@sub,color=@color,logo=@logo,vitrine_hero_image=@vitrine_hero_image,vitrine_promo_eyebrow=@vitrine_promo_eyebrow,vitrine_promo_title=@vitrine_promo_title,vitrine_promo_description=@vitrine_promo_description,vitrine_promo_text_color=@vitrine_promo_text_color,vitrine_promo_bg_start=@vitrine_promo_bg_start,vitrine_promo_bg_end=@vitrine_promo_bg_end,vitrine_promo_active=@vitrine_promo_active,email=@email,phone=@phone,cpf=@cpf,cnpj=@cnpj,cep=@cep,address=@address,address_number=@address_number,address_complement=@address_complement,neighborhood=@neighborhood,city=@city,state=@state,contract_date=@contract_date,license_start_date=@license_start_date,contract_value_cents=@contract_value_cents,contract_status=@contract_status,producer_payment_methods=@producer_payment_methods,customer_payment_methods=@customer_payment_methods,login=@login,password_hash=@password_hash,initial_setup_completed=@initial_setup_completed,status=@status,plan=@plan,billing_cycle=@billing_cycle,expires_at=@expires_at,license_key=@license_key,custom_domain=@custom_domain,support_config=@support_config,
 estoque=@estoque,
 products=@products,
 looks=@looks,
@@ -549,6 +669,7 @@ updated_at=@updated_at WHERE id=@id`).run({
           )
         : (current.customer_payment_methods ?? '[]'),
     login: payload.login ?? current.login, password_hash: passwordHash,
+    initial_setup_completed: payload.initialSetupCompleted !== undefined ? (payload.initialSetupCompleted ? 1 : 0) : (current.initial_setup_completed ?? 1),
     status: payload.status === 'inativo' ? 'inativo' : (payload.status === 'degustacao' ? 'degustacao' : (payload.status ?? current.status)),
     plan: payload.plan ?? current.plan,
     billing_cycle: ['monthly','annual'].includes(payload.billingCycle)
@@ -616,17 +737,21 @@ function updatePaymentStatus(id, status, extra={}){
   const row = db.prepare('SELECT * FROM payments WHERE id = ?').get(id); if(!row) return null;
   const nextStatus = status || row.status; const now = new Date().toISOString();
   const paidAt = nextStatus === 'paid' ? (extra.paidAt || now) : (extra.paidAt !== undefined ? extra.paidAt : row.paid_at);
-  db.prepare('UPDATE payments SET status = ?, paid_at = ?, due_at = ?, external_id = ?, notes = ?, whatsapp_sent_at = ?, whatsapp_message_id = ?, reminders_count = ?, updated_at = ? WHERE id = ?').run(
+  db.prepare('UPDATE payments SET status = ?, paid_at = ?, due_at = ?, external_id = ?, notes = ?, whatsapp_sent_at = ?, whatsapp_message_id = ?, reminders_count = ?, confirmation_source = ?, confirmed_by = ?, updated_at = ? WHERE id = ?').run(
     nextStatus, paidAt || null, extra.dueAt !== undefined ? extra.dueAt : row.due_at, extra.externalId !== undefined ? extra.externalId : row.external_id,
     extra.notes !== undefined ? extra.notes : row.notes, extra.whatsappSentAt !== undefined ? extra.whatsappSentAt : row.whatsapp_sent_at,
-    extra.whatsappMessageId !== undefined ? extra.whatsappMessageId : row.whatsapp_message_id, extra.remindersCount !== undefined ? extra.remindersCount : row.reminders_count, now, id
+    extra.whatsappMessageId !== undefined ? extra.whatsappMessageId : row.whatsapp_message_id, extra.remindersCount !== undefined ? extra.remindersCount : row.reminders_count,
+    extra.confirmationSource !== undefined ? extra.confirmationSource : row.confirmation_source,
+    extra.confirmedBy !== undefined ? extra.confirmedBy : row.confirmed_by,
+    now, id
   );
   const updated = db.prepare('SELECT * FROM payments WHERE id = ?').get(id);
   if(nextStatus === 'paid'){
     const store = getStoreRowById(updated.store_id);
     const start = store && store.expires_at && new Date(store.expires_at+'T23:59:59') > new Date() ? store.expires_at : todayStr();
-    const nextExpiry = addDays(start, 30);
+    const nextExpiry = addDays(start, store?.billing_cycle === 'annual' ? 365 : 30);
     updateStore(updated.store_id, { status:'ativo', expiresAt: nextExpiry });
+    cancelTrustAccess(updated.store_id);
   }
   if(nextStatus === 'overdue') syncStoreLicense(updated.store_id);
   return paymentRowToView(updated);
@@ -732,6 +857,27 @@ function getProducerCheckoutOrderByExternalId(externalId){
   return producerCheckoutRowToView(
     db.prepare('SELECT * FROM producer_checkout_orders WHERE external_id = ? ORDER BY created_at DESC LIMIT 1').get(externalId)
   );
+}
+
+function listProducerCheckoutOrders(filters={}){
+  const where = [];
+  const params = {};
+
+  if(filters.status){
+    where.push('status = @status');
+    params.status = String(filters.status);
+  }
+
+  if(filters.onlyUnactivated === true){
+    where.push("(created_store_id IS NULL OR created_store_id = '')");
+  }
+
+  const sql =
+    'SELECT * FROM producer_checkout_orders' +
+    (where.length ? ' WHERE ' + where.join(' AND ') : '') +
+    ' ORDER BY created_at DESC';
+
+  return db.prepare(sql).all(params).map(producerCheckoutRowToView);
 }
 
 function updateProducerCheckoutOrder(id, patch={}){
@@ -1617,4 +1763,4 @@ function updateProducerPlan(id, payload={}){
 }
 
 ensureSeedStore();
-module.exports = { db, slugify, uniqueSlug, listStores, getStoreById, getStoreBySlug, getStoreRowById, getStoreRowBySlug, createStore, updateStore, setStorePassword, deleteStore, verifyStoreLogin, licenseStatus: rawLicenseStatus, generateLicenseKey, createPayment, listPayments, updatePaymentStatus, createProducerCheckoutOrder, getProducerCheckoutOrderById, getProducerCheckoutOrderByToken, getProducerCheckoutOrderByExternalId, updateProducerCheckoutOrder, claimProducerCheckoutActivationNotification, completeProducerCheckoutActivationNotification, failProducerCheckoutActivationNotification, activatePaidProducerCheckoutStore, createCustomerOrder, getCustomerOrderById, getCustomerOrderByToken, getCustomerOrderByExternalId, updateCustomerOrder, listCustomerOrdersByStore, listProducerPlans, getProducerPlan, updateProducerPlan, getFinanceSummary, getFinanceChart, syncStoreLicense, currentAiPeriod, getAiUsageMonthly, recordAiUsage };
+module.exports = { db, slugify, uniqueSlug, listStores, getStoreById, getStoreBySlug, getStoreRowById, getStoreRowBySlug, createStore, updateStore, setStorePassword, deleteStore, verifyStoreLogin, licenseStatus: rawLicenseStatus, generateLicenseKey, createPayment, listPayments, updatePaymentStatus, createProducerCheckoutOrder, getProducerCheckoutOrderById, getProducerCheckoutOrderByToken, getProducerCheckoutOrderByExternalId, listProducerCheckoutOrders, updateProducerCheckoutOrder, claimProducerCheckoutActivationNotification, completeProducerCheckoutActivationNotification, failProducerCheckoutActivationNotification, activatePaidProducerCheckoutStore, createCustomerOrder, getCustomerOrderById, getCustomerOrderByToken, getCustomerOrderByExternalId, updateCustomerOrder, listCustomerOrdersByStore, listProducerPlans, getProducerPlan, updateProducerPlan, getFinanceSummary, getFinanceChart, syncStoreLicense, grantTrustAccess, cancelTrustAccess, currentAiPeriod, getAiUsageMonthly, recordAiUsage };

@@ -18,6 +18,18 @@ const ACTIVATION_TEMPLATE_LANG =
     'pt_BR'
   ).trim();
 
+const MANUAL_WELCOME_TEMPLATE_NAME =
+  String(
+    process.env.PRO_WHATSAPP_MANUAL_WELCOME_TEMPLATE_NAME ||
+    ''
+  ).trim();
+
+const MANUAL_WELCOME_TEMPLATE_LANG =
+  String(
+    process.env.PRO_WHATSAPP_MANUAL_WELCOME_TEMPLATE_LANG ||
+    'pt_BR'
+  ).trim();
+
 const GRAPH_API_VERSION =
   String(
     process.env.PRO_WHATSAPP_GRAPH_API_VERSION ||
@@ -40,6 +52,9 @@ function getWhatsAppConfigStatus() {
     templateConfigured: Boolean(ACTIVATION_TEMPLATE_NAME),
     templateName: ACTIVATION_TEMPLATE_NAME,
     language: ACTIVATION_TEMPLATE_LANG,
+    manualWelcomeTemplateConfigured: Boolean(MANUAL_WELCOME_TEMPLATE_NAME),
+    manualWelcomeTemplateName: MANUAL_WELCOME_TEMPLATE_NAME,
+    manualWelcomeTemplateLanguage: MANUAL_WELCOME_TEMPLATE_LANG,
     apiVersion: GRAPH_API_VERSION
   };
 }
@@ -204,10 +219,157 @@ async function sendActivationWhatsApp(data = {}) {
   }
 }
 
+
+function isManualWelcomeWhatsAppConfigured() {
+  return Boolean(
+    WHATSAPP_TOKEN &&
+    WHATSAPP_PHONE_NUMBER_ID &&
+    MANUAL_WELCOME_TEMPLATE_NAME
+  );
+}
+
+function buildManualWelcomeTemplatePayload(data = {}) {
+  const to = normalizePhone(data.to);
+
+  const recipientName =
+    String(data.recipientName || 'Cliente').trim();
+
+  const storeName =
+    String(data.storeName || '').trim();
+
+  const plan =
+    String(data.plan || '').trim();
+
+  const loginUrl =
+    String(data.loginUrl || '').trim();
+
+  if (!to) {
+    throw new Error(
+      'WhatsApp do cliente nao informado ou invalido.'
+    );
+  }
+
+  if (!loginUrl) {
+    throw new Error(
+      'Link de acesso da loja nao informado.'
+    );
+  }
+
+  return {
+    messaging_product: 'whatsapp',
+    to,
+    type: 'template',
+    template: {
+      name: MANUAL_WELCOME_TEMPLATE_NAME,
+      language: {
+        code: MANUAL_WELCOME_TEMPLATE_LANG
+      },
+      components: [
+        {
+          type: 'body',
+          parameters: [
+            {
+              type: 'text',
+              text: recipientName
+            },
+            {
+              type: 'text',
+              text: storeName
+            },
+            {
+              type: 'text',
+              text: plan
+            },
+            {
+              type: 'text',
+              text: loginUrl
+            }
+          ]
+        }
+      ]
+    }
+  };
+}
+
+async function sendManualWelcomeWhatsApp(data = {}) {
+  if (!isManualWelcomeWhatsAppConfigured()) {
+    return {
+      ok: false,
+      error:
+        'WhatsApp manual/local nao configurado no servidor.'
+    };
+  }
+
+  let payload;
+
+  try {
+    payload =
+      buildManualWelcomeTemplatePayload(data);
+  } catch (err) {
+    return {
+      ok: false,
+      error: String(
+        err?.message ||
+        'Dados invalidos para WhatsApp manual/local.'
+      )
+    };
+  }
+
+  try {
+    const response =
+      await fetch(
+        `https://graph.facebook.com/${GRAPH_API_VERSION}/${WHATSAPP_PHONE_NUMBER_ID}/messages`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization':
+              `Bearer ${WHATSAPP_TOKEN}`
+          },
+          body: JSON.stringify(payload)
+        }
+      );
+
+    const result =
+      await response.json()
+        .catch(() => ({}));
+
+    if (!response.ok) {
+      return {
+        ok: false,
+        status: response.status,
+        error:
+          result?.error?.message ||
+          'Falha ao enviar WhatsApp manual/local.'
+      };
+    }
+
+    return {
+      ok: true,
+      messageId:
+        String(
+          result?.messages?.[0]?.id ||
+          ''
+        )
+    };
+  } catch (err) {
+    return {
+      ok: false,
+      error: String(
+        err?.message ||
+        'Falha de comunicacao com WhatsApp.'
+      )
+    };
+  }
+}
+
 module.exports = {
   isWhatsAppConfigured,
   getWhatsAppConfigStatus,
   normalizePhone,
   buildActivationTemplatePayload,
-  sendActivationWhatsApp
+  sendActivationWhatsApp,
+  isManualWelcomeWhatsAppConfigured,
+  buildManualWelcomeTemplatePayload,
+  sendManualWelcomeWhatsApp
 };

@@ -3490,9 +3490,8 @@ el('btnTrust72').addEventListener('click',()=>grantSelectedStoreTrust72().catch(
 el('btnCancelTrust').addEventListener('click',()=>cancelSelectedStoreTrust().catch(e=>el('status').textContent=e.message));
 el('btnRefreshCheckoutRecovery').addEventListener('click',()=>loadCheckoutRecovery().catch(e=>el('status').textContent=e.message));
 
-loadStores();
+loadStores().then(function(){return loadCheckoutRecovery();}).catch(function(e){el('status').textContent=e.message;});
 loadProducerPlans();
-loadCheckoutRecovery();
 
 </script>
 

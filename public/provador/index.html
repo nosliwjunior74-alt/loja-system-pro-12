@@ -7,11 +7,11 @@
 .hero{
   position:relative;
   background:
-    radial-gradient(circle at 72% 22%,rgba(255,92,166,.30),transparent 30%),
+    radial-gradient(circle at 72% 22%,color-mix(in srgb,var(--brand) 38%,transparent),transparent 30%),
     radial-gradient(circle at 18% 92%,rgba(255,255,255,.08),transparent 34%),
-    linear-gradient(125deg,#1f1119 0%,#46182f 48%,#7a2050 100%);
+    linear-gradient(125deg,color-mix(in srgb,var(--brand) 12%,#160d12) 0%,color-mix(in srgb,var(--brand) 34%,#2b1420) 48%,color-mix(in srgb,var(--brand) 62%,#431629) 100%);
   border:1px solid rgba(255,255,255,.10);
-  box-shadow:0 28px 70px rgba(55,17,37,.28);
+  box-shadow:0 28px 70px color-mix(in srgb,var(--brand) 18%,transparent);
 }
 
 .hero .copy{
@@ -20,7 +20,7 @@
 }
 
 .hero .eyebrow{
-  color:#ff75b6;
+  color:color-mix(in srgb,var(--brand) 72%,white);
   font-size:13px;
   letter-spacing:.16em;
 }
@@ -112,11 +112,33 @@
   box-shadow:0 18px 40px rgba(0,0,0,.18);
 }
 
+.top{box-shadow:0 8px 28px rgba(45,27,36,.06)}
+.nav button{transition:transform .18s ease,background .18s ease,border-color .18s ease,box-shadow .18s ease}
+.nav button:hover{transform:translateY(-1px);border-color:color-mix(in srgb,var(--brand) 28%,var(--line));background:color-mix(in srgb,var(--brand) 5%,white)}
+.nav .main:hover{background:color-mix(in srgb,var(--brand) 88%,black);box-shadow:0 10px 24px color-mix(in srgb,var(--brand) 22%,transparent)}
+.hero .cta.main{box-shadow:0 13px 30px color-mix(in srgb,var(--brand) 30%,transparent)}
+.secHead button{padding:8px 10px;border-radius:10px;transition:background .18s ease,transform .18s ease}
+.secHead button:hover{background:color-mix(in srgb,var(--brand) 7%,white);transform:translateY(-1px)}
+.card{transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease}
+.card:hover{transform:translateY(-3px);border-color:color-mix(in srgb,var(--brand) 25%,var(--line));box-shadow:0 18px 38px rgba(45,27,36,.11)}
+.pic{background:linear-gradient(145deg,color-mix(in srgb,var(--brand) 4%,white),#faf7f9)}
+.cardBtns button{transition:transform .18s ease,filter .18s ease,box-shadow .18s ease}
+.cardBtns button:hover{transform:translateY(-1px);filter:brightness(.98)}
+.show{background:color-mix(in srgb,var(--brand) 8%,white);color:color-mix(in srgb,var(--brand) 58%,#35202b)}
+.drawerBtn{background:var(--brand);box-shadow:0 12px 28px color-mix(in srgb,var(--brand) 32%,transparent)}
+button:focus-visible{outline:3px solid color-mix(in srgb,var(--brand) 32%,transparent);outline-offset:2px}
+
+.hero.without-featured{grid-template-columns:1fr;min-height:auto;}
+.hero.without-featured .copy{padding-bottom:28px;}
+.hero.without-featured .visual{min-height:105px;background:transparent;}
+.hero.without-featured .visual::before{display:none;}
+.hero.without-featured .product{left:clamp(18px,5vw,70px);right:clamp(18px,5vw,70px);bottom:18px;}
+
 @media(max-width:900px){
   .hero{
     background:
-      radial-gradient(circle at 82% 16%,rgba(255,92,166,.25),transparent 28%),
-      linear-gradient(145deg,#211119,#651b43);
+      radial-gradient(circle at 82% 16%,color-mix(in srgb,var(--brand) 32%,transparent),transparent 28%),
+      linear-gradient(145deg,color-mix(in srgb,var(--brand) 14%,#160d12),color-mix(in srgb,var(--brand) 58%,#351322));
   }
 
   .hero .copy p{
@@ -304,6 +326,8 @@ function renderizar(){
   const list=document.getElementById('drawerList');
   const hero=VitrinePro.featured;
   const vitrineHeroImage=VitrinePro.store?.vitrineHeroImage || '';
+  const heroSection=document.querySelector('.hero');
+  if(heroSection) heroSection.classList.toggle('without-featured',!hero&&!vitrineHeroImage);
 
   if(hero){
     const heroImg=document.getElementById('heroImg');
@@ -341,7 +365,7 @@ function renderizar(){
     return;
   }
 
-  const destaques=items.filter(x=>imagem(x)).slice(0,8);
+  const destaques=items.filter(x=>imagem(x)).slice(0,4);
   grid.innerHTML=destaques.map((item,i)=>cardHtml(item,i)).join('');
 
   list.innerHTML=items.filter(x=>imagem(x)).map((item,i)=>`
@@ -402,6 +426,10 @@ function falarComLoja(){
 async function carregarVitrine(){
   const slug=pegarLojaAtual();
   if(!slug){
+    VitrinePro.store=null;
+    VitrinePro.items=[];
+    VitrinePro.featured=null;
+    renderizar();
     document.getElementById('grid').innerHTML='<div class="empty">Loja não identificada.</div>';
     return;
   }

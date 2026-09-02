@@ -13,8 +13,36 @@
     }catch(e){}
     return DEFAULTS;
   }
+  function cfgFromStore(store){
+    const st=store||{};
+    return {
+      ...DEFAULTS,
+      name:st.nome || st.name || st.titulo || DEFAULTS.name,
+      sub:st.slogan || st.sub || st.subtitulo || st.descricao || DEFAULTS.sub,
+      logo:st.logo || st.logoUrl || st.imagemLogo || DEFAULTS.logo,
+      color:st.cor || st.color || st.brandColor || st.corPrimaria || DEFAULTS.color
+    };
+  }
   async function fetchCfg(){
-    try { const res = await fetch('/api/session/store-config', { credentials:'same-origin' }); if (res.ok) { const data = await res.json(); if (data.store) return { ...DEFAULTS, name:data.store.name, sub:data.store.sub, logo:data.store.logo, color:data.store.color }; } } catch(e) {}
+    const params=new URLSearchParams(location.search);
+    const slug=params.get('loja') || params.get('slug') || '';
+    if(slug){
+      try{
+        const res=await fetch('/api/public/store/'+encodeURIComponent(slug),{cache:'no-store'});
+        if(res.ok){
+          const data=await res.json();
+          if(data && data.store) return cfgFromStore(data.store);
+        }
+      }catch(e){}
+      return {...DEFAULTS};
+    }
+    try {
+      const res = await fetch('/api/session/store-config', { credentials:'same-origin' });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.store) return cfgFromStore(data.store);
+      }
+    } catch(e) {}
     return localCfg();
   }
   async function apply(){

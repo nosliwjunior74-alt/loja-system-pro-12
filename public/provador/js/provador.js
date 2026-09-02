@@ -1,19 +1,28 @@
-﻿
+
 window.UI={page:0,pageSize:4,async renderTrack(trackId,items,clickFnName){const track=document.getElementById(trackId); if(!track)return; const start=this.page*this.pageSize; const slice=items.slice(start,start+this.pageSize); track.innerHTML=slice.map(i=>`<button class="card" onclick="${clickFnName}('${i.id || i.nome}')"><div class="name">${i.nome}</div><img src="${i.imagem}" alt="${i.nome}"></button>`).join('');}};
 async function renderHome(){await AppStore.ensureSeed(); const items=await Estoque.visible(); UI.page=Math.min(UI.page,Math.max(0,Math.ceil(items.length/UI.pageSize)-1)); await UI.renderTrack('homeTrack',items,'previewLook'); const first=items.find(i=>i.destaque)||items[0]; if(first) previewItem(first);}
 async function previewLook(id){const item=await Estoque.byId(id); if(item) previewItem(item);}
 function previewItem(item){const img=document.getElementById('landingLook'); const badge=document.getElementById('homeBadge'); if(img){img.src=item.imagem; img.style.display='block';} if(badge) badge.textContent=`Destaque: ${item.nome}`;}
 async function nextHome(){const items=await Estoque.visible(); const max=Math.max(0,Math.ceil(items.length/UI.pageSize)-1); UI.page=Math.min(max,UI.page+1); await renderHome();}
 async function prevHome(){UI.page=Math.max(0,UI.page-1); await renderHome();}
+function filtrarItensCatalogo(items){
+  return (Array.isArray(items)?items:[]).filter(item=>{
+    const qtd=item?.quantidade ?? item?.quantity ?? item?.estoque;
+    if(qtd===undefined || qtd===null || qtd==='') return true;
+    return Number(qtd)>0;
+  });
+}
+async function carregarItensCatalogo(){
+  return filtrarItensCatalogo(await carregarLooksOnline());
+}
 async function renderCatalogo(){
-  await AppStore.ensureSeed();
-  const items=await Estoque.visible();
+  const items=await carregarItensCatalogo();
   const track=document.getElementById('catalogTrack');
   const carousel=track ? track.closest('.carousel') : null;
 
   if(!items.length){
     if(track){
-      track.innerHTML='<div class="catalog-empty-state"><strong>Nenhuma peÃ§a disponÃ­vel</strong><span>Cadastre roupas no painel da loja para exibi-las neste catÃ¡logo.</span></div>';
+      track.innerHTML='<div class="catalog-empty-state"><strong>Nenhuma peça disponível</strong><span>Cadastre roupas no painel da loja para exibi-las neste catálogo.</span></div>';
     }
     if(carousel) carousel.classList.add('catalog-empty');
     return;
@@ -24,8 +33,8 @@ async function renderCatalogo(){
   await UI.renderTrack('catalogTrack',items,'abrirProvadorItem');
 }
 
-async function abrirProvadorItem(id){const item=await Estoque.byId(id); if(item){AppStore.setSelected(item); if(window.ProNavigation){ProNavigation.go('provador.html');}else{location.href='provador.html';}}}
-async function nextCatalog(){const items=await Estoque.visible(); const max=Math.max(0,Math.ceil(items.length/UI.pageSize)-1); UI.page=Math.min(max,UI.page+1); await renderCatalogo();}
+async function abrirProvadorItem(id){const items=await carregarItensCatalogo(); const item=items.find(i=>String(i.id || i.nome)===String(id)); if(item){AppStore.setSelected(item); if(window.ProNavigation){ProNavigation.go('provador.html');}else{location.href='provador.html?loja='+encodeURIComponent(new URLSearchParams(location.search).get('loja') || localStorage.getItem('loja_slug') || '');}}}
+async function nextCatalog(){const items=await carregarItensCatalogo(); const max=Math.max(0,Math.ceil(items.length/UI.pageSize)-1); UI.page=Math.min(max,UI.page+1); await renderCatalogo();}
 async function prevCatalog(){UI.page=Math.max(0,UI.page-1); await renderCatalogo();}
 async function initProvador(){
   await AppStore.ensureSeed();
@@ -40,7 +49,7 @@ async function initProvador(){
 
   if(lista.length === 0){
     document.body.classList.add('provador-sem-look');
-    if(badge) badge.textContent = 'Escolha um look para comeÃ§ar';
+    if(badge) badge.textContent = 'Escolha um look para começar';
     if(btnLooks) btnLooks.style.display = 'none';
     if(btnTrocar) btnTrocar.textContent = 'ESCOLHER LOOK';
 
@@ -92,7 +101,7 @@ async function selecionarLook(id){
   );
 
   if(!item){
-      console.log('Look nÃ£o encontrado:', id);
+      console.log('Look não encontrado:', id);
       return;
   }
 
@@ -153,7 +162,7 @@ async function carregarLooksOnline() {
             localStorage.getItem('loja_slug');
 
         if (!slug) {
-            console.error('Slug nÃ£o encontrado');
+            console.error('Slug não encontrado');
             return [];
         }
 
@@ -167,7 +176,7 @@ async function carregarLooksOnline() {
         const result = await response.json();
 
         if (!result.store) {
-            console.error('Store nÃ£o encontrada');
+            console.error('Store não encontrada');
             return [];
         }
 

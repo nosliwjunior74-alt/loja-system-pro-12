@@ -12,19 +12,33 @@
     return '/' + v.replace(/^(?:\.\.\/|\.\/)+/,'');
   }
   function safeJson(v){ try { return JSON.parse(v || '{}'); } catch(e){ return {}; } }
+  function cfgFromStore(store){
+    const st=store||{};
+    return {
+      name: st.nome || st.name || st.titulo || DEFAULTS.name,
+      sub: st.slogan || st.sub || st.subtitulo || st.descricao || DEFAULTS.sub,
+      logo: st.logo || st.logoUrl || st.imagemLogo || DEFAULTS.logo,
+      color: st.cor || st.color || st.brandColor || st.corPrimaria || DEFAULTS.color
+    };
+  }
   async function getCfg(){
+    const params=new URLSearchParams(location.search);
+    const slug=params.get('loja') || params.get('slug') || '';
+    if(slug){
+      try{
+        const res=await fetch('/api/public/store/'+encodeURIComponent(slug),{cache:'no-store'});
+        if(res.ok){
+          const data=await res.json();
+          if(data && data.store) return cfgFromStore(data.store);
+        }
+      }catch(e){}
+      return {...DEFAULTS};
+    }
     try {
       const res = await fetch('/api/session/store-config', { credentials:'same-origin' });
       if (res.ok) {
         const data = await res.json();
-        if (data && data.store) {
-          return {
-            name: data.store.name || DEFAULTS.name,
-            sub: data.store.sub || DEFAULTS.sub,
-            logo: data.store.logo || DEFAULTS.logo,
-            color: data.store.color || DEFAULTS.color
-          };
-        }
+        if (data && data.store) return cfgFromStore(data.store);
       }
     } catch(e) {}
     const localCfg = safeJson(localStorage.getItem('lojaAtivaConfig'));

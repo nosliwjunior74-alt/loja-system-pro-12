@@ -5,6 +5,11 @@ async function previewLook(id){const item=await Estoque.byId(id); if(item) previ
 function previewItem(item){const img=document.getElementById('landingLook'); const badge=document.getElementById('homeBadge'); if(img){img.src=item.imagem; img.style.display='block';} if(badge) badge.textContent=`Destaque: ${item.nome}`;}
 async function nextHome(){const items=await Estoque.visible(); const max=Math.max(0,Math.ceil(items.length/UI.pageSize)-1); UI.page=Math.min(max,UI.page+1); await renderHome();}
 async function prevHome(){UI.page=Math.max(0,UI.page-1); await renderHome();}
+const CatalogoState={categoria:'Todos'};
+
+function categoriaItemCatalogo(item){
+  return String(item?.categoria ?? item?.category ?? '').trim() || 'Sem categoria';
+}
 function filtrarItensCatalogo(items){
   return (Array.isArray(items)?items:[]).filter(item=>{
     const qtd=item?.quantidade ?? item?.quantity ?? item?.estoque;
@@ -15,8 +20,53 @@ function filtrarItensCatalogo(items){
 async function carregarItensCatalogo(){
   return filtrarItensCatalogo(await carregarLooksOnline());
 }
+function aplicarCategoriaCatalogo(items){
+  if(CatalogoState.categoria==='Todos') return items;
+  return items.filter(item=>categoriaItemCatalogo(item)===CatalogoState.categoria);
+}
+function renderFiltrosCatalogo(items){
+  const area=document.querySelector('.catalog-tools');
+  const filters=document.getElementById('catalogFilters');
+  const count=document.getElementById('catalogCount');
+  if(!area || !filters || !count) return;
+
+  if(!items.length){
+    area.hidden=true;
+    filters.replaceChildren();
+    count.textContent='';
+    CatalogoState.categoria='Todos';
+    return;
+  }
+
+  area.hidden=false;
+  const categorias=[...new Set(items.map(categoriaItemCatalogo))].sort((a,b)=>a.localeCompare(b,'pt-BR'));
+  if(CatalogoState.categoria!=='Todos' && !categorias.includes(CatalogoState.categoria)){
+    CatalogoState.categoria='Todos';
+  }
+
+  filters.replaceChildren();
+  for(const categoria of ['Todos',...categorias]){
+    const botao=document.createElement('button');
+    const ativo=CatalogoState.categoria===categoria;
+    botao.type='button';
+    botao.className='catalog-filter'+(ativo?' active':'');
+    botao.textContent=categoria;
+    botao.setAttribute('aria-pressed',String(ativo));
+    botao.addEventListener('click',()=>{
+      CatalogoState.categoria=categoria;
+      UI.page=0;
+      renderCatalogo();
+    });
+    filters.appendChild(botao);
+  }
+
+  const filtrados=aplicarCategoriaCatalogo(items);
+  count.textContent=`${filtrados.length} ${filtrados.length===1?'peça':'peças'}`;
+}
 async function renderCatalogo(){
-  const items=await carregarItensCatalogo();
+  const todos=await carregarItensCatalogo();
+  renderFiltrosCatalogo(todos);
+  const items=aplicarCategoriaCatalogo(todos);
   const track=document.getElementById('catalogTrack');
   const carousel=track ? track.closest('.carousel') : null;
 
@@ -34,7 +84,7 @@ async function renderCatalogo(){
 }
 
 async function abrirProvadorItem(id){const items=await carregarItensCatalogo(); const item=items.find(i=>String(i.id || i.nome)===String(id)); if(item){AppStore.setSelected(item); if(window.ProNavigation){ProNavigation.go('provador.html');}else{location.href='provador.html?loja='+encodeURIComponent(new URLSearchParams(location.search).get('loja') || localStorage.getItem('loja_slug') || '');}}}
-async function nextCatalog(){const items=await carregarItensCatalogo(); const max=Math.max(0,Math.ceil(items.length/UI.pageSize)-1); UI.page=Math.min(max,UI.page+1); await renderCatalogo();}
+async function nextCatalog(){const items=aplicarCategoriaCatalogo(await carregarItensCatalogo()); const max=Math.max(0,Math.ceil(items.length/UI.pageSize)-1); UI.page=Math.min(max,UI.page+1); await renderCatalogo();}
 async function prevCatalog(){UI.page=Math.max(0,UI.page-1); await renderCatalogo();}
 async function initProvador(){
   await AppStore.ensureSeed();

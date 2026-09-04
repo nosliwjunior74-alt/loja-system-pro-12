@@ -200,7 +200,7 @@ async function prevProvador(){
   );
 }
 async function carregarClientesSelect(){const sel=document.getElementById('clienteSelect'); if(!sel)return; const customers=await Estoque.customers(); sel.innerHTML='<option value="">Sem cliente selecionada</option>'+customers.map(c=>`<option value="${c.telefone||''}">${c.nome}</option>`).join('');}
-function fotoLook(){CameraModule.savePhoto('poseCanvas'); alert('Foto salva no computador.');}
+function fotoLook(){CameraModule.savePhoto('poseCanvas');}
 function enviarWhats(){const phone=(document.getElementById('clienteSelect')||{}).value||''; WhatsAppModule.saveAndOpen(phone);}
 async function renderDescanso(){await AppStore.ensureSeed(); const holder=document.getElementById('restHolder'); const label=document.getElementById('restLabel'); if(!holder)return; const meta=await DB.getKV('rest_meta'); if(label&&meta) label.textContent=meta.name||'Sua Loja'; const file=await DB.getKV('rest_file'); if(meta&&meta.mode==='custom'&&file){const url=URL.createObjectURL(file); holder.innerHTML=meta.type==='video'?`<video src="${url}" autoplay muted loop playsinline controls></video>`:`<img src="${url}" alt="${meta.name||''}">`;} else {holder.innerHTML=`<img src="imagens/logo.png" alt="Sua Loja">`;}}
 async function carregarLooksOnline() {

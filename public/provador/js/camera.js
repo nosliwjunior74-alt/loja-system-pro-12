@@ -189,6 +189,12 @@ ctx.restore();
     draw();
   },
 
+  capturePhotoDataUrl(canvasId = 'canvas') {
+    const canvas = document.getElementById(canvasId);
+    if (!canvas) return '';
+    return canvas.toDataURL('image/png');
+  },
+
   savePhoto(canvasId = 'canvas') {
     const canvas = document.getElementById(canvasId);
     if (!canvas) {

@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Controle do Provador</title>
+<link rel="stylesheet" href="css/controle-remoto.css">
+</head>
+<body class="controle-remoto">
+<main class="remote-shell">
+  <header class="remote-header">
+    <div class="remote-store">
+      <img id="storeLogo" class="remote-logo" alt="">
+      <div>
+        <span class="remote-eyebrow">PROVADOR PRO</span>
+        <h1 id="storeName">Controle do Provador</h1>
+      </div>
+    </div>
+    <div id="remoteStatus" class="remote-status" aria-live="polite">Conectando...</div>
+  </header>
+
+  <section class="remote-pad" aria-label="Controle remoto do provador">
+    <button type="button" data-command="previous-look">← ANTERIOR</button>
+    <button type="button" data-command="toggle-looks">LOOKS</button>
+    <button type="button" data-command="next-look">PROXIMO →</button>
+    <button type="button" data-command="photo">FOTO</button>
+    <button type="button" data-command="catalog">CATALOGO</button>
+    <button type="button" data-command="rest">DESCANSO</button>
+  </section>
+
+  <section id="remotePhotoPanel" class="remote-photo-panel" hidden aria-live="polite">
+    <div class="remote-photo-title">FOTO DO LOOK</div>
+    <img id="remotePhotoPreview" class="remote-photo-preview" alt="Foto do cliente com o look selecionado">
+    <div class="remote-photo-actions">
+      <button id="remotePhotoSaveBtn" type="button">SALVAR NO CELULAR</button>
+      <button id="remotePhotoWhatsBtn" type="button">WHATSAPP</button>
+      <button id="remotePhotoClearBtn" type="button">EXCLUIR / NOVA FOTO</button>
+    </div>
+  </section>
+
+  <p class="remote-note">Controle temporario desta sessao do Provador. Feche esta pagina quando terminar.</p>
+</main>
+<script src="js/controle-remoto.js"></script>
+</body>
+</html>

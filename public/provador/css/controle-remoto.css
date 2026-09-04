@@ -1,0 +1,223 @@
+:root{
+  --brand-color:#e33d8f;
+  --remote-bg:#0d0d10;
+  --remote-card:rgba(255,255,255,.08);
+  --remote-border:rgba(255,255,255,.14);
+  --remote-text:#ffffff;
+  --remote-muted:rgba(255,255,255,.72);
+}
+
+*{box-sizing:border-box}
+
+html,body{
+  margin:0;
+  min-height:100%;
+  background:var(--remote-bg);
+  color:var(--remote-text);
+  font-family:Arial,Helvetica,sans-serif;
+  -webkit-text-size-adjust:100%;
+}
+
+body.controle-remoto{
+  min-height:100dvh;
+  padding:max(18px,env(safe-area-inset-top)) 16px max(22px,env(safe-area-inset-bottom));
+  background:
+    radial-gradient(circle at top,color-mix(in srgb,var(--brand-color) 24%,transparent),transparent 42%),
+    var(--remote-bg);
+}
+
+.remote-shell{
+  width:min(680px,100%);
+  margin:0 auto;
+}
+
+.remote-header{
+  display:grid;
+  gap:14px;
+  margin-bottom:18px;
+}
+
+.remote-store{
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+
+.remote-logo{
+  width:52px;
+  height:52px;
+  border-radius:14px;
+  object-fit:contain;
+  background:#fff;
+  padding:5px;
+}
+
+.remote-logo[hidden]{display:none}
+
+.remote-eyebrow{
+  display:block;
+  margin-bottom:3px;
+  font-size:11px;
+  font-weight:800;
+  letter-spacing:.12em;
+  color:var(--remote-muted);
+}
+
+.remote-header h1{
+  margin:0;
+  font-size:clamp(20px,5vw,28px);
+  line-height:1.1;
+}
+
+.remote-status{
+  min-height:42px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:10px 14px;
+  border:1px solid var(--remote-border);
+  border-radius:14px;
+  background:var(--remote-card);
+  color:var(--remote-muted);
+  font-size:14px;
+  font-weight:700;
+  text-align:center;
+}
+
+.remote-status.is-ok{
+  border-color:color-mix(in srgb,var(--brand-color) 58%,white 10%);
+  color:#fff;
+}
+
+.remote-status.is-error{
+  border-color:rgba(255,90,90,.65);
+  color:#ffd8d8;
+}
+
+.remote-pad{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:12px;
+}
+
+.remote-pad button{
+  min-height:86px;
+  border:1px solid var(--remote-border);
+  border-radius:20px;
+  background:var(--remote-card);
+  color:#fff;
+  padding:14px 12px;
+  font-size:16px;
+  font-weight:900;
+  letter-spacing:.03em;
+  cursor:pointer;
+  touch-action:manipulation;
+  -webkit-tap-highlight-color:transparent;
+  transition:transform .08s ease,background .15s ease,border-color .15s ease;
+}
+
+.remote-pad button:active{
+  transform:scale(.97);
+  background:color-mix(in srgb,var(--brand-color) 28%,var(--remote-card));
+  border-color:var(--brand-color);
+}
+
+.remote-pad button:focus-visible{
+  outline:3px solid color-mix(in srgb,var(--brand-color) 60%,white);
+  outline-offset:3px;
+}
+
+.remote-pad button:disabled{
+  opacity:.42;
+  cursor:not-allowed;
+}
+
+.remote-note{
+  margin:16px 4px 0;
+  color:var(--remote-muted);
+  text-align:center;
+  font-size:12px;
+  line-height:1.45;
+}
+
+@media(min-width:620px){
+  .remote-pad{
+    grid-template-columns:repeat(3,minmax(0,1fr));
+  }
+}
+
+@media(max-width:390px){
+  body.controle-remoto{
+    padding-left:12px;
+    padding-right:12px;
+  }
+
+  .remote-pad{
+    gap:10px;
+  }
+
+  .remote-pad button{
+    min-height:78px;
+    font-size:14px;
+  }
+}
+
+.remote-photo-panel[hidden]{
+  display:none;
+}
+
+.remote-photo-panel{
+  margin-top:16px;
+  padding:14px;
+  border:1px solid var(--remote-border);
+  border-radius:20px;
+  background:var(--remote-card);
+  display:grid;
+  gap:12px;
+}
+
+.remote-photo-title{
+  color:#fff;
+  font-size:13px;
+  font-weight:900;
+  letter-spacing:.05em;
+  text-align:center;
+}
+
+.remote-photo-preview{
+  display:block;
+  width:100%;
+  max-height:52vh;
+  object-fit:contain;
+  border-radius:14px;
+  background:#000;
+}
+
+.remote-photo-actions{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:10px;
+}
+
+.remote-photo-actions button{
+  min-height:48px;
+  border:1px solid var(--remote-border);
+  border-radius:14px;
+  background:var(--remote-card);
+  color:#fff;
+  font-size:13px;
+  font-weight:900;
+  cursor:pointer;
+  touch-action:manipulation;
+}
+
+.remote-photo-actions button:active{
+  transform:scale(.98);
+  border-color:var(--brand-color);
+}
+
+@media(min-width:620px){
+  .remote-photo-actions{
+    grid-template-columns:repeat(3,minmax(0,1fr));
+  }
+}

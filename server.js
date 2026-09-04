@@ -7,6 +7,8 @@ const path = require('path');
 const fs = require('fs');
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
+const os = require('os');
+const QRCode = require('qrcode');
 const {
   MercadoPagoConfig,
   Payment,
@@ -547,6 +549,48 @@ async function askStoreAi(
 const PUBLIC_DIR = path.join(__dirname, 'public');
 app.set('trust proxy', 1);
 function baseUrl(req){ return BASE_URL || `${req.protocol}://${req.get('host')}`; }
+function localNetworkIpv4(){
+  const candidates = [];
+  for(const entries of Object.values(os.networkInterfaces())){
+    for(const info of entries || []){
+      if(info && info.family === 'IPv4' && !info.internal && info.address){
+        candidates.push(String(info.address));
+      }
+    }
+  }
+
+  return candidates.find(ip=>/^192\.168\./.test(ip))
+    || candidates.find(ip=>/^10\./.test(ip))
+    || candidates.find(ip=>/^172\.(1[6-9]|2\d|3[01])\./.test(ip))
+    || candidates.find(ip=>!/^169\.254\./.test(ip))
+    || candidates[0]
+    || '';
+}
+function provadorRemoteBaseUrl(req){
+  const host = String(req.get('host') || '').trim();
+  const hostName = host
+    .replace(/^\[/,'')
+    .replace(/\](?::\d+)?$/,'')
+    .replace(/:\d+$/,'')
+    .toLowerCase();
+
+  const isLoopback = hostName === '127.0.0.1'
+    || hostName === 'localhost'
+    || hostName === '::1';
+
+  if(!isLoopback){
+    return `${req.protocol}://${host}`;
+  }
+
+  const localIp = localNetworkIpv4();
+  const portMatch = host.match(/:(\d+)$/);
+  const port = portMatch?.[1] || String(process.env.PORT || '10000');
+
+  return localIp
+    ? `http://${localIp}:${port}`
+    : `${req.protocol}://${host}`;
+}
+
 function todayYmd(){ return new Date().toISOString().slice(0,10); }
 function brlFromCents(cents){ return (Number(cents || 0)/100).toFixed(2).replace('.', ','); }
 function paymentLinkForStore(store, req){ return `${baseUrl(req)}/s/${store.slug}`; }
@@ -665,6 +709,37 @@ const checkoutLimiter = rateLimit({
   legacyHeaders: false,
   message: { error: `Muitas tentativas de checkout. Aguarde alguns minutos e tente novamente.` }
 });
+
+// ===== LIMITADOR DO CONTROLE REMOTO DO PROVADOR =====
+const provadorRemoteLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 120,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error:'Muitos comandos do controle remoto. Aguarde alguns segundos.' }
+});
+// ===== SESSOES TEMPORARIAS TV <-> CELULAR =====
+const PROVADOR_REMOTE_TTL_MS = 30 * 60 * 1000;
+const provadorRemoteSessions = new Map();
+const PROVADOR_REMOTE_COMMANDS = new Set([
+  'next-look','previous-look','open-looks','close-looks','toggle-looks',
+  'photo','whatsapp','catalog','rest','tracking'
+]);
+
+function cleanProvadorRemoteSessions(){
+  const now = Date.now();
+  for(const [id, remote] of provadorRemoteSessions.entries()){
+    if(!remote || remote.expiresAt <= now){
+      provadorRemoteSessions.delete(id);
+    }
+  }
+}
+
+function getProvadorRemoteSession(id){
+  cleanProvadorRemoteSessions();
+  return provadorRemoteSessions.get(String(id || '').trim()) || null;
+}
+
 app.get('/health', (_req,res)=>res.json({ ok:true }));
 function requireAdmin(req,res,next){ if(req.session?.adminLoggedIn) return next(); return res.redirect('/admin-login.html'); }
 function requireAdminApi(req,res,next){ if(req.session?.adminLoggedIn) return next(); return res.status(401).json({ error:'unauthorized' }); }
@@ -2795,6 +2870,178 @@ app.post('/api/public/change-password-required', authLimiter, (req,res)=>{
 
 
 app.post('/api/public/logout', requireClientApi, (req,res)=>{ delete req.session.clientStoreId; delete req.session.clientStoreSlug; res.json({ ok:true }); });
+// ===== CONTROLE REMOTO: CRIAR SESSAO =====
+app.post('/api/public/provador-remote/session', provadorRemoteLimiter, async (req,res)=>{
+  cleanProvadorRemoteSessions();
+
+  const slug = String(req.body?.slug || '')
+    .trim()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g,'')
+    .replace(/\s+/g,'-');
+
+  const store = getStoreBySlug(slug, baseUrl(req));
+  if(!store){
+    return res.status(404).json({ error:'Loja nao encontrada.' });
+  }
+
+  const id = crypto.randomBytes(9).toString('base64url');
+  const tvToken = crypto.randomBytes(24).toString('base64url');
+  const controllerToken = crypto.randomBytes(24).toString('base64url');
+  const expiresAt = Date.now() + PROVADOR_REMOTE_TTL_MS;
+  const controllerBaseUrl = provadorRemoteBaseUrl(req).replace(/\/+$/,'');
+  const controllerUrlObj = new URL(controllerBaseUrl + '/provador/controle.html');
+  controllerUrlObj.searchParams.set('session',id);
+  controllerUrlObj.searchParams.set('loja',store.slug);
+  controllerUrlObj.hash='token='+encodeURIComponent(controllerToken);
+  const controllerUrl = controllerUrlObj.toString();
+
+  let controllerQrDataUrl='';
+  try{
+    controllerQrDataUrl = await QRCode.toDataURL(controllerUrl,{
+      errorCorrectionLevel:'M',
+      margin:1,
+      width:220
+    });
+  }catch(err){
+    console.error('Erro gerando QR Code do controle:',err);
+  }
+
+  provadorRemoteSessions.set(id,{
+    id,
+    slug:store.slug,
+    tvToken,
+    controllerToken,
+    expiresAt,
+    commands:[],
+    nextCommandId:1,
+    photo:null
+  });
+
+  return res.json( {
+    ok:true,
+    session:{
+      id,
+      slug:store.slug,
+      tvToken,
+      controllerToken,
+      controllerBaseUrl,
+      controllerUrl,
+      controllerQrDataUrl,
+      expiresAt
+    }
+  });
+});
+
+// ===== CONTROLE REMOTO: RECEBER FOTO DO PROVADOR =====
+app.post('/api/public/provador-remote/:id/photo', provadorRemoteLimiter, (req,res)=>{
+  const remote = getProvadorRemoteSession(req.params.id);
+  if(!remote){
+    return res.status(404).json({ error:'Sessao remota expirada ou inexistente.' });
+  }
+
+  const token = String(req.get('x-provador-tv-token') || '').trim();
+  if(!token || token !== remote.tvToken){
+    return res.status(403).json({ error:'TV nao autorizada para esta sessao.' });
+  }
+
+  const dataUrl = String(req.body?.dataUrl || '').trim();
+  if(!/^data:image\/png;base64,/i.test(dataUrl)){
+    return res.status(400).json({ error:'Foto invalida.' });
+  }
+
+  if(dataUrl.length > 8 * 1024 * 1024){
+    return res.status(413).json({ error:'Foto muito grande.' });
+  }
+
+  const createdAt = Date.now();
+  remote.photo = { dataUrl, createdAt };
+  remote.expiresAt = Date.now() + PROVADOR_REMOTE_TTL_MS;
+
+  return res.json({ ok:true, createdAt, expiresAt:remote.expiresAt });
+});
+
+// ===== CONTROLE REMOTO: CELULAR BUSCAR FOTO =====
+app.get('/api/public/provador-remote/:id/photo', provadorRemoteLimiter, (req,res)=>{
+  const remote = getProvadorRemoteSession(req.params.id);
+  if(!remote){
+    return res.status(404).json({ error:'Sessao remota expirada ou inexistente.' });
+  }
+
+  const token = String(req.get('x-provador-controller-token') || '').trim();
+  if(!token || token !== remote.controllerToken){
+    return res.status(403).json({ error:'Controle remoto nao autorizado.' });
+  }
+
+  const afterRaw = Number.parseInt(String(req.query?.after || '0'),10);
+  const after = Number.isFinite(afterRaw) && afterRaw >= 0 ? afterRaw : 0;
+  const photo = remote.photo && Number(remote.photo.createdAt || 0) > after
+    ? remote.photo
+    : null;
+
+  remote.expiresAt = Date.now() + PROVADOR_REMOTE_TTL_MS;
+
+  return res.json({ ok:true, photo, expiresAt:remote.expiresAt });
+});
+
+// ===== CONTROLE REMOTO: RECEBER COMANDO DO CELULAR =====
+app.post('/api/public/provador-remote/:id/command', provadorRemoteLimiter, (req,res)=>{
+  const remote = getProvadorRemoteSession(req.params.id);
+  if(!remote){
+    return res.status(404).json({ error:'Sessao remota expirada ou inexistente.' });
+  }
+
+  const token = String(req.body?.token || '').trim();
+  if(!token || token !== remote.controllerToken){
+    return res.status(403).json({ error:'Controle remoto nao autorizado.' });
+  }
+
+  const command = String(req.body?.command || '').trim().toLowerCase();
+  if(!PROVADOR_REMOTE_COMMANDS.has(command)){
+    return res.status(400).json({ error:'Comando remoto invalido.' });
+  }
+
+  const item = {
+    id:remote.nextCommandId++,
+    command,
+    createdAt:Date.now()
+  };
+
+  remote.commands.push(item);
+  if(remote.commands.length > 50){
+    remote.commands.splice(0, remote.commands.length - 50);
+  }
+  remote.expiresAt = Date.now() + PROVADOR_REMOTE_TTL_MS;
+
+  return res.json({ ok:true, command:item });
+});
+
+// ===== CONTROLE REMOTO: TV BUSCAR COMANDOS =====
+app.get('/api/public/provador-remote/:id/commands', provadorRemoteLimiter, (req,res)=>{
+  const remote = getProvadorRemoteSession(req.params.id);
+  if(!remote){
+    return res.status(404).json({ error:'Sessao remota expirada ou inexistente.' });
+  }
+
+  const token = String(req.get('x-provador-tv-token') || '').trim();
+  if(!token || token !== remote.tvToken){
+    return res.status(403).json({ error:'TV nao autorizada para esta sessao.' });
+  }
+
+  const afterRaw = Number.parseInt(String(req.query?.after || '0'),10);
+  const after = Number.isFinite(afterRaw) && afterRaw >= 0 ? afterRaw : 0;
+  const commands = remote.commands.filter(item=>item.id > after);
+
+  remote.expiresAt = Date.now() + PROVADOR_REMOTE_TTL_MS;
+
+  return res.json({
+    ok:true,
+    commands,
+    expiresAt:remote.expiresAt
+  });
+});
+
 app.get('/api/public/store/:slug', (req, res) => {
   const slug = String(req.params.slug || '')
     .trim()

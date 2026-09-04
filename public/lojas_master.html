@@ -2955,13 +2955,23 @@ e=>el('status').textContent=e.message
 el('openProvadorBtn')
 .addEventListener(
 'click',
-()=>parent.postMessage(
+()=>{
+const store=getActiveStore();
+const slug=String(store?.slug||'').trim();
+
+if(!slug){
+el('status').textContent='Selecione uma loja antes de abrir o Provador.';
+return;
+}
+
+parent.postMessage(
 {
 type:'open-url',
-url:'provador/provador.html'
+url:'provador/provador.html?loja='+encodeURIComponent(slug)
 },
 '*'
-)
+);
+}
 );
 
 

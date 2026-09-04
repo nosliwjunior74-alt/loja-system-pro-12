@@ -135,14 +135,17 @@
       }catch(err){
         if(err?.name==='AbortError') return;
       }
-      const a=document.createElement('a');
-      a.href=photoDataUrl;
-      a.download='foto-look.png';
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      const text=encodeURIComponent('Foto do meu look no Provador Pro. A imagem foi salva no celular para anexar.');
-      window.open('https://wa.me/?text='+text,'_blank','noopener');
+      status('No modo local, use SALVAR NO CELULAR e compartilhe pelo WhatsApp',true);
+      return;
+    });
+  }
+
+  if(photoClearBtn){
+    photoClearBtn.addEventListener('click',async()=>{
+      if(!photoDataUrl) return;
+      hidePhoto();
+      status('Preparando nova foto...',true);
+      await send('photo');
     });
   }
 

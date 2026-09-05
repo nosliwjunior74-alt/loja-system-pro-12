@@ -132,3 +132,9 @@
   flex-direction:column;
   overflow:hidden;
 }
+
+/* Evita que o Ajuda do Painel Mestre cubra controles e QR do Provador. */
+body.provador-frame-open #chatbotBtn,
+body.provador-frame-open #chatbotBox{
+  display:none !important;
+}

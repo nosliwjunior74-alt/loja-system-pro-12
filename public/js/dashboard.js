@@ -62,6 +62,11 @@ function abrirTela(url, btn){
 
   activateButtonForUrl(url);
 
+  document.body.classList.toggle(
+    'provador-frame-open',
+    normalizarUrl(url) === 'provador/provador.html'
+  );
+
   frame.src =
     url;
 

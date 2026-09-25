@@ -13,24 +13,13 @@
 <label>Nome da roupa</label><input id="nome" placeholder="Ex.: Camisa Branca Social">
 
     <label>Categoria</label>
-<select id="categoria">
-    <option value="Camisas">Camisas</option>
-    <option value="Blusas">Blusas</option>
-    <option value="Camisetas">Camisetas</option>
-    <option value="Vestidos">Vestidos</option>
-    <option value="Saias">Saias</option>
-    <option value="Shorts">Shorts</option>
-    <option value="Calças">Calças</option>
-    <option value="Conjuntos">Conjuntos</option>
-    <option value="Jaquetas">Jaquetas</option>
-    <option value="Casacos">Casacos</option>
-    <option value="Polos">Polos</option>
-    <option value="Jalecos">Jalecos</option>
-    <option value="Uniformes">Uniformes</option>
-    <option value="Infantil">Infantil</option>
-    <option value="Acessórios">Acessórios</option>
-    <option value="Outros">Outros</option>
-</select>
+<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+  <select id="categoria" style="flex:1 1 240px">
+    <option value="">Selecione uma categoria</option>
+  </select>
+  <button type="button" class="small-btn" id="addCategoryBtn">+ Adicionar categoria</button>
+</div>
+<div class="muted" id="categoryInfo" style="margin-top:6px">Categorias padrão da loja + categorias criadas por você.</div>
 
 <label>Subcategoria</label>
 <input id="subcategoria" placeholder="Ex.: Social, Polo, Festa">
@@ -165,6 +154,130 @@
 </section></main>
 <script src="js/salvar.js"></script><script src="js/estoque.js"></script>
 <script>
+const DEFAULT_CATEGORIES = [
+  'Camisas','Blusas','Camisetas','Vestidos','Saias','Shorts','Calças','Conjuntos',
+  'Jaquetas','Casacos','Polos','Jalecos','Blazers','Uniformes','Infantil','Acessórios','Outros'
+];
+let storeCategories = [...DEFAULT_CATEGORIES];
+
+function normalizeCategoryName(value){
+  return String(value || '')
+    .trim()
+    .replace(/\s+/g, ' ')
+    .slice(0, 60);
+}
+
+function mergeCategories(...lists){
+  const result = [];
+  const seen = new Set();
+
+  for(const list of lists){
+    if(!Array.isArray(list)) continue;
+    for(const raw of list){
+      const name = normalizeCategoryName(raw);
+      if(!name) continue;
+      const key = name.toLocaleLowerCase('pt-BR');
+      if(seen.has(key)) continue;
+      seen.add(key);
+      result.push(name);
+    }
+  }
+
+  return result;
+}
+
+function renderCategoryOptions(selectedValue=''){
+  const selected = normalizeCategoryName(selectedValue || categoria.value);
+  const categories = mergeCategories(storeCategories, selected ? [selected] : []);
+  storeCategories = categories;
+
+  categoria.innerHTML = '';
+
+  const placeholder = document.createElement('option');
+  placeholder.value = '';
+  placeholder.textContent = 'Selecione uma categoria';
+  categoria.appendChild(placeholder);
+
+  for(const name of categories){
+    const option = document.createElement('option');
+    option.value = name;
+    option.textContent = name;
+    categoria.appendChild(option);
+  }
+
+  categoria.value = selected;
+}
+
+async function saveStoreCategories(categories){
+  const response = await fetch('/api/public/store-branding', {
+    method:'PUT',
+    credentials:'include',
+    headers:{ 'Content-Type':'application/json' },
+    body:JSON.stringify({
+      supportConfig:{ categories }
+    })
+  });
+
+  if(!response.ok){
+    const text = await response.text();
+    throw new Error('Falha ao salvar categorias: HTTP ' + response.status + ' ' + text);
+  }
+
+  return await response.json().catch(()=>({ok:true}));
+}
+
+async function addNewCategory(){
+  const raw = window.prompt('Digite o nome da nova categoria:');
+  if(raw === null) return;
+
+  const name = normalizeCategoryName(raw);
+  if(!name){
+    alert('Informe um nome válido para a categoria.');
+    return;
+  }
+
+  const existing = storeCategories.find(
+    item => item.toLocaleLowerCase('pt-BR') === name.toLocaleLowerCase('pt-BR')
+  );
+
+  if(existing){
+    renderCategoryOptions(existing);
+    alert('Essa categoria já existe.');
+    return;
+  }
+
+  const previous = [...storeCategories];
+  const next = mergeCategories(storeCategories, [name]);
+
+  try{
+    await saveStoreCategories(next);
+    storeCategories = next;
+    renderCategoryOptions(name);
+    alert('Categoria adicionada com sucesso.');
+  }catch(error){
+    console.error(error);
+    storeCategories = previous;
+    renderCategoryOptions();
+    alert('Não foi possível salvar a nova categoria. Nenhuma alteração foi aplicada.');
+  }
+}
+
+addCategoryBtn.onclick = addNewCategory;
+
+async function loadStoreCategories(store){
+  const support = store && store.supportConfig && typeof store.supportConfig === 'object'
+    ? store.supportConfig
+    : {};
+
+  const saved = Array.isArray(support.categories) ? support.categories : [];
+  const inventory = Array.isArray(store?.estoque)
+    ? store.estoque.map(item => item && item.categoria).filter(Boolean)
+    : [];
+
+  storeCategories = mergeCategories(DEFAULT_CATEGORIES, saved, inventory);
+  renderCategoryOptions();
+}
+
 async function renderInventory(){
   const inv = document.getElementById('inventory');
   const items = await Estoque.all();
@@ -210,7 +323,7 @@ async function renderCustomers(){
     </div>`).join('');
 }
 function clearForm(){
-  itemId.value=''; nome.value=''; categoria.value=''; quantidade.value='1'; preco.value=''; imagemFile.value=''; imageData.value=''; previewImg.src=''; saveBtn.textContent='Salvar roupa';
+  itemId.value=''; nome.value=''; renderCategoryOptions(''); quantidade.value='1'; preco.value=''; imagemFile.value=''; imageData.value=''; previewImg.src=''; saveBtn.textContent='Salvar roupa';
 }
 function clearCustomerForm(){
   customerId.value=''; clienteNome.value=''; clienteTelefone.value=''; clienteObs.value=''; saveCustomerBtn.textContent='Salvar cliente';
@@ -251,7 +364,7 @@ window.editItem = async (id)=>{
 itemId.value = item.id;
 nome.value = item.nome;
 
-categoria.value = item.categoria || '';
+renderCategoryOptions(item.categoria || '');
 subcategoria.value = item.subcategoria || '';
 cor.value = item.cor || '';
 tamanho.value = item.tamanho || 'M';
@@ -654,7 +767,8 @@ async function prepararLojaSelecionada(){
 }
 
 (async()=>{
-  await prepararLojaSelecionada();
+  const activeStore = await prepararLojaSelecionada();
+  await loadStoreCategories(activeStore);
   await AppStore.ensureSeed();
   await renderInventory();
   await renderCustomers();

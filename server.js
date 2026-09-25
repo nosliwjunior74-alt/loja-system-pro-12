@@ -3381,6 +3381,21 @@ if(
         .filter(item => item.question && item.answer);
   }
 
+  if(Array.isArray(recebido.categories)){
+    const seenCategories = new Set();
+    nextSupport.categories =
+      recebido.categories
+        .slice(0, 100)
+        .map(item => String(item || '').trim().replace(/\s+/g, ' ').slice(0, 60))
+        .filter(Boolean)
+        .filter(item => {
+          const key = item.toLocaleLowerCase('pt-BR');
+          if(seenCategories.has(key)) return false;
+          seenCategories.add(key);
+          return true;
+        });
+  }
+
   payload.supportConfig = nextSupport;
 }
 if(Array.isArray(req.body?.estoque))

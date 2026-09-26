@@ -6,6 +6,136 @@ window.CameraModule = {
   poseFrameBusy: false,
   autoFramingEnabled: true,
   autoFramingStorageKey: 'provador_camera_auto_framing_v1',
+  cameraTrack: null,
+  cameraFocusSupported: false,
+  cameraFocusReady: false,
+  cameraFocusAutoEnabled: true,
+  cameraFocusModes: [],
+  cameraFocusStorageKey: 'provador_camera_physical_focus_auto_v1',
+
+  loadCameraFocusPreference() {
+    try {
+      const saved = localStorage.getItem(this.cameraFocusStorageKey);
+      this.cameraFocusAutoEnabled = saved === null ? true : saved !== 'false';
+    } catch (e) {
+      this.cameraFocusAutoEnabled = true;
+    }
+    return this.cameraFocusAutoEnabled;
+  },
+
+  getCameraFocusState() {
+    const settings = this.cameraTrack?.getSettings?.() || {};
+    return {
+      ready: !!this.cameraFocusReady,
+      supported: !!this.cameraFocusSupported,
+      auto: this.cameraFocusAutoEnabled !== false,
+      modes: Array.isArray(this.cameraFocusModes) ? [...this.cameraFocusModes] : [],
+      actualMode: settings.focusMode || null,
+      focusDistance: settings.focusDistance ?? null
+    };
+  },
+
+  emitCameraFocusStatus(extra = {}) {
+    window.dispatchEvent(new CustomEvent('provador:camera-focus-status', {
+      detail: { ...this.getCameraFocusState(), ...extra }
+    }));
+  },
+
+  async initPhysicalCameraFocus(stream) {
+    this.cameraTrack = stream?.getVideoTracks?.()[0] || null;
+    this.cameraFocusReady = true;
+    this.loadCameraFocusPreference();
+
+    if (!this.cameraTrack || typeof this.cameraTrack.getCapabilities !== 'function') {
+      this.cameraFocusSupported = false;
+      this.cameraFocusModes = [];
+      this.emitCameraFocusStatus({ reason: 'capabilities-unavailable' });
+      return this.getCameraFocusState();
+    }
+
+    let capabilities = {};
+    try {
+      capabilities = this.cameraTrack.getCapabilities() || {};
+    } catch (e) {}
+
+    this.cameraFocusModes = Array.isArray(capabilities.focusMode)
+      ? capabilities.focusMode.map(String)
+      : [];
+
+    const hasContinuous = this.cameraFocusModes.includes('continuous');
+    const hasManual = this.cameraFocusModes.includes('manual');
+    this.cameraFocusSupported = hasContinuous && hasManual;
+
+    if (!this.cameraFocusSupported) {
+      this.emitCameraFocusStatus({ reason: 'focus-mode-unsupported' });
+      return this.getCameraFocusState();
+    }
+
+    try {
+      await this.setCameraFocusAuto(this.cameraFocusAutoEnabled, { persist: false });
+    } catch (error) {
+      console.warn('Foco físico detectado, mas não pôde ser controlado:', error);
+      this.cameraFocusSupported = false;
+      this.emitCameraFocusStatus({
+        reason: 'apply-failed',
+        error: String(error?.message || error)
+      });
+    }
+
+    return this.getCameraFocusState();
+  },
+
+  async setCameraFocusAuto(enabled, { persist = true } = {}) {
+    if (!this.cameraTrack || !this.cameraFocusSupported) {
+      this.emitCameraFocusStatus({ reason: 'unsupported' });
+      return this.getCameraFocusState();
+    }
+
+    const useAuto = !!enabled;
+
+    if (useAuto) {
+      await this.cameraTrack.applyConstraints({
+        advanced: [{ focusMode: 'continuous' }]
+      });
+    } else {
+      const capabilities = this.cameraTrack.getCapabilities?.() || {};
+      const settings = this.cameraTrack.getSettings?.() || {};
+      const manual = { focusMode: 'manual' };
+
+      const caps = capabilities.focusDistance;
+      if (
+        caps &&
+        Number.isFinite(Number(caps.min)) &&
+        Number.isFinite(Number(caps.max))
+      ) {
+        let distance = Number(settings.focusDistance);
+        if (!Number.isFinite(distance)) {
+          distance = (Number(caps.min) + Number(caps.max)) / 2;
+        }
+        distance = Math.max(Number(caps.min), Math.min(Number(caps.max), distance));
+        manual.focusDistance = distance;
+      }
+
+      await this.cameraTrack.applyConstraints({
+        advanced: [manual]
+      });
+    }
+
+    this.cameraFocusAutoEnabled = useAuto;
+
+    if (persist) {
+      try {
+        localStorage.setItem(this.cameraFocusStorageKey, String(useAuto));
+      } catch (e) {}
+    }
+
+    this.emitCameraFocusStatus({ applied: true });
+    return this.getCameraFocusState();
+  },
+
+  async toggleCameraFocusAuto() {
+    return this.setCameraFocusAuto(!this.cameraFocusAutoEnabled);
+  },
 
   loadAutoFramingPreference() {
     try {
@@ -68,6 +198,8 @@ window.CameraModule = {
 
       video.srcObject = stream;
       await video.play();
+
+      await this.initPhysicalCameraFocus(stream);
 
       if (tip) {
         tip.textContent = 'Câmera ativa.';

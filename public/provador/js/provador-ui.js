@@ -21,24 +21,74 @@
     if (!document.hidden) showControls();
   });
 
-  const autoFocusBtn=document.getElementById('autoFocusBtn');
+  const autoFramingBtn=document.getElementById('autoFramingBtn');
 
-  function updateAutoFocusBtn(){
-    if(!autoFocusBtn) return;
+  function updateAutoFramingBtn(){
+    if(!autoFramingBtn) return;
     const on=window.CameraModule?.getAutoFraming?.() !== false;
-    autoFocusBtn.textContent=on?'FOCO AUTO ON':'FOCO AUTO OFF';
-    autoFocusBtn.setAttribute('aria-pressed',String(on));
-    autoFocusBtn.classList.toggle('is-on',on);
+    autoFramingBtn.textContent=on?'ENQUADRAMENTO AUTO ON':'ENQUADRAMENTO AUTO OFF';
+    autoFramingBtn.setAttribute('aria-pressed',String(on));
+    autoFramingBtn.classList.toggle('is-on',on);
   }
 
-  if(autoFocusBtn){
-    autoFocusBtn.addEventListener('click',()=>{
+  if(autoFramingBtn){
+    autoFramingBtn.addEventListener('click',()=>{
       window.CameraModule?.toggleAutoFraming?.();
-      updateAutoFocusBtn();
+      updateAutoFramingBtn();
       showControls();
     });
-    window.addEventListener('provador:camera-framing-status',updateAutoFocusBtn);
-    updateAutoFocusBtn();
+    window.addEventListener('provador:camera-framing-status',updateAutoFramingBtn);
+    updateAutoFramingBtn();
+  }
+
+  const cameraFocusBtn=document.getElementById('cameraFocusBtn');
+
+  function updateCameraFocusBtn(event){
+    if(!cameraFocusBtn) return;
+    const state=event?.detail || window.CameraModule?.getCameraFocusState?.() || {};
+
+    if(!state.ready){
+      cameraFocusBtn.disabled=true;
+      cameraFocusBtn.textContent='FOCO CÂMERA: DETECTANDO...';
+      cameraFocusBtn.title='Aguardando a câmera iniciar.';
+      return;
+    }
+
+    if(!state.supported){
+      cameraFocusBtn.disabled=true;
+      cameraFocusBtn.textContent='FOCO CÂMERA N/D';
+      cameraFocusBtn.setAttribute('aria-pressed','false');
+      cameraFocusBtn.classList.remove('is-on');
+      cameraFocusBtn.title='Esta câmera ou navegador não oferece controle manual de foco.';
+      return;
+    }
+
+    const auto=state.auto !== false;
+    cameraFocusBtn.disabled=false;
+    cameraFocusBtn.textContent=auto?'FOCO CÂMERA AUTO':'FOCO CÂMERA FIXO';
+    cameraFocusBtn.setAttribute('aria-pressed',String(auto));
+    cameraFocusBtn.classList.toggle('is-on',auto);
+    cameraFocusBtn.title=auto
+      ? 'Clique para travar o foco físico na distância atual.'
+      : 'Clique para voltar ao autofocus contínuo.';
+  }
+
+  if(cameraFocusBtn){
+    cameraFocusBtn.addEventListener('click',async()=>{
+      if(cameraFocusBtn.disabled) return;
+      cameraFocusBtn.disabled=true;
+      cameraFocusBtn.textContent='AJUSTANDO FOCO...';
+      try{
+        const state=await window.CameraModule?.toggleCameraFocusAuto?.();
+        updateCameraFocusBtn({detail:state || {}});
+      }catch(error){
+        console.error('Falha ao alternar foco físico da câmera:',error);
+        updateCameraFocusBtn();
+      }
+      showControls();
+    });
+    window.addEventListener('provador:camera-focus-status',updateCameraFocusBtn);
+    updateCameraFocusBtn();
   }
 
   const voiceBtn=document.getElementById('voiceBtn');

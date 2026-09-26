@@ -8,7 +8,10 @@
 </div>
 <div class="grid">
 <div class="panel">
-<h2 style="margin-top:0">Cadastro de roupas</h2>
+<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:10px">
+  <h2 style="margin:0">Cadastro de roupas</h2>
+  <button type="button" class="small-btn" id="openClothesManualBtn">❓ Manual de cadastro</button>
+</div>
 <input type="hidden" id="itemId"><input type="hidden" id="imageData">
 <label>Nome da roupa</label><input id="nome" placeholder="Ex.: Camisa Branca Social">
 
@@ -18,8 +21,22 @@
     <option value="">Selecione uma categoria</option>
   </select>
   <button type="button" class="small-btn" id="addCategoryBtn">+ Adicionar categoria</button>
+  <button type="button" class="small-btn" id="manageCategoriesBtn">⚙ Gerenciar categorias</button>
 </div>
 <div class="muted" id="categoryInfo" style="margin-top:6px">Categorias padrão da loja + categorias criadas por você.</div>
+
+<div id="categoryManagerOverlay" hidden style="position:fixed;inset:0;background:rgba(14,8,18,.68);z-index:9999;align-items:center;justify-content:center;padding:18px">
+  <div style="width:min(760px,96vw);max-height:86vh;overflow:auto;background:#211826;border:1px solid rgba(255,255,255,.12);border-radius:18px;padding:18px;box-shadow:0 20px 60px rgba(0,0,0,.45)">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+      <div>
+        <h3 style="margin:0">Gerenciar categorias</h3>
+        <div class="muted" style="margin-top:4px">Renomeie categorias criadas, desative categorias sem apagar produtos e remova apenas categorias personalizadas sem uso.</div>
+      </div>
+      <button type="button" class="small-btn" id="closeCategoryManagerBtn">Fechar</button>
+    </div>
+    <div id="categoryManagerList" style="display:grid;gap:10px;margin-top:16px"></div>
+  </div>
+</div>
 
 <label>Subcategoria</label>
 <input id="subcategoria" placeholder="Ex.: Social, Polo, Festa">
@@ -158,13 +175,19 @@ const DEFAULT_CATEGORIES = [
   'Camisas','Blusas','Camisetas','Vestidos','Saias','Shorts','Calças','Conjuntos',
   'Jaquetas','Casacos','Polos','Jalecos','Blazers','Uniformes','Infantil','Acessórios','Outros'
 ];
+
 let storeCategories = [...DEFAULT_CATEGORIES];
+let disabledCategories = [];
 
 function normalizeCategoryName(value){
   return String(value || '')
     .trim()
     .replace(/\s+/g, ' ')
     .slice(0, 60);
+}
+
+function categoryKey(value){
+  return normalizeCategoryName(value).toLocaleLowerCase('pt-BR');
 }
 
 function mergeCategories(...lists){
@@ -176,7 +199,7 @@ function mergeCategories(...lists){
     for(const raw of list){
       const name = normalizeCategoryName(raw);
       if(!name) continue;
-      const key = name.toLocaleLowerCase('pt-BR');
+      const key = categoryKey(name);
       if(seen.has(key)) continue;
       seen.add(key);
       result.push(name);
@@ -186,8 +209,25 @@ function mergeCategories(...lists){
   return result;
 }
 
-function renderCategoryOptions(selectedValue=''){
-  const selected = normalizeCategoryName(selectedValue || categoria.value);
+function isDefaultCategory(name){
+  const key = categoryKey(name);
+  return DEFAULT_CATEGORIES.some(item => categoryKey(item) === key);
+}
+
+function isCategoryDisabled(name){
+  const key = categoryKey(name);
+  return disabledCategories.some(item => categoryKey(item) === key);
+}
+
+function normalizeDisabledCategories(list){
+  const knownKeys = new Set(storeCategories.map(categoryKey));
+  return mergeCategories(list).filter(name => knownKeys.has(categoryKey(name)));
+}
+
+function renderCategoryOptions(selectedValue=null){
+  const selected = normalizeCategoryName(
+    selectedValue === null ? categoria.value : selectedValue
+  );
   const categories = mergeCategories(storeCategories, selected ? [selected] : []);
   storeCategories = categories;
 
@@ -199,22 +239,30 @@ function renderCategoryOptions(selectedValue=''){
   categoria.appendChild(placeholder);
 
   for(const name of categories){
+    const disabled = isCategoryDisabled(name);
+    const selectedKey = categoryKey(selected);
+    if(disabled && categoryKey(name) !== selectedKey) continue;
+
     const option = document.createElement('option');
     option.value = name;
-    option.textContent = name;
+    option.textContent = disabled ? `${name} (desativada)` : name;
     categoria.appendChild(option);
   }
 
   categoria.value = selected;
 }
 
-async function saveStoreCategories(categories){
+async function saveCategoryConfig(categories, disabled, extraPayload={}){
   const response = await fetch('/api/public/store-branding', {
     method:'PUT',
     credentials:'include',
     headers:{ 'Content-Type':'application/json' },
     body:JSON.stringify({
-      supportConfig:{ categories }
+      ...extraPayload,
+      supportConfig:{
+        categories,
+        disabledCategories:disabled
+      }
     })
   });
 
@@ -237,12 +285,16 @@ async function addNewCategory(){
   }
 
   const existing = storeCategories.find(
-    item => item.toLocaleLowerCase('pt-BR') === name.toLocaleLowerCase('pt-BR')
+    item => categoryKey(item) === categoryKey(name)
   );
 
   if(existing){
-    renderCategoryOptions(existing);
-    alert('Essa categoria já existe.');
+    if(isCategoryDisabled(existing)){
+      alert('Essa categoria já existe, mas está desativada. Use "Gerenciar categorias" para reativá-la.');
+    }else{
+      renderCategoryOptions(existing);
+      alert('Essa categoria já existe.');
+    }
     return;
   }
 
@@ -250,7 +302,7 @@ async function addNewCategory(){
   const next = mergeCategories(storeCategories, [name]);
 
   try{
-    await saveStoreCategories(next);
+    await saveCategoryConfig(next, disabledCategories);
     storeCategories = next;
     renderCategoryOptions(name);
     alert('Categoria adicionada com sucesso.');
@@ -262,7 +314,268 @@ async function addNewCategory(){
   }
 }
 
+async function replaceLocalInventory(items){
+  await DB.clear(DB.STORES.ESTOQUE);
+  for(const item of items){
+    await DB.put(DB.STORES.ESTOQUE, item);
+  }
+}
+
+async function categoryUsage(){
+  const items = await Estoque.all();
+  const usage = new Map();
+
+  for(const item of items){
+    const name = normalizeCategoryName(item && item.categoria);
+    if(!name) continue;
+    const key = categoryKey(name);
+    usage.set(key, (usage.get(key) || 0) + 1);
+  }
+
+  return { items, usage };
+}
+
+async function renameCategory(oldName){
+  if(isDefaultCategory(oldName)){
+    alert('Categorias padrão são protegidas. Você pode desativá-las, mas não renomeá-las.');
+    return;
+  }
+
+  const raw = window.prompt(`Novo nome para "${oldName}":`, oldName);
+  if(raw === null) return;
+
+  const newName = normalizeCategoryName(raw);
+  if(!newName){
+    alert('Informe um nome válido para a categoria.');
+    return;
+  }
+
+  const oldKey = categoryKey(oldName);
+  const newKey = categoryKey(newName);
+
+  if(oldKey === newKey){
+    return;
+  }
+
+  const duplicate = storeCategories.find(
+    item => categoryKey(item) === newKey
+  );
+
+  if(duplicate){
+    alert('Já existe uma categoria com esse nome.');
+    return;
+  }
+
+  const { items } = await categoryUsage();
+  const updatedItems = items.map(item => {
+    if(categoryKey(item && item.categoria) !== oldKey) return item;
+    return { ...item, categoria:newName };
+  });
+
+  const nextCategories = mergeCategories(
+    storeCategories.map(item => categoryKey(item) === oldKey ? newName : item)
+  );
+
+  const nextDisabled = mergeCategories(
+    disabledCategories.map(item => categoryKey(item) === oldKey ? newName : item)
+  );
+
+  if(!confirm(`Renomear "${oldName}" para "${newName}"? As roupas desta loja que usam a categoria também serão atualizadas.`)){
+    return;
+  }
+
+  try{
+    await saveCategoryConfig(
+      nextCategories,
+      nextDisabled,
+      { estoque:updatedItems }
+    );
+
+    await replaceLocalInventory(updatedItems);
+
+    storeCategories = nextCategories;
+    disabledCategories = nextDisabled;
+
+    if(categoryKey(categoria.value) === oldKey){
+      renderCategoryOptions(newName);
+    }else{
+      renderCategoryOptions();
+    }
+
+    await renderInventory();
+    await renderCategoryManager();
+    alert('Categoria renomeada com sucesso.');
+  }catch(error){
+    console.error(error);
+    alert('Não foi possível renomear a categoria. Nenhuma alteração foi aplicada.');
+  }
+}
+
+async function toggleCategoryDisabled(name){
+  const key = categoryKey(name);
+  const currentlyDisabled = isCategoryDisabled(name);
+
+  const nextDisabled = currentlyDisabled
+    ? disabledCategories.filter(item => categoryKey(item) !== key)
+    : mergeCategories(disabledCategories, [name]);
+
+  const action = currentlyDisabled ? 'reativar' : 'desativar';
+
+  if(!confirm(`Deseja ${action} a categoria "${name}"?`)){
+    return;
+  }
+
+  try{
+    await saveCategoryConfig(storeCategories, nextDisabled);
+    disabledCategories = nextDisabled;
+    renderCategoryOptions();
+    await renderCategoryManager();
+    alert(currentlyDisabled ? 'Categoria reativada.' : 'Categoria desativada. Produtos existentes foram preservados.');
+  }catch(error){
+    console.error(error);
+    alert('Não foi possível atualizar o status da categoria.');
+  }
+}
+
+async function removeCustomCategory(name){
+  if(isDefaultCategory(name)){
+    alert('Categorias padrão são protegidas e não podem ser removidas. Use Desativar.');
+    return;
+  }
+
+  const key = categoryKey(name);
+  const { usage } = await categoryUsage();
+  const count = usage.get(key) || 0;
+
+  if(count > 0){
+    alert(`A categoria "${name}" está em uso por ${count} roupa(s). Desative a categoria ou renomeie antes de remover.`);
+    return;
+  }
+
+  if(!confirm(`Remover definitivamente a categoria "${name}" desta loja?`)){
+    return;
+  }
+
+  const nextCategories = storeCategories.filter(
+    item => categoryKey(item) !== key
+  );
+  const nextDisabled = disabledCategories.filter(
+    item => categoryKey(item) !== key
+  );
+
+  try{
+    await saveCategoryConfig(nextCategories, nextDisabled);
+    storeCategories = nextCategories;
+    disabledCategories = nextDisabled;
+    renderCategoryOptions();
+    await renderCategoryManager();
+    alert('Categoria removida com sucesso.');
+  }catch(error){
+    console.error(error);
+    alert('Não foi possível remover a categoria.');
+  }
+}
+
+function buildManagerButton(text, onClick, danger=false){
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.className = danger ? 'small-btn danger' : 'small-btn';
+  button.textContent = text;
+  button.onclick = onClick;
+  return button;
+}
+
+async function renderCategoryManager(){
+  if(!categoryManagerList) return;
+
+  const { usage } = await categoryUsage();
+  categoryManagerList.innerHTML = '';
+
+  for(const name of storeCategories){
+    const key = categoryKey(name);
+    const count = usage.get(key) || 0;
+    const isDefault = isDefaultCategory(name);
+    const disabled = isCategoryDisabled(name);
+
+    const row = document.createElement('div');
+    row.style.cssText = 'display:grid;grid-template-columns:minmax(180px,1fr) auto;gap:12px;align-items:center;padding:12px;border:1px solid rgba(255,255,255,.10);border-radius:14px;background:rgba(255,255,255,.035)';
+
+    const info = document.createElement('div');
+
+    const title = document.createElement('div');
+    title.style.fontWeight = '700';
+    title.textContent = name;
+
+    const meta = document.createElement('div');
+    meta.className = 'muted';
+    meta.style.marginTop = '4px';
+    meta.textContent =
+      `${isDefault ? 'Padrão' : 'Personalizada'} • ${disabled ? 'Desativada' : 'Ativa'} • ${count} roupa(s)`;
+
+    info.appendChild(title);
+    info.appendChild(meta);
+
+    const actions = document.createElement('div');
+    actions.style.cssText = 'display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end';
+
+    if(!isDefault){
+      actions.appendChild(
+        buildManagerButton('Editar nome', () => renameCategory(name))
+      );
+    }
+
+    actions.appendChild(
+      buildManagerButton(
+        disabled ? 'Reativar' : 'Desativar',
+        () => toggleCategoryDisabled(name)
+      )
+    );
+
+    if(!isDefault){
+      actions.appendChild(
+        buildManagerButton(
+          'Remover',
+          () => removeCustomCategory(name),
+          true
+        )
+      );
+    }
+
+    row.appendChild(info);
+    row.appendChild(actions);
+    categoryManagerList.appendChild(row);
+  }
+}
+
+async function openCategoryManager(){
+  categoryManagerOverlay.hidden = false;
+  categoryManagerOverlay.style.display = 'flex';
+  await renderCategoryManager();
+}
+
+function closeCategoryManager(){
+  categoryManagerOverlay.hidden = true;
+  categoryManagerOverlay.style.display = 'none';
+}
+
 addCategoryBtn.onclick = addNewCategory;
+openClothesManualBtn.onclick = ()=>{
+  window.open('../manual/manual-painel-cliente.html#cadastro-roupas','_blank','noopener');
+};
+manageCategoriesBtn.onclick = openCategoryManager;
+closeCategoryManagerBtn.onclick = closeCategoryManager;
+
+categoryManagerOverlay.addEventListener('click', event => {
+  if(event.target === categoryManagerOverlay){
+    closeCategoryManager();
+  }
+});
+
+document.addEventListener('keydown', event => {
+  if(event.key === 'Escape' && !categoryManagerOverlay.hidden){
+    closeCategoryManager();
+  }
+});
 
 async function loadStoreCategories(store){
   const support = store && store.supportConfig && typeof store.supportConfig === 'object'
@@ -270,11 +583,15 @@ async function loadStoreCategories(store){
     : {};
 
   const saved = Array.isArray(support.categories) ? support.categories : [];
+  const savedDisabled = Array.isArray(support.disabledCategories) ? support.disabledCategories : [];
   const inventory = Array.isArray(store?.estoque)
     ? store.estoque.map(item => item && item.categoria).filter(Boolean)
     : [];
 
   storeCategories = mergeCategories(DEFAULT_CATEGORIES, saved, inventory);
+  disabledCategories = mergeCategories(savedDisabled);
+  disabledCategories = normalizeDisabledCategories(disabledCategories);
+
   renderCategoryOptions();
 }
 

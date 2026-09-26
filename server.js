@@ -3396,6 +3396,21 @@ if(
         });
   }
 
+  if(Array.isArray(recebido.disabledCategories)){
+    const seenDisabledCategories = new Set();
+    nextSupport.disabledCategories =
+      recebido.disabledCategories
+        .slice(0, 100)
+        .map(item => String(item || '').trim().replace(/\s+/g, ' ').slice(0, 60))
+        .filter(Boolean)
+        .filter(item => {
+          const key = item.toLocaleLowerCase('pt-BR');
+          if(seenDisabledCategories.has(key)) return false;
+          seenDisabledCategories.add(key);
+          return true;
+        });
+  }
+
   payload.supportConfig = nextSupport;
 }
 if(Array.isArray(req.body?.estoque))

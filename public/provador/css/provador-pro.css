@@ -603,3 +603,11 @@ body.provador-pro .provador-mobile-pairing-qr-image{
   width:100%;
   height:auto;
 }
+
+/* FOCO/ENQUADRAMENTO AUTOMATICO
+   ON  = comportamento atual: cover (preenche a tela)
+   OFF = quadro inteiro: contain (sem corte automatico) */
+body.provador-pro.camera-auto-framing-off .live-video,
+body.provador-pro.camera-auto-framing-off .overlay-canvas{
+  object-fit:contain;
+}

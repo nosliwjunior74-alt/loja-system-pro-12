@@ -21,6 +21,26 @@
     if (!document.hidden) showControls();
   });
 
+  const autoFocusBtn=document.getElementById('autoFocusBtn');
+
+  function updateAutoFocusBtn(){
+    if(!autoFocusBtn) return;
+    const on=window.CameraModule?.getAutoFraming?.() !== false;
+    autoFocusBtn.textContent=on?'FOCO AUTO ON':'FOCO AUTO OFF';
+    autoFocusBtn.setAttribute('aria-pressed',String(on));
+    autoFocusBtn.classList.toggle('is-on',on);
+  }
+
+  if(autoFocusBtn){
+    autoFocusBtn.addEventListener('click',()=>{
+      window.CameraModule?.toggleAutoFraming?.();
+      updateAutoFocusBtn();
+      showControls();
+    });
+    window.addEventListener('provador:camera-framing-status',updateAutoFocusBtn);
+    updateAutoFocusBtn();
+  }
+
   const voiceBtn=document.getElementById('voiceBtn');
   if(voiceBtn){
     if(!window.ProvadorVoice || !window.ProvadorVoice.supported){

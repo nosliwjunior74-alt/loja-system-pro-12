@@ -2,6 +2,48 @@ window.CameraModule = {
   overlayImg: null,
   lastRect: null,
   poseEnabled: true,
+  poseLoopStarted: false,
+  poseFrameBusy: false,
+  autoFramingEnabled: true,
+  autoFramingStorageKey: 'provador_camera_auto_framing_v1',
+
+  loadAutoFramingPreference() {
+    try {
+      const saved = localStorage.getItem(this.autoFramingStorageKey);
+      this.autoFramingEnabled = saved === null ? true : saved !== 'false';
+    } catch (e) {
+      this.autoFramingEnabled = true;
+    }
+    this.applyAutoFramingMode();
+    return this.autoFramingEnabled;
+  },
+
+  applyAutoFramingMode() {
+    const body = document.body;
+    if (body) {
+      body.classList.toggle('camera-auto-framing-off', !this.autoFramingEnabled);
+    }
+  },
+
+  getAutoFraming() {
+    return this.autoFramingEnabled !== false;
+  },
+
+  setAutoFraming(enabled) {
+    this.autoFramingEnabled = !!enabled;
+    this.applyAutoFramingMode();
+    try {
+      localStorage.setItem(this.autoFramingStorageKey, String(this.autoFramingEnabled));
+    } catch (e) {}
+    window.dispatchEvent(new CustomEvent('provador:camera-framing-status', {
+      detail: { enabled: this.autoFramingEnabled }
+    }));
+    return this.autoFramingEnabled;
+  },
+
+  toggleAutoFraming() {
+    return this.setAutoFraming(!this.getAutoFraming());
+  },
 
   async start(videoId = 'video', canvasId = 'canvas', tipId = 'cameraTip') {
     const video = document.getElementById(videoId);
@@ -12,6 +54,8 @@ window.CameraModule = {
       console.error('Video ou canvas não encontrado', { video, canvas });
       return;
     }
+
+    this.loadAutoFramingPreference();
 
     try {
      const stream = await navigator.mediaDevices.getUserMedia({
@@ -125,17 +169,34 @@ window.CameraModule = {
 });
 
 
-    const mpCamera = new Camera(video, {
-      onFrame: async () => {
+    // Usa o MESMO stream já aberto por getUserMedia.
+    // Não abre/reconfigura a webcam novamente em 640x480.
+    if (this.poseLoopStarted) return;
+
+    this.poseLoopStarted = true;
+    this.poseFrameBusy = false;
+
+    const processPoseFrame = async () => {
+      if (!this.poseLoopStarted) return;
+
+      if (
+        this.poseEnabled &&
+        video.readyState >= 2 &&
+        !this.poseFrameBusy
+      ) {
+        this.poseFrameBusy = true;
         try {
           await pose.send({ image: video });
-        } catch (e) {}
-      },
-     width: 640,
-height: 480
-    });
+        } catch (e) {
+        } finally {
+          this.poseFrameBusy = false;
+        }
+      }
 
-    mpCamera.start();
+      requestAnimationFrame(processPoseFrame);
+    };
+
+    requestAnimationFrame(processPoseFrame);
   },
 
   drawLoop(video, canvas) {

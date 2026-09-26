@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Provador Pro — Manual da Câmera</title>
+<style>
+:root{
+  --bg:#f7f3f6; --card:#fff; --text:#222; --muted:#6e6269;
+  --pink:#d81068; --pink2:#a62b61; --border:#ead7e1; --dark:#202020;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--text);line-height:1.55}
+header{background:linear-gradient(135deg,#a62b61,#d81068);color:#fff;padding:30px 18px}
+.wrap{max-width:920px;margin:auto}
+h1{margin:0 0 6px;font-size:30px}
+.sub{margin:0;opacity:.95}
+main{padding:22px 16px 50px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:22px;margin:0 0 18px;box-shadow:0 6px 20px rgba(0,0,0,.04)}
+h2{color:var(--pink2);margin:0 0 12px;font-size:22px}
+h3{margin:20px 0 8px;font-size:17px}
+.badge{display:inline-block;background:#fce5f0;color:#9b2458;border-radius:999px;padding:4px 10px;font-weight:700;font-size:13px}
+.note{background:#fff8dc;border-left:5px solid #d7a400;padding:12px 14px;border-radius:8px}
+.ok{background:#ecf8ef;border-left:5px solid #2d8a46;padding:12px 14px;border-radius:8px}
+table{width:100%;border-collapse:collapse;margin-top:10px}
+th,td{border:1px solid var(--border);padding:10px;text-align:left;vertical-align:top}
+th{background:#fff0f6;color:#8c2855}
+button{border:0;border-radius:12px;padding:12px 18px;font-weight:700;cursor:pointer}
+.print{background:var(--dark);color:#fff}
+.close{background:#eee;color:#222;margin-left:8px}
+code{background:#f2edf0;padding:2px 6px;border-radius:5px}
+ul,ol{padding-left:22px}
+@media(max-width:600px){h1{font-size:25px}.card{padding:17px}table{font-size:14px}}
+@media print{
+  header{background:none!important;color:#000;padding:0 0 15px}
+  body{background:#fff}
+  .card{box-shadow:none;break-inside:avoid}
+  .actions{display:none}
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <h1>📷 Manual da Câmera — Provador Pro</h1>
+    <p class="sub">Enquadramento, foco e uso correto em TV, computador e celular.</p>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="card actions">
+    <button class="print" onclick="window.print()">🖨 Imprimir / Salvar em PDF</button>
+    <button class="close" onclick="window.close()">Fechar manual</button>
+  </div>
+
+  <section class="card">
+    <h2>1. Onde ficam os controles</h2>
+    <p>Abra o <strong>Provador</strong> e depois abra o botão <strong>MENU</strong>. Os controles aparecem nesta ordem:</p>
+    <p><span class="badge">ENQUADRAMENTO AUTO ON/OFF</span></p>
+    <p><span class="badge">FOCO CÂMERA AUTO/FIXO/N/D</span></p>
+    <p><span class="badge">❓ MANUAL DA CÂMERA</span></p>
+    <p>O manual abre em uma nova aba para não desmontar a tela atual do Provador.</p>
+  </section>
+
+  <section class="card">
+    <h2>2. ENQUADRAMENTO AUTO</h2>
+    <h3>ENQUADRAMENTO AUTO ON</h3>
+    <p>A imagem preenche a área disponível do Provador. Dependendo da proporção da câmera e da tela, uma parte das bordas pode ser cortada para preencher melhor o espaço.</p>
+
+    <h3>ENQUADRAMENTO AUTO OFF</h3>
+    <p>Mostra o quadro completo recebido da câmera. Podem aparecer faixas pretas nas laterais ou em cima/baixo quando a proporção da câmera for diferente da área do Provador.</p>
+
+    <div class="ok">
+      <strong>Para prova de corpo inteiro:</strong> o modo <strong>OFF</strong> é o mais indicado quando for importante enxergar todo o corpo e evitar cortes provocados apenas pelo preenchimento da tela.
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>3. FOCO CÂMERA</h2>
+    <h3>FOCO CÂMERA AUTO</h3>
+    <p>Quando a câmera e o navegador permitem, o Provador solicita foco contínuo. É adequado principalmente para celulares e situações em que a pessoa muda de distância em relação à câmera.</p>
+
+    <h3>FOCO CÂMERA FIXO</h3>
+    <p>Quando suportado, o Provador tenta manter o foco físico da câmera sem ficar solicitando foco contínuo.</p>
+
+    <h3>FOCO CÂMERA N/D</h3>
+    <p><strong>N/D</strong> significa que aquela combinação de câmera, navegador ou aparelho não oferece ao Provador o controle físico necessário. A câmera continua funcionando normalmente usando o comportamento próprio do aparelho.</p>
+
+    <div class="note">
+      Algumas webcams possuem recursos próprios do fabricante, do driver ou do sistema operacional, como rastreamento de rosto, enquadramento automático ou zoom automático. Esses recursos podem continuar atuando mesmo quando o Provador solicita foco fixo.
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>4. Uso recomendado por equipamento</h2>
+    <table>
+      <thead><tr><th>Uso</th><th>Enquadramento</th><th>Foco</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><strong>TV / loja</strong></td>
+          <td>Use <strong>OFF</strong> quando precisar preservar o corpo inteiro. Use ON se preferir preencher toda a tela.</td>
+          <td>Use AUTO normalmente. FIXO pode ser testado quando a webcam realmente oferecer suporte e houver oscilação de foco.</td>
+        </tr>
+        <tr>
+          <td><strong>Celular do cliente</strong></td>
+          <td>ON ou OFF conforme a posição e a proporção da câmera.</td>
+          <td>Preferencialmente <strong>AUTO</strong>, aproveitando o sistema de foco do próprio celular.</td>
+        </tr>
+        <tr>
+          <td><strong>Computador de teste</strong></td>
+          <td>OFF ajuda a conferir todo o quadro recebido pela webcam.</td>
+          <td>AUTO ou FIXO conforme o suporte da webcam usada no teste.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="card">
+    <h2>5. Cada aparelho mantém sua própria escolha</h2>
+    <p>A escolha de enquadramento/foco é armazenada no próprio navegador/dispositivo quando o recurso está disponível. Assim, a configuração usada na TV da loja não deve ser usada como configuração global de outro aparelho.</p>
+    <p>Exemplo: a TV da loja pode usar <strong>ENQUADRAMENTO OFF</strong> enquanto o celular de um cliente usa <strong>ON</strong>.</p>
+  </section>
+
+  <section class="card">
+    <h2>6. O que estes controles NÃO alteram</h2>
+    <p>Os controles da câmera não foram criados para alterar:</p>
+    <ul>
+      <li>link enviado pelo lojista ao cliente;</li>
+      <li>produtos, looks ou estoque;</li>
+      <li>loja selecionada;</li>
+      <li>login ou licença;</li>
+      <li>QR Code e pareamento do controle celular;</li>
+      <li>configurações comerciais da loja.</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2>7. Se a imagem continuar acompanhando a pessoa</h2>
+    <ol>
+      <li>Confirme se <strong>ENQUADRAMENTO AUTO</strong> está em OFF.</li>
+      <li>Se a câmera oferecer suporte, teste <strong>FOCO CÂMERA FIXO</strong>.</li>
+      <li>Se ainda houver zoom/rastreamento, verifique recursos próprios da webcam, driver ou sistema operacional.</li>
+      <li>No celular, considere que parte do foco e processamento pode ser controlada pelo próprio aparelho.</li>
+    </ol>
+  </section>
+
+  <section class="card">
+    <h2>8. Regra prática</h2>
+    <div class="ok">
+      <strong>Para testar o Provador:</strong> primeiro garanta que a pessoa apareça inteira no quadro. Depois escolha o foco mais estável disponível naquele aparelho. Não é necessário que todas as câmeras ofereçam exatamente os mesmos controles físicos.
+    </div>
+  </section>
+</main>
+</body>
+</html>

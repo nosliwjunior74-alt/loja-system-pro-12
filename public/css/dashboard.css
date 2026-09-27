@@ -363,3 +363,19 @@ body{
     opacity:1 !important;
   }
 }
+
+
+/* MOBILE ACTIVE MENU VISIBILITY FIX V1 */
+@media (max-width:760px){
+  .sidebar .menu-btn.active{
+    background:var(--brand-color, #e33d8f) !important;
+    color:#ffffff !important;
+    border-color:transparent !important;
+    box-shadow:0 10px 24px rgba(227,61,143,.22) !important;
+  }
+
+  .sidebar .menu-btn.active .menu-icon{
+    color:#ffffff !important;
+    background:rgba(255,255,255,.18) !important;
+  }
+}

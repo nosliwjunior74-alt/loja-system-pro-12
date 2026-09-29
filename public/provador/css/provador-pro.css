@@ -525,6 +525,61 @@ body.provador-pro .provador-menu-panel .provador-menu-item{
 body.provador-pro .provador-menu-panel .provador-menu-item:hover{
   background:rgba(255,255,255,.13);
 }
+
+/* PROVADOR PRO REMOTE TRY + MENU DRAWERS V1 */
+body.provador-pro .provador-menu-panel{
+  max-height:calc(100vh - 74px);
+  overflow-y:auto;
+  overscroll-behavior:contain;
+  scrollbar-width:thin;
+}
+body.provador-pro .provador-menu-drawer{
+  width:100%;
+  border:1px solid rgba(255,255,255,.14);
+  border-radius:12px;
+  background:rgba(255,255,255,.055);
+  overflow:hidden;
+}
+body.provador-pro .provador-menu-drawer-summary{
+  min-height:44px;
+  padding:0 14px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  color:#fff;
+  font-size:11px;
+  font-weight:900;
+  letter-spacing:.03em;
+  cursor:pointer;
+  list-style:none;
+  user-select:none;
+}
+body.provador-pro .provador-menu-drawer-summary::-webkit-details-marker{
+  display:none;
+}
+body.provador-pro .provador-menu-drawer-summary::after{
+  content:'▾';
+  font-size:12px;
+  opacity:.75;
+  transition:transform .16s ease;
+}
+body.provador-pro .provador-menu-drawer[open] .provador-menu-drawer-summary::after{
+  transform:rotate(180deg);
+}
+body.provador-pro .provador-menu-drawer-content{
+  padding:0 8px 8px;
+  display:grid;
+  gap:8px;
+}
+body.provador-pro .provador-menu-drawer[open] .provador-menu-drawer-summary{
+  margin-bottom:8px;
+  background:rgba(255,255,255,.055);
+}
+body.provador-pro .provador-menu-drawer .provador-mobile-pairing{
+  margin-top:0;
+  padding-bottom:18px;
+}
 body.provador-pro .provador-menu-panel .provador-voice-btn.is-on{
   background:var(--brand-color,#e33d8f);
   border-color:var(--brand-color,#e33d8f);

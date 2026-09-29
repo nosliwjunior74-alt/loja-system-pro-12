@@ -1,5 +1,38 @@
 
-window.UI={page:0,pageSize:4,async renderTrack(trackId,items,clickFnName){const track=document.getElementById(trackId); if(!track)return; const start=this.page*this.pageSize; const slice=items.slice(start,start+this.pageSize); track.innerHTML=slice.map(i=>`<button class="card" onclick="${clickFnName}('${i.id || i.nome}')"><div class="name">${i.nome}</div><img src="${i.imagem}" alt="${i.nome}"></button>`).join('');}};
+window.UI={page:0,pageSize:4,async renderTrack(trackId,items,clickFnName){
+  const track=document.getElementById(trackId);
+  if(!track) return;
+
+  const start=this.page*this.pageSize;
+  const slice=items.slice(start,start+this.pageSize);
+  track.replaceChildren();
+
+  for(const item of slice){
+    const button=document.createElement('button');
+    button.type='button';
+    button.className='card';
+
+    const name=document.createElement('div');
+    name.className='name';
+    name.textContent=String(item?.nome ?? item?.name ?? 'Look');
+
+    const img=document.createElement('img');
+    img.src=String(item?.imagem ?? item?.image ?? '');
+    img.alt=String(item?.nome ?? item?.name ?? 'Look');
+
+    button.append(name,img);
+    button.addEventListener('click',async()=>{
+      const fn=window[clickFnName];
+      if(typeof fn!=='function'){
+        console.error('Função de clique não encontrada:',clickFnName);
+        return;
+      }
+      await fn(item?.id ?? item?.nome ?? item?.name);
+    });
+
+    track.appendChild(button);
+  }
+}}; // PROVADOR PRO V3R3 SAFE CARD CLICK
 async function renderHome(){await AppStore.ensureSeed(); const items=await Estoque.visible(); UI.page=Math.min(UI.page,Math.max(0,Math.ceil(items.length/UI.pageSize)-1)); await UI.renderTrack('homeTrack',items,'previewLook'); const first=items.find(i=>i.destaque)||items[0]; if(first) previewItem(first);}
 async function previewLook(id){const item=await Estoque.byId(id); if(item) previewItem(item);}
 function previewItem(item){const img=document.getElementById('landingLook'); const badge=document.getElementById('homeBadge'); if(img){img.src=item.imagem; img.style.display='block';} if(badge) badge.textContent=`Destaque: ${item.nome}`;}
@@ -167,7 +200,12 @@ async function selecionarLook(id){
     const painel = document.getElementById('looksPanel');
 if (painel) painel.style.display = 'none';
 
-  CameraModule.setLook(item.imagem);
+  if (window.Motor2Bridge?.shouldUse?.(item)) {
+    await window.Motor2Bridge.tryOn(item);
+  } else {
+    window.Motor2Bridge?.clear?.();
+    CameraModule.setLook(item.imagem);
+  }
 }
 async function nextProvador(){
 
@@ -266,4 +304,3 @@ async function carregarLooksOnline() {
         return [];
     }
 }
-

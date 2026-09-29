@@ -134,8 +134,8 @@
         }
 
         if(window.ProvadorControls?.execute){
-          await window.ProvadorControls.execute(item.command,'remote');
-        }
+          await window.ProvadorControls.execute(item.command,'remote',item.value);
+        } // PROVADOR PRO CONTROLE CELULAR COMPLETO V3
 
         window.dispatchEvent(new CustomEvent('provador:mobile-remote-command',{
           detail:{id,command:item.command}

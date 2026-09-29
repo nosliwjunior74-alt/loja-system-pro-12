@@ -122,6 +122,18 @@ body.controle-remoto{
   border-color:var(--brand-color);
 }
 
+/* PROVADOR PRO REMOTE TRY + MENU DRAWERS V1 */
+.remote-pad .remote-try-look{
+  grid-column:1 / -1;
+  min-height:72px;
+  background:color-mix(in srgb,var(--brand-color) 34%,var(--remote-card));
+  border-color:color-mix(in srgb,var(--brand-color) 72%,white 8%);
+  font-size:17px;
+}
+.remote-pad .remote-try-look:active{
+  background:color-mix(in srgb,var(--brand-color) 52%,var(--remote-card));
+}
+
 .remote-pad button:focus-visible{
   outline:3px solid color-mix(in srgb,var(--brand-color) 60%,white);
   outline-offset:3px;
@@ -220,4 +232,55 @@ body.controle-remoto{
   .remote-photo-actions{
     grid-template-columns:repeat(3,minmax(0,1fr));
   }
+}
+
+/* PROVADOR PRO CONTROLE CELULAR COMPLETO V3 */
+.remote-primary{display:grid;gap:8px;margin-bottom:14px}
+.remote-primary .remote-try-look{
+  width:100%;min-height:72px;border:1px solid color-mix(in srgb,var(--brand-color) 72%,white 8%);
+  border-radius:20px;background:color-mix(in srgb,var(--brand-color) 34%,var(--remote-card));
+  color:#fff;padding:14px;font-size:17px;font-weight:900;cursor:pointer;touch-action:manipulation
+}
+.remote-selected-look{
+  min-height:36px;display:flex;align-items:center;justify-content:center;padding:8px 12px;
+  border:1px solid var(--remote-border);border-radius:12px;background:rgba(255,255,255,.045);
+  color:var(--remote-muted);font-size:12px;font-weight:800;text-align:center
+}
+.remote-drawers{display:grid;gap:10px}
+.remote-drawer{border:1px solid var(--remote-border);border-radius:18px;background:rgba(255,255,255,.045);overflow:hidden}
+.remote-drawer summary{
+  min-height:58px;display:flex;align-items:center;justify-content:space-between;padding:0 16px;
+  list-style:none;color:#fff;font-size:15px;font-weight:900;letter-spacing:.03em;cursor:pointer;user-select:none
+}
+.remote-drawer summary::-webkit-details-marker{display:none}
+.remote-drawer summary::after{content:'▾';opacity:.72;transition:transform .15s ease}
+.remote-drawer[open] summary::after{transform:rotate(180deg)}
+.remote-drawer[open] summary{border-bottom:1px solid var(--remote-border);background:rgba(255,255,255,.035)}
+.remote-drawer-body{padding:12px;display:grid;gap:10px}
+.remote-grid-2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.remote-drawer button{
+  min-height:58px;border:1px solid var(--remote-border);border-radius:15px;background:var(--remote-card);
+  color:#fff;padding:10px;font-size:13px;font-weight:900;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent
+}
+.remote-drawer button:active,.remote-primary button:active{transform:scale(.98);border-color:var(--brand-color)}
+.remote-drawer button:disabled,.remote-primary button:disabled{opacity:.42;cursor:not-allowed}
+.remote-inline-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.remote-inline-actions button:last-child{grid-column:1 / -1}
+.remote-looks-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.remote-look-card{min-height:0 !important;padding:8px !important;display:grid;gap:7px;text-align:left}
+.remote-look-card img{display:block;width:100%;aspect-ratio:4/5;object-fit:contain;border-radius:11px;background:#fff}
+.remote-look-card .remote-look-name{display:block;min-height:32px;font-size:12px;line-height:1.25;text-align:center}
+.remote-look-card.is-selected{
+  border-color:var(--brand-color);box-shadow:0 0 0 2px color-mix(in srgb,var(--brand-color) 35%,transparent);
+  background:color-mix(in srgb,var(--brand-color) 20%,var(--remote-card))
+}
+.remote-empty{
+  grid-column:1 / -1;padding:18px 12px;border:1px dashed var(--remote-border);border-radius:14px;
+  color:var(--remote-muted);text-align:center;font-size:12px
+}
+.remote-drawer-note{margin:0;padding:0 12px 12px;color:var(--remote-muted);font-size:11px;line-height:1.4;text-align:center}
+@media(max-width:390px){
+  .remote-grid-2{grid-template-columns:1fr}
+  .remote-drawer summary{min-height:54px;font-size:14px}
+  .remote-drawer button{min-height:54px}
 }

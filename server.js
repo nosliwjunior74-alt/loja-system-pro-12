@@ -723,8 +723,10 @@ const PROVADOR_REMOTE_TTL_MS = 30 * 60 * 1000;
 const provadorRemoteSessions = new Map();
 const PROVADOR_REMOTE_COMMANDS = new Set([
   'next-look','previous-look','open-looks','close-looks','toggle-looks',
+  'select-look','try-selected-look',
+  'toggle-voice','toggle-framing','toggle-focus',
   'photo','whatsapp','catalog','rest','tracking'
-]);
+]); // PROVADOR PRO REMOTE TRY + MENU DRAWERS V1 | PROVADOR PRO REMOTE CAMERA CONTROLS V2 | PROVADOR PRO CONTROLE CELULAR COMPLETO V3
 
 function cleanProvadorRemoteSessions(){
   const now = Date.now();
@@ -3002,9 +3004,18 @@ app.post('/api/public/provador-remote/:id/command', provadorRemoteLimiter, (req,
     return res.status(400).json({ error:'Comando remoto invalido.' });
   }
 
+  const value = command==='select-look'
+    ? String(req.body?.value || '').trim().slice(0,240)
+    : '';
+
+  if(command==='select-look' && !value){
+    return res.status(400).json({ error:'Look remoto invalido.' });
+  }
+
   const item = {
     id:remote.nextCommandId++,
     command,
+    ...(value ? { value } : {}),
     createdAt:Date.now()
   };
 

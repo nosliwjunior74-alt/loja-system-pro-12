@@ -2,16 +2,18 @@
   const state={busy:false};
   const PENDING_KEY='provador_remote_pending_command_v1';
   const PENDING_SOURCE_KEY='provador_remote_pending_source_v1';
+  const PENDING_VALUE_KEY='provador_remote_pending_value_v1'; // PROVADOR PRO CONTROLE CELULAR COMPLETO V3
 
   function isProvadorPage(){
     const page=String(location.pathname || '').split('/').pop().toLowerCase();
     return page==='provador.html';
   }
 
-  function returnToProvador(command,source='local'){
+  function returnToProvador(command,source='local',value=''){
     try{
       sessionStorage.setItem(PENDING_KEY,String(command || ''));
       sessionStorage.setItem(PENDING_SOURCE_KEY,String(source || 'local'));
+      sessionStorage.setItem(PENDING_VALUE_KEY,String(value ?? ''));
     }catch(e){}
 
     if(window.ProNavigation?.go){
@@ -38,6 +40,38 @@
     }catch(e){
       return null;
     }
+  }
+
+  async function selectLookOnly(value){
+    const items=await looks();
+    const needle=String(value ?? '');
+    const item=items.find(candidate=>
+      String(candidate?.id ?? '')===needle ||
+      String(candidate?.nome ?? '')===needle ||
+      String(candidate?.name ?? '')===needle
+    );
+    if(!item) return false;
+
+    // PROVADOR PRO V3R2 CLEAR MOTOR2 ON REMOTE SELECTION
+    // Ao apenas escolher outro look pelo celular, remova imediatamente
+    // o render antigo do Motor 2. O novo look so sera vestido ao tocar PROVAR.
+    try{ window.Motor2Bridge?.clear?.(); }catch(e){}
+
+    try{ window.AppStore?.setSelected?.(item); }catch(e){}
+
+    const name=String(item?.nome ?? item?.name ?? 'Look selecionado');
+    const title=document.getElementById('provadorTitle');
+    const badge=document.getElementById('provadorBadge');
+    if(title) title.textContent=name;
+    if(badge) badge.textContent=name;
+
+    const painel=document.getElementById('looksPanel');
+    if(painel) painel.style.display='none';
+
+    window.dispatchEvent(new CustomEvent('provador:remote-look-selected',{
+      detail:{id:item?.id ?? '',nome:name}
+    }));
+    return true;
   }
 
   async function move(delta){
@@ -76,9 +110,10 @@
     return true;
   }
 
-  async function execute(command,source='local'){
+  async function execute(command,source='local',value=''){
     const cmd=String(command||'').trim().toLowerCase();
     const commandSource=String(source||'local').trim().toLowerCase();
+    const commandValue=String(value ?? '').trim();
 
     switch(cmd){
       case 'next':
@@ -104,6 +139,47 @@
           return true;
         }
         return false;
+
+      // PROVADOR PRO CONTROLE CELULAR COMPLETO V3
+      case 'select-look':
+        if(!isProvadorPage()) return returnToProvador('select-look',commandSource,commandValue);
+        return selectLookOnly(commandValue);
+
+      // PROVADOR PRO REMOTE TRY + MENU DRAWERS V1
+      case 'try-selected-look': {
+        if(!isProvadorPage()) return returnToProvador('try-selected-look',commandSource);
+        const item=selected();
+        if(!item) return false;
+        if(typeof window.selecionarLook==='function'){
+          await window.selecionarLook(item.id || item.nome);
+          return true;
+        }
+        return false;
+      }
+
+      // PROVADOR PRO REMOTE CAMERA CONTROLS V2
+      case 'toggle-voice': {
+        if(!isProvadorPage()) return returnToProvador('toggle-voice',commandSource);
+        if(!window.ProvadorVoice?.supported || typeof window.ProvadorVoice?.toggle!=='function') return false;
+        window.ProvadorVoice.toggle();
+        return true;
+      }
+
+      case 'toggle-framing': {
+        if(!isProvadorPage()) return returnToProvador('toggle-framing',commandSource);
+        if(typeof window.CameraModule?.toggleAutoFraming!=='function') return false;
+        window.CameraModule.toggleAutoFraming();
+        return true;
+      }
+
+      case 'toggle-focus': {
+        if(!isProvadorPage()) return returnToProvador('toggle-focus',commandSource);
+        const focusState=window.CameraModule?.getCameraFocusState?.() || {};
+        if(!focusState.ready || !focusState.supported) return false;
+        if(typeof window.CameraModule?.toggleCameraFocusAuto!=='function') return false;
+        await window.CameraModule.toggleCameraFocusAuto();
+        return true;
+      }
 
       case 'photo':
         if(!isProvadorPage()) return returnToProvador('photo',commandSource);
@@ -159,15 +235,18 @@
 
     let cmd='';
     let source='local';
+    let value='';
     try{
       cmd=String(sessionStorage.getItem(PENDING_KEY) || '').trim();
       source=String(sessionStorage.getItem(PENDING_SOURCE_KEY) || 'local').trim().toLowerCase();
+      value=String(sessionStorage.getItem(PENDING_VALUE_KEY) || '').trim();
       if(cmd) sessionStorage.removeItem(PENDING_KEY);
       sessionStorage.removeItem(PENDING_SOURCE_KEY);
+      sessionStorage.removeItem(PENDING_VALUE_KEY);
     }catch(e){}
 
     if(!cmd) return false;
-    return execute(cmd,source);
+    return execute(cmd,source,value);
   }
 
   window.ProvadorControls={
@@ -178,6 +257,11 @@
     openLooks:()=>execute('open-looks'),
     closeLooks:()=>execute('close-looks'),
     toggleLooks:()=>execute('toggle-looks'),
+    selectLook:(value)=>execute('select-look','local',value),
+    trySelectedLook:()=>execute('try-selected-look'),
+    toggleVoice:()=>execute('toggle-voice'),
+    toggleFraming:()=>execute('toggle-framing'),
+    toggleFocus:()=>execute('toggle-focus'),
     photo:()=>execute('photo'),
     whatsapp:()=>execute('whatsapp'),
     catalog:()=>execute('catalog'),

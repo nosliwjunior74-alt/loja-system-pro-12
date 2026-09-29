@@ -19,13 +19,56 @@
     <div id="remoteStatus" class="remote-status" aria-live="polite">Conectando...</div>
   </header>
 
-  <section class="remote-pad" aria-label="Controle remoto do provador">
-    <button type="button" data-command="previous-look">← ANTERIOR</button>
-    <button type="button" data-command="toggle-looks">LOOKS</button>
-    <button type="button" data-command="next-look">PROXIMO →</button>
-    <button type="button" data-command="photo">FOTO</button>
-    <button type="button" data-command="catalog">CATALOGO</button>
-    <button type="button" data-command="rest">DESCANSO</button>
+  <!-- PROVADOR PRO CONTROLE CELULAR COMPLETO V3 -->
+  <section class="remote-primary" aria-label="Ação principal do provador">
+    <button type="button" class="remote-try-look" data-command="try-selected-look">👕 PROVAR LOOK SELECIONADO</button>
+    <div id="remoteSelectedLook" class="remote-selected-look">Escolha um look abaixo.</div>
+  </section>
+
+  <section class="remote-drawers" aria-label="Funções do controle celular">
+    <details class="remote-drawer" open>
+      <summary>👗 LOOKS</summary>
+      <div class="remote-drawer-body">
+        <div id="remoteLooksGrid" class="remote-looks-grid" aria-live="polite">
+          <div class="remote-empty">Carregando looks...</div>
+        </div>
+        <div class="remote-inline-actions">
+          <button type="button" data-command="previous-look">← ANTERIOR</button>
+          <button type="button" data-command="next-look">PRÓXIMO →</button>
+          <button type="button" data-command="toggle-looks">MOSTRAR / FECHAR LOOKS NA TV</button>
+        </div>
+      </div>
+    </details>
+
+    <details class="remote-drawer">
+      <summary>🎥 CÂMERA E VOZ</summary>
+      <div class="remote-drawer-body remote-grid-2">
+        <button type="button" data-command="toggle-voice">🎤 VOZ TV</button>
+        <button type="button" data-command="toggle-framing">📐 ENQUADRAMENTO</button>
+        <button type="button" data-command="toggle-focus">🎯 FOCO CÂMERA</button>
+        <button type="button" data-command="tracking">🧍 TRACKING</button>
+      </div>
+      <p class="remote-drawer-note">A primeira permissão de microfone é do navegador da TV e precisa ser autorizada uma vez diretamente nela.</p>
+    </details>
+
+    <details class="remote-drawer">
+      <summary>📸 AÇÕES DO LOOK</summary>
+      <div class="remote-drawer-body remote-grid-2">
+        <button type="button" data-command="photo">📸 FOTO DO LOOK</button>
+        <button type="button" data-command="whatsapp">💬 WHATSAPP TV</button>
+        <button type="button" data-command="catalog">👚 TROCAR LOOK / CATÁLOGO</button>
+      </div>
+    </details>
+
+    <details class="remote-drawer">
+      <summary>🧭 NAVEGAÇÃO</summary>
+      <div class="remote-drawer-body remote-grid-2">
+        <button type="button" data-command="catalog">CATÁLOGO</button>
+        <button type="button" data-command="rest">DESCANSO</button>
+        <button type="button" data-command="open-looks">ABRIR LOOKS NA TV</button>
+        <button type="button" data-command="close-looks">FECHAR LOOKS NA TV</button>
+      </div>
+    </details>
   </section>
 
   <section id="remotePhotoPanel" class="remote-photo-panel" hidden aria-live="polite">

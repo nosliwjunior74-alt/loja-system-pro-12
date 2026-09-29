@@ -9,18 +9,29 @@
 <div class="provador-menu-wrap">
 <button id="provadorMenuBtn" class="provador-menu-btn" type="button" aria-expanded="false" aria-controls="provadorMenuPanel">MENU</button>
 <div id="provadorMenuPanel" class="provador-menu-panel" hidden>
-<button id="voiceBtn" class="provador-voice-btn provador-menu-item" type="button" aria-pressed="false" title="Ativar ou desativar comandos de voz">VOZ OFF</button>
-<button id="autoFramingBtn" class="provador-menu-item" type="button" aria-pressed="true" title="Alternar enquadramento automático da imagem">ENQUADRAMENTO AUTO ON</button>
-<button id="cameraFocusBtn" class="provador-menu-item" type="button" aria-pressed="true" disabled title="Detectando suporte de foco físico da câmera">FOCO CÂMERA: DETECTANDO...</button>
-<button type="button" id="cameraManualBtn" class="provador-menu-item" onclick="window.open('/manual/manual-camera.html','_blank','noopener')">❓ MANUAL DA CÂMERA</button>
-<button id="mobileRemoteBtn" class="provador-mobile-btn provador-menu-item" type="button">CONTROLE CELULAR</button>
-<div id="mobileRemotePairing" class="provador-mobile-pairing" hidden>
-  <div class="provador-mobile-pairing-title">CONTROLE CELULAR</div>
-  <div class="provador-mobile-pairing-text">Abra este link no celular conectado a mesma rede:</div>
-  <input id="mobileRemoteLink" class="provador-mobile-pairing-link" type="text" readonly aria-label="Link do controle celular">
-  <button id="mobileRemoteCopyBtn" class="provador-mobile-pairing-copy" type="button">COPIAR LINK</button>
-  <div id="mobileRemoteQr" class="provador-mobile-pairing-qr" hidden></div>
-</div>
+<!-- PROVADOR PRO REMOTE TRY + MENU DRAWERS V1 -->
+<details class="provador-menu-drawer">
+  <summary class="provador-menu-drawer-summary">⚙ CÂMERA E CONTROLES</summary>
+  <div class="provador-menu-drawer-content">
+    <button id="voiceBtn" class="provador-voice-btn provador-menu-item" type="button" aria-pressed="false" title="Ativar ou desativar comandos de voz">VOZ OFF</button>
+    <button id="autoFramingBtn" class="provador-menu-item" type="button" aria-pressed="true" title="Alternar enquadramento automático da imagem">ENQUADRAMENTO AUTO ON</button>
+    <button id="cameraFocusBtn" class="provador-menu-item" type="button" aria-pressed="true" disabled title="Detectando suporte de foco físico da câmera">FOCO CÂMERA: DETECTANDO...</button>
+    <button type="button" id="cameraManualBtn" class="provador-menu-item" onclick="window.open('/manual/manual-camera.html','_blank','noopener')">❓ MANUAL DA CÂMERA</button>
+  </div>
+</details>
+<details class="provador-menu-drawer provador-menu-drawer-mobile">
+  <summary class="provador-menu-drawer-summary">📱 CONTROLE CELULAR</summary>
+  <div class="provador-menu-drawer-content">
+    <button id="mobileRemoteBtn" class="provador-mobile-btn provador-menu-item" type="button">CONTROLE CELULAR</button>
+    <div id="mobileRemotePairing" class="provador-mobile-pairing" hidden>
+      <div class="provador-mobile-pairing-title">CONTROLE CELULAR</div>
+      <div class="provador-mobile-pairing-text">Abra este link no celular conectado a mesma rede:</div>
+      <input id="mobileRemoteLink" class="provador-mobile-pairing-link" type="text" readonly aria-label="Link do controle celular">
+      <button id="mobileRemoteCopyBtn" class="provador-mobile-pairing-copy" type="button">COPIAR LINK</button>
+      <div id="mobileRemoteQr" class="provador-mobile-pairing-qr" hidden></div>
+    </div>
+  </div>
+</details>
 <button id="backToDescanso" class="provador-back provador-menu-item" type="button" onclick="ProNavigation.go('descanso.html')">&larr; Descanso</button>
 </div>
 </div>
@@ -48,7 +59,7 @@
 </section></main>
 <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
-<script src="../shared/pro-navigation.js"></script><script src="js/salvar.js"></script><script src="js/estoque.js"></script><script src="js/camera.js"></script><script src="js/whatsapp.js"></script><script src="js/provador.js"></script>
+<script src="../shared/pro-navigation.js"></script><script src="js/salvar.js"></script><script src="js/estoque.js"></script><script src="js/camera.js"></script><script src="js/motor2-bridge.js"></script><script src="js/whatsapp.js"></script><script src="js/provador.js"></script>
 <script src="js/provador-controls.js"></script><script src="js/provador-mobile-remote.js"></script><script src="js/provador-remote.js"></script><script src="js/provador-voice.js"></script><script src="js/provador-ui.js"></script><script>initProvador().then(()=>window.ProvadorControls?.runPending?.()).catch(error=>console.error('Falha ao iniciar Provador:',error));</script><script src="../shared/brand-sync.js"></script>
  <script>
 function toggleLooks() {

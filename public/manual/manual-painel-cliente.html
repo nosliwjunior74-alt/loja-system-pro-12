@@ -96,7 +96,11 @@ Este guia explica a rotina normal da loja, desde o login até cadastro de roupas
 <li>Entre em <strong>Painel da Loja &gt; Cadastro de roupas</strong>.</li>
 <li>Informe o nome da peça.</li>
 <li>Escolha a <strong>Categoria</strong>.</li>
-<li>Preencha subcategoria, cor, tamanho, marca, quantidade e preço quando disponíveis.</li>
+<li>Preencha subcategoria, cor, tamanho, marca e preço.</li>
+<li>No campo <strong>Código / SKU da roupa</strong>, você pode digitar um código próprio, clicar em <strong>Gerar código</strong> ou deixar vazio para o sistema gerar o próximo código numérico ao salvar.</li>
+<li>O SKU precisa ser único dentro da loja. Se já estiver em uso, o sistema informa qual roupa está usando o código.</li>
+<li>O campo <strong>Código de barras / EAN</strong> é opcional. Se informado, também precisa ser único dentro da loja e pode ser lido por scanner compatível.</li>
+<li>No primeiro cadastro, informe a <strong>Quantidade inicial</strong>. Depois de salvar, a quantidade passa a ser controlada pelos botões de estoque.</li>
 <li>Adicione a imagem correta da roupa.</li>
 <li>Revise as informações antes de salvar.</li>
 <li>Em um produto novo, clique em <strong>Salvar roupa</strong>.</li>
@@ -134,9 +138,11 @@ Este guia explica a rotina normal da loja, desde o login até cadastro de roupas
 
 <h3>2.5. Editar uma roupa existente</h3>
 <ol>
-<li>Na coluna <strong>Roupas cadastradas</strong>, localize a peça.</li>
-<li>Clique em <strong>Editar</strong>.</li>
+<li>Na gaveta de estoque, localize a peça e clique em <strong>Editar</strong>.</li>
 <li>Altere somente os campos necessários.</li>
+<li>O campo <strong>Estoque atual</strong> aparece somente para leitura. A edição da roupa não deve ser usada para aumentar ou reduzir quantidade.</li>
+<li>Para alterar quantidade, use <strong>+ Entrada</strong>, <strong>- Saída</strong> ou <strong>Ajustar</strong> na gaveta de estoque.</li>
+<li>Se apagar o SKU durante a edição e salvar, o sistema pode gerar um novo código automático disponível.</li>
 <li>Clique em <strong>Atualizar roupa</strong>.</li>
 </ol>
 
@@ -144,14 +150,37 @@ Este guia explica a rotina normal da loja, desde o login até cadastro de roupas
 </div>
 </details>
 
-<details>
+<details id="estoque">
 <summary>3. Estoque</summary>
 <div class="content">
+<p>O estoque fica organizado em <strong>gavetas por categoria, modelo e variação</strong>. A tela foi feita para evitar listas muito longas e permite localizar a peça somente quando você precisa dela.</p>
+<h3>3.1. Pesquisar uma peça</h3>
 <ul>
-<li>Confira quantidade disponível de cada produto.</li>
-<li>Atualize o estoque quando entrar mercadoria nova.</li>
-<li>Atualize também quando houver venda, troca ou retirada de peça.</li>
-<li>Evite deixar produto sem estoque aparecendo como disponível.</li>
+<li>Pesquise por <strong>SKU, código de barras, nome, categoria, cor, tamanho ou marca</strong>.</li>
+<li>Sem pesquisa, as gavetas ficam recolhidas para manter o painel organizado.</li>
+<li>O resumo informa quantas variações, peças e categorias foram encontradas.</li>
+</ul>
+<h3>3.2. Entrada, saída e ajuste</h3>
+<ul>
+<li><strong>+ Entrada:</strong> use para mercadoria que chegou, devolução autorizada ou reposição manual. Informe a quantidade e, se quiser, o motivo.</li>
+<li><strong>- Saída:</strong> use para retirada manual que não passou pelo Caixa. Informe a quantidade e o motivo.</li>
+<li><strong>Ajustar:</strong> use quando precisar corrigir a quantidade real após conferência física.</li>
+<li><strong>Histórico:</strong> mostra as movimentações registradas daquela variação.</li>
+</ul>
+<div class="warning"><strong>Importante:</strong> vendas feitas pelo Caixa baixam o estoque automaticamente. Não faça uma saída manual da mesma peça depois da venda, pois isso descontaria duas vezes.</div>
+<h3>3.3. Online e Offline</h3>
+<ul>
+<li>Quando o sistema está online, o painel mostra <strong>[OK] Estoque sincronizado</strong>.</li>
+<li>Quando estiver sem conexão, as movimentações compatíveis ficam registradas no dispositivo e entram na fila de sincronização.</li>
+<li>Ao recuperar a conexão, a fila envia cada movimentação com proteção contra duplicidade.</li>
+<li>Evite apagar dados do navegador enquanto existirem operações offline ainda não sincronizadas.</li>
+</ul>
+<h3>3.4. Boas práticas</h3>
+<ul>
+<li>Use SKU único em cada roupa para acelerar busca e leitura no Caixa.</li>
+<li>Confira o estoque físico periodicamente.</li>
+<li>Use o histórico para descobrir de onde veio uma diferença.</li>
+<li>Produto com estoque zero continua cadastrado, mas aparece como esgotado no Caixa.</li>
 </ul>
 </div>
 </details>
@@ -207,20 +236,86 @@ Este guia explica a rotina normal da loja, desde o login até cadastro de roupas
 </div>
 </details>
 
-<details>
+<details id="clientes">
 <summary>8. Clientes da Loja</summary>
 <div class="content">
-<p>Use a área de clientes para organizar os dados de atendimento disponíveis no sistema.</p>
+<p>O cadastro de clientes foi feito para atendimento e vínculo opcional com vendas do Caixa.</p>
+<h3>8.1. Cadastrar cliente</h3>
 <ul>
-<li>Consulte os clientes cadastrados.</li>
-<li>Confira nome, contato e demais informações permitidas.</li>
-<li>Mantenha os dados organizados e atualizados.</li>
+<li>Abra <strong>Cadastro do cliente</strong> no Painel da Loja.</li>
+<li>Preencha nome e, quando disponíveis, sobrenome, CPF, WhatsApp/telefone, e-mail, CEP, estado, endereço, número, complemento, bairro, cidade e observações.</li>
+<li>Clique em <strong>Salvar cliente</strong>.</li>
 </ul>
+<h3>8.2. Localizar cliente</h3>
+<ul>
+<li>A lista fica recolhida para não poluir o painel.</li>
+<li>Pesquise por <strong>nome, sobrenome, CPF ou WhatsApp</strong>.</li>
+<li>A busca aceita o nome completo, por exemplo <strong>Cliente Online Teste</strong>.</li>
+<li>Use <strong>Editar dados</strong> para corrigir informações e <strong>Excluir</strong> somente quando realmente quiser remover o cadastro.</li>
+</ul>
+<h3>8.3. Online e Offline</h3>
+<ul>
+<li><strong>[OK] Clientes sincronizados</strong> indica leitura normal do servidor.</li>
+<li>Sem conexão, o painel pode usar os clientes salvos no dispositivo e identifica a situação como Offline.</li>
+<li>Cadastros e alterações preparados para sincronização devem ser enviados ao servidor quando a conexão voltar, sem duplicar o mesmo cliente.</li>
+</ul>
+<div class="tip">No Caixa, o cliente é opcional. A venda pode ser feita sem cliente ou vinculada a um cliente localizado pela busca.</div>
+</div>
+</details>
+
+<details id="caixa">
+<summary>9. Caixa / Checkout</summary>
+<div class="content">
+<p>O Caixa é a tela de atendimento para localizar produtos, montar o carrinho, vincular cliente, escolher pagamento, confirmar venda e consultar o pós-venda.</p>
+<h3>9.1. Localizar produtos e montar o carrinho</h3>
+<ul>
+<li>Pesquise por <strong>SKU, código de barras ou nome</strong>.</li>
+<li>Clique em <strong>Adicionar</strong> para colocar o produto no carrinho.</li>
+<li>Use <strong>-</strong>, <strong>+</strong> ou <strong>remover</strong> para alterar o carrinho.</li>
+<li>O sistema soma automaticamente o total e bloqueia quantidade acima do estoque.</li>
+<li>Produto esgotado aparece como <strong>ESGOTADO</strong>.</li>
+<li>Produto sem preço válido é bloqueado na confirmação da venda.</li>
+</ul>
+<h3>9.2. Cliente e pagamento</h3>
+<ul>
+<li>O cliente é opcional. Pesquise por nome, sobrenome, CPF ou WhatsApp e clique em <strong>Selecionar</strong>.</li>
+<li>Escolha uma forma de pagamento: <strong>PIX, Dinheiro, Débito ou Crédito</strong>.</li>
+</ul>
+<h3>9.3. Confirmar venda</h3>
+<ul>
+<li>Revise itens, total, cliente e forma de pagamento.</li>
+<li>Clique em <strong>Confirmar venda</strong> e confirme a operação.</li>
+<li>Uma venda concluída recebe um <strong>ID único</strong> e baixa o estoque automaticamente.</li>
+<li>A baixa é protegida contra repetição: a mesma venda não deve descontar o estoque duas vezes.</li>
+<li>Se um item falhar, a venda inteira é bloqueada para evitar baixa parcial.</li>
+</ul>
+<h3>9.4. Histórico, cancelamento e estorno</h3>
+<ul>
+<li>O <strong>Histórico de vendas</strong> mostra venda, itens, cliente, pagamento, valor, data, ID e status.</li>
+<li><strong>Cancelar</strong> ou <strong>Estornar</strong> pergunta se as peças devem voltar ao estoque disponível.</li>
+<li>Se escolher <strong>SIM</strong>, a quantidade retorna ao estoque. Se escolher <strong>NÃO</strong>, o status muda, mas a peça não volta para venda.</li>
+<li>O evento fica registrado na venda original.</li>
+</ul>
+<h3>9.5. Troca de produto</h3>
+<ul>
+<li>Clique em <strong>Trocar</strong> na venda confirmada.</li>
+<li>Informe a quantidade devolvida e marque ou desmarque <strong>voltar ao estoque</strong>.</li>
+<li>Pesquise e adicione o novo produto.</li>
+<li>O Caixa calcula automaticamente: <strong>sem diferença</strong>, <strong>valor a pagar</strong> ou <strong>crédito</strong>.</li>
+<li>Ao confirmar, a devolução e a saída do novo item são registradas juntas e vinculadas à venda original.</li>
+<li>O sistema bloqueia novo produto sem preço, estoque insuficiente e devolução acima da quantidade vendida.</li>
+</ul>
+<h3>9.6. Personalização e telas</h3>
+<ul>
+<li>O Caixa usa automaticamente o <strong>nome, logo e cor principal</strong> da loja ativa.</li>
+<li>O layout é responsivo para computador, tablet, celular e telas maiores.</li>
+</ul>
+<div class="warning"><strong>Offline do Caixa:</strong> nesta versão, venda e operações de pós-venda exigem conexão com o servidor. O modo Offline/outbox completo do Caixa será habilitado em etapa própria para preservar a segurança do estoque.</div>
 </div>
 </details>
 
 <details>
-<summary>9. Pagamentos</summary>
+<summary>10. Pagamentos</summary>
 <div class="content">
 <p>As formas de pagamento exibidas ao cliente devem corresponder às opções realmente aceitas pela sua loja.</p>
 <ul>
@@ -234,7 +329,7 @@ Este guia explica a rotina normal da loja, desde o login até cadastro de roupas
 </details>
 
 <details>
-<summary>10. WhatsApp e atendimento</summary>
+<summary>11. WhatsApp e atendimento</summary>
 <div class="content">
 <ul>
 <li>Confira se o número de WhatsApp da loja está correto.</li>
@@ -245,7 +340,7 @@ Este guia explica a rotina normal da loja, desde o login até cadastro de roupas
 </details>
 
 <details>
-<summary>11. Testes antes de divulgar</summary>
+<summary>12. Testes antes de divulgar</summary>
 <div class="content">
 <p>Antes de enviar o sistema aos clientes, teste:</p>
 <ul>
@@ -253,6 +348,7 @@ Este guia explica a rotina normal da loja, desde o login até cadastro de roupas
 <li>vitrine;</li>
 <li>catálogo;</li>
 <li>provador;</li>
+<li>Caixa: busca, carrinho, venda e histórico;</li>
 <li>tela de descanso;</li>
 <li>WhatsApp;</li>
 <li>imagens e preços;</li>
@@ -263,7 +359,7 @@ Este guia explica a rotina normal da loja, desde o login até cadastro de roupas
 </details>
 
 <details>
-<summary>12. Link público, copiar e enviar ao cliente</summary>
+<summary>13. Link público, copiar e enviar ao cliente</summary>
 <div class="content">
 <ol>
 <li>No Painel da Loja, localize a área do link público.</li>
@@ -276,7 +372,7 @@ Este guia explica a rotina normal da loja, desde o login até cadastro de roupas
 </details>
 
 <details>
-<summary>13. Rotina normal da loja</summary>
+<summary>14. Rotina normal da loja</summary>
 <div class="content">
 <ol>
 <li>Entrar no painel.</li>
@@ -285,6 +381,7 @@ Este guia explica a rotina normal da loja, desde o login até cadastro de roupas
 <li>Atualizar preços e informações quando necessário.</li>
 <li>Conferir vitrine e catálogo.</li>
 <li>Verificar clientes e atendimentos.</li>
+<li>Usar o Caixa para vendas e pós-venda.</li>
 <li>Testar o link público.</li>
 <li>Divulgar produtos e atender os clientes.</li>
 </ol>
@@ -292,7 +389,7 @@ Este guia explica a rotina normal da loja, desde o login até cadastro de roupas
 </details>
 
 <details>
-<summary>14. Backup, manutenção e suporte</summary>
+<summary>15. Backup, manutenção e suporte</summary>
 <div class="content">
 <p>Se perceber falha, perda de dados ou comportamento diferente do normal:</p>
 <ol>

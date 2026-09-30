@@ -1,10 +1,100 @@
 <!DOCTYPE html>
 <html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Sua Loja - Painel da Loja</title><link rel="stylesheet" href="css/estilo.css"></head>
+<title>Sua Loja - Painel da Loja</title><link rel="stylesheet" href="css/estilo.css"><style>
+/* PROVADOR PRO ESTOQUE GAVETAS PESQUISA V1A */
+.stock-v1-toolbar{display:grid;gap:8px;margin:12px 0 14px}
+.stock-v1-search{width:100%;box-sizing:border-box}
+.stock-category-drawer,.stock-model-drawer{border:1px solid rgba(255,255,255,.10);border-radius:14px;overflow:hidden;margin-bottom:10px;background:rgba(255,255,255,.025)}
+.stock-category-drawer>summary,.stock-model-drawer>summary{cursor:pointer;list-style:none;padding:13px 14px;font-weight:800;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.stock-category-drawer>summary::-webkit-details-marker,.stock-model-drawer>summary::-webkit-details-marker{display:none}
+.stock-category-body,.stock-model-body{padding:0 10px 10px}
+.stock-variant{display:grid;grid-template-columns:72px minmax(0,1fr);gap:10px;padding:10px;border:1px solid rgba(255,255,255,.09);border-radius:12px;background:rgba(0,0,0,.10)}
+.stock-variant img{width:72px;height:88px;object-fit:contain;border-radius:9px;background:#fff}
+.stock-variant-line{display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin-bottom:6px}
+.stock-chip{display:inline-flex;align-items:center;min-height:26px;padding:3px 8px;border-radius:999px;background:rgba(255,255,255,.08);font-size:12px}
+.stock-chip.stock-qtd{font-weight:900}
+.stock-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.stock-actions .small-btn{margin:0}
+.stock-empty{padding:18px;text-align:center;border:1px dashed rgba(255,255,255,.14);border-radius:12px}
+@media(max-width:620px){.stock-variant{grid-template-columns:56px minmax(0,1fr)}.stock-variant img{width:56px;height:72px}}
+</style>
+
+
+<style>
+/* PROVADOR PRO CLIENTES COMPLETOS V1A */
+.customer-form-drawer{
+  border:1px solid rgba(255,255,255,.10);
+  border-radius:14px;
+  overflow:hidden;
+  background:rgba(255,255,255,.025);
+}
+.customer-form-drawer>summary{
+  cursor:pointer;
+  list-style:none;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:14px;
+  font-weight:800;
+}
+.customer-form-drawer>summary::-webkit-details-marker{display:none}
+.customer-form-body{padding:0 14px 14px}
+.customer-form-grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:10px 12px;
+}
+.customer-form-grid>div{min-width:0}
+.customer-form-span-2{grid-column:1/-1}
+.customer-search-toolbar{display:grid;gap:7px;margin:10px 0 14px}
+.customer-card{
+  border:1px solid rgba(255,255,255,.10);
+  border-radius:14px;
+  overflow:hidden;
+  margin-bottom:10px;
+  background:rgba(255,255,255,.025);
+}
+.customer-card>summary{
+  cursor:pointer;
+  list-style:none;
+  padding:12px 14px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+}
+.customer-card>summary::-webkit-details-marker{display:none}
+.customer-card-name{font-weight:900}
+.customer-card-meta{font-size:12px;text-align:right}
+.customer-card-body{padding:0 14px 14px}
+.customer-data-grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:8px 14px;
+  margin-top:8px;
+}
+.customer-data-row{min-width:0}
+.customer-data-label{font-size:11px;text-transform:uppercase;letter-spacing:.06em;opacity:.65}
+.customer-data-value{overflow-wrap:anywhere}
+.customer-empty{
+  padding:18px;
+  text-align:center;
+  border:1px dashed rgba(255,255,255,.14);
+  border-radius:12px;
+}
+@media(max-width:620px){
+  .customer-form-grid,.customer-data-grid{grid-template-columns:1fr}
+  .customer-form-span-2{grid-column:auto}
+  .customer-card>summary{align-items:flex-start}
+}
+</style>
+
+</head>
 <body><main class="admin-wrap"><section class="admin">
 <div class="admin-head">
 <div><h1 style="margin:0">Painel da Loja</h1><div class="muted">Visual premium rosa mesclado, estoque offline e integração com vitrine, catálogo e provador.</div></div>
-<div class="admin-nav"><a href="index.html">Vitrine</a><a href="catalogo.html">Catálogo</a><a href="provador.html">Provador</a><a href="descanso.html">Descanso</a></div>
+<div class="admin-nav"><a href="index.html">Vitrine</a><a href="catalogo.html">Catálogo</a><a href="provador.html">Provador</a><a href="caixa.html">Caixa</a><a href="descanso.html">Descanso</a></div>
 </div>
 <div class="grid">
 <div class="panel">
@@ -55,8 +145,24 @@
 <label>Marca</label>
 <input id="marca" placeholder="Marca da peça">
 
-<label>Quantidade</label>
+<!-- PROVADOR PRO SKU / CODIGO DE BARRAS - FASE A V1 -->
+<label>Codigo / SKU da roupa</label>
+<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+  <input id="sku" placeholder="Ex.: 003 ou BLA-003-P-PRE" style="flex:1 1 220px">
+  <button type="button" class="small-btn" id="generateSkuBtn">Gerar codigo</button>
+</div>
+<div class="muted" style="margin-top:6px">
+  Unico dentro desta loja. Se deixar vazio ao salvar, o sistema gera o proximo codigo numerico automaticamente.
+</div>
+
+<label>Codigo de barras / EAN (opcional)</label>
+<input id="codigoBarras" inputmode="numeric" placeholder="Leia com o scanner ou digite o codigo">
+
+<label id="quantidadeLabel">Quantidade inicial</label>
 <input id="quantidade" type="number" min="0" value="1">
+<div id="quantidadeHint" class="muted" style="margin-top:6px">
+  No primeiro cadastro, informe a quantidade inicial. Depois use + Entrada, - Saída ou Ajustar no estoque.
+</div>
 <label>Preço</label><input id="preco" placeholder="Ex.: 99,90">
 <label>Imagem da roupa</label><input id="imagemFile" type="file" accept="image/*">
 <div style="margin-top:12px"><img id="previewImg" class="preview" src="" alt=""></div>
@@ -65,13 +171,86 @@
 
 <div class="divider"></div>
 
-<h2 style="margin-top:0">Cadastro de clientes</h2>
-<input type="hidden" id="customerId">
-<label>Nome do cliente</label><input id="clienteNome" placeholder="Ex.: Maria Silva">
-<label>Telefone</label><input id="clienteTelefone" placeholder="Ex.: 31999999999">
-<label>Observações</label><textarea id="clienteObs" placeholder="Ex.: Gosta de looks sociais."></textarea>
-<div class="item-actions"><button class="small-btn" id="saveCustomerBtn">Salvar cliente</button><button class="small-btn" id="clearCustomerBtn">Limpar cadastro</button></div>
-<div class="item-actions"><button class="small-btn" id="restoreCustomersBtn">Restaurar clientes iniciais</button></div>
+<!-- PROVADOR PRO CLIENTES COMPLETOS V1A -->
+<details id="customerFormDrawer" class="customer-form-drawer">
+  <summary>
+    <span>👤 Cadastro do cliente</span>
+    <span class="muted">abrir / fechar</span>
+  </summary>
+  <div class="customer-form-body">
+    <input type="hidden" id="customerId">
+
+    <div class="customer-form-grid">
+      <div>
+        <label>Nome</label>
+        <input id="clienteNome" placeholder="Ex.: Maria">
+      </div>
+      <div>
+        <label>Sobrenome</label>
+        <input id="clienteSobrenome" placeholder="Ex.: Silva">
+      </div>
+
+      <div>
+        <label>CPF</label>
+        <input id="clienteCpf" inputmode="numeric" maxlength="14" placeholder="000.000.000-00">
+      </div>
+      <div>
+        <label>WhatsApp / Telefone</label>
+        <input id="clienteTelefone" inputmode="tel" placeholder="Ex.: 31999999999">
+      </div>
+
+      <div class="customer-form-span-2">
+        <label>E-mail</label>
+        <input id="clienteEmail" type="email" placeholder="Ex.: cliente@email.com">
+      </div>
+
+      <div>
+        <label>CEP</label>
+        <input id="clienteCep" inputmode="numeric" maxlength="9" placeholder="00000-000">
+      </div>
+      <div>
+        <label>Estado</label>
+        <input id="clienteEstado" maxlength="2" placeholder="Ex.: MG">
+      </div>
+
+      <div class="customer-form-span-2">
+        <label>Endereço</label>
+        <input id="clienteEndereco" placeholder="Rua / Avenida">
+      </div>
+
+      <div>
+        <label>Número</label>
+        <input id="clienteNumero" placeholder="Ex.: 120">
+      </div>
+      <div>
+        <label>Complemento</label>
+        <input id="clienteComplemento" placeholder="Apto, casa, fundos...">
+      </div>
+
+      <div>
+        <label>Bairro</label>
+        <input id="clienteBairro" placeholder="Bairro">
+      </div>
+      <div>
+        <label>Cidade</label>
+        <input id="clienteCidade" placeholder="Cidade">
+      </div>
+
+      <div class="customer-form-span-2">
+        <label>Observações</label>
+        <textarea id="clienteObs" placeholder="Ex.: Gosta de looks sociais."></textarea>
+      </div>
+    </div>
+
+    <div class="item-actions">
+      <button class="small-btn" id="saveCustomerBtn">Salvar cliente</button>
+      <button class="small-btn" id="clearCustomerBtn">Limpar cadastro</button>
+    </div>
+    <div class="item-actions">
+      <button class="small-btn" id="restoreCustomersBtn">Restaurar clientes iniciais</button>
+    </div>
+  </div>
+</details>
 
 <div class="divider"></div>
 
@@ -157,14 +336,33 @@
 </div>
 
 <div class="panel">
-<h2 style="margin-top:0">Roupas cadastradas</h2>
-<div class="muted" style="margin-bottom:12px">Tudo que estiver aqui aparece na vitrine, catálogo e provador.</div>
+<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:10px">
+  <h2 style="margin:0">📦 Estoque por categorias</h2>
+  <a class="small-btn" href="../manual/manual-painel-cliente.html#estoque" target="_blank" rel="noopener" style="text-decoration:none">❓ Manual do estoque</a>
+</div>
+<div class="muted" style="margin-bottom:8px">Pesquise por codigo/SKU, codigo de barras, nome, categoria, cor, tamanho ou marca.</div>
+<div class="stock-v1-toolbar">
+  <input id="inventorySearch" class="stock-v1-search" placeholder="🔎 Pesquisar: SKU, codigo de barras, nome, categoria, cor, tamanho ou marca">
+  <div id="inventorySearchInfo" class="muted"></div>
+  <div id="stockSyncInfo" class="muted" style="font-weight:700"></div>
+</div>
 <div id="inventory" class="inventory"></div>
+
 
 <div class="divider"></div>
 
-<h2 style="margin-top:0">Clientes cadastrados</h2>
-<div class="muted" style="margin-bottom:12px">Usados no envio para WhatsApp.</div>
+<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:10px">
+  <h2 style="margin:0">👥 Clientes cadastrados</h2>
+  <a class="small-btn" href="../manual/manual-painel-cliente.html#clientes" target="_blank" rel="noopener" style="text-decoration:none">❓ Manual de clientes</a>
+</div>
+<div class="muted" style="margin-bottom:8px">
+  Pesquise por nome, sobrenome, CPF ou WhatsApp. Os clientes ficam em gavetas para manter o painel organizado.
+</div>
+<div class="customer-search-toolbar">
+  <input id="customerSearch" placeholder="🔎 Pesquisar cliente: nome, sobrenome, CPF ou WhatsApp">
+  <div id="customerSearchInfo" class="muted"></div>
+  <div id="customerSyncInfo" class="muted" style="font-weight:700"></div>
+</div>
 <div id="customers" class="customers"></div>
 </div>
 </div>
@@ -595,55 +793,431 @@ async function loadStoreCategories(store){
   renderCategoryOptions();
 }
 
-async function renderInventory(){
-  const inv = document.getElementById('inventory');
+function stockV1Text(value){ return String(value ?? '').trim(); }
+function stockV1Norm(value){ return stockV1Text(value).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase(); }
+function stockV1Esc(value){
+  return stockV1Text(value).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+function stockV1Blob(item){
+  return stockV1Norm([
+    item?.sku,
+    item?.codigoBarras,
+    item?.ean,
+    item?.nome,
+    item?.categoria,
+    item?.subcategoria,
+    item?.cor,
+    item?.tamanho,
+    item?.marca,
+    item?.id
+  ].filter(Boolean).join(' '));
+}
+
+function skuV1Normalize(value){
+  return String(value || '').trim().toUpperCase().replace(/\s+/g,'');
+}
+
+function barcodeV1Normalize(value){
+  return String(value || '').trim().replace(/\s+/g,'');
+}
+
+async function skuV1Next(excludeId=''){
   const items = await Estoque.all();
+  let maxNumeric = 0;
 
-  inv.innerHTML = items.map(i=>`
-    <div class="item">
-      <img src="${i.imagem}" alt="${i.nome}">
+  for(const item of (Array.isArray(items) ? items : [])){
+    if(String(item?.id || '') === String(excludeId || '')) continue;
+    const value = skuV1Normalize(item?.sku || '');
+    if(/^\d+$/.test(value)){
+      maxNumeric = Math.max(maxNumeric, Number(value));
+    }
+  }
 
-      <h3 style="margin:10px 0 4px">${i.nome}</h3>
+  return String(maxNumeric + 1).padStart(3,'0');
+}
 
-      <div class="muted">${i.categoria || ''}</div>
+async function skuV1ValidateUnique(skuValue, barcodeValue, excludeId=''){
+  const items = await Estoque.all();
+  const skuKey = skuV1Normalize(skuValue);
+  const barcodeKey = barcodeV1Normalize(barcodeValue);
 
-      <div class="muted">
-        ${i.subcategoria || ''}
-        ${i.cor ? ' • ' + i.cor : ''}
-        ${i.tamanho ? ' • ' + i.tamanho : ''}
-      </div>
+  for(const item of (Array.isArray(items) ? items : [])){
+    if(String(item?.id || '') === String(excludeId || '')) continue;
 
-      <div class="muted">${i.marca || ''}</div>
+    if(skuKey && skuV1Normalize(item?.sku || '') === skuKey){
+      return {ok:false,field:'sku',item};
+    }
 
-      <div class="badge2">Estoque: ${i.quantidade}</div>
-      ${i.preco ? `<div class="badge2">R$ ${i.preco}</div>` : ''}
+    if(barcodeKey && barcodeV1Normalize(item?.codigoBarras || item?.ean || '') === barcodeKey){
+      return {ok:false,field:'barcode',item};
+    }
+  }
 
-      <div class="item-actions">
-        <button class="small-btn" onclick="editItem('${i.id}')">Editar</button>
-        <button class="small-btn danger" onclick="removeItem('${i.id}')">Excluir</button>
-      </div>
-    </div>
-  `).join('');
-}    
+  return {ok:true};
+}
+function stockV1Label(tipo){ return ({entrada:'Entrada',saida:'Saída',ajuste:'Ajuste'})[tipo] || stockV1Text(tipo); }
+function stockV1Date(value){ const d=new Date(value); return Number.isNaN(d.getTime()) ? stockV1Text(value) : d.toLocaleString('pt-BR'); }
+async function stockV1Move(id,tipo){
+  const item=await Estoque.byId(id); if(!item) return;
+  const atual=Math.max(0,Number(item.quantidade||0)); let novo=atual; let quantidade=0;
+  if(tipo==='entrada' || tipo==='saida'){
+    const raw=window.prompt(tipo==='entrada' ? `Quantas peças entraram em "${item.nome}"?` : `Quantas peças saíram de "${item.nome}"?`);
+    if(raw===null) return; quantidade=Number(raw);
+    if(!Number.isInteger(quantidade) || quantidade<=0){ alert('Informe uma quantidade inteira maior que zero.'); return; }
+    if(tipo==='saida' && quantidade>atual){ alert(`Saída bloqueada. Estoque atual: ${atual} peça(s).`); return; }
+    novo=tipo==='entrada' ? atual+quantidade : atual-quantidade;
+  }else if(tipo==='ajuste'){
+    const raw=window.prompt(`Informe a quantidade correta de "${item.nome}":`,String(atual));
+    if(raw===null) return; novo=Number(raw);
+    if(!Number.isInteger(novo) || novo<0){ alert('Informe uma quantidade inteira igual ou maior que zero.'); return; }
+    if(novo===atual) return; quantidade=Math.abs(novo-atual);
+  }else{return;}
+  const motivo=window.prompt('Motivo / observação (opcional):',''); if(motivo===null) return;
+  const movimentacoes=Array.isArray(item.movimentacoes) ? [...item.movimentacoes] : [];
+  const movement={id:'mov_'+Date.now()+'_'+Math.random().toString(36).slice(2,8),tipo,quantidade,anterior:atual,posterior:novo,motivo:stockV1Text(motivo),data:new Date().toISOString()};
+  movimentacoes.push(movement);
+  const updatedItem={...item,quantidade:novo,movimentacoes,stockUpdatedAt:new Date().toISOString()};
+  if(typeof Estoque.saveMovement==='function') await Estoque.saveMovement(updatedItem,movement);
+  else await Estoque.save(updatedItem);
+  await renderInventory();
+  await stockV1RenderSyncStatus();
+}
+async function stockV1History(id){
+  const item=await Estoque.byId(id); if(!item) return;
+  const movs=Array.isArray(item.movimentacoes) ? item.movimentacoes : [];
+  if(!movs.length){ alert('Ainda não há movimentações registradas para esta peça.'); return; }
+  const linhas=[`HISTÓRICO — ${item.nome}`,''];
+  for(const mov of [...movs].reverse().slice(0,40)){
+    linhas.push(`${stockV1Date(mov.data)} — ${stockV1Label(mov.tipo)} — ${mov.anterior} → ${mov.posterior}` + (mov.motivo ? ` — ${mov.motivo}` : ''));
+  }
+  alert(linhas.join('\n'));
+}
+function stockV1Bind(){
+  const inv=document.getElementById('inventory'); if(!inv) return;
+  inv.querySelectorAll('[data-stock-action]').forEach(btn=>{
+    btn.addEventListener('click',async()=>{
+      const id=decodeURIComponent(btn.dataset.stockId||''); const action=btn.dataset.stockAction;
+      if(['entrada','saida','ajuste'].includes(action)) await stockV1Move(id,action);
+      else if(action==='historico') await stockV1History(id);
+      else if(action==='editar') await window.editItem(id);
+      else if(action==='excluir') await window.removeItem(id);
+    });
+  });
+}
+async function stockV1RenderSyncStatus(){
+  const el=document.getElementById('stockSyncInfo');
+  if(!el || typeof Estoque.getSyncStatus!=='function') return;
+  const status=await Estoque.getSyncStatus();
+  const pending=Math.max(0,Number(status?.pending||0));
+  const state=String(status?.state||'local');
+  if(state==='synced' && pending===0){ el.textContent='[OK] Estoque sincronizado'; return; }
+  if(state==='offline'){ el.textContent=`[OFFLINE] ${pending} alteracao(oes) aguardando sincronizacao`; return; }
+  if(state==='conflict'){ el.textContent=`[CONFLITO] ${pending} alteracao(oes) aguardando revisao`; return; }
+  if(pending>0){ el.textContent=`[PENDENTE] ${pending} alteracao(oes) aguardando sincronizacao`; return; }
+  el.textContent='Estoque local pronto';
+}
+
+async function renderInventory(){
+  const inv=document.getElementById('inventory'); if(!inv) return;
+  const allItemsRaw=await Estoque.all();
+  const allItems=Array.isArray(allItemsRaw) ? allItemsRaw : [];
+  const query=stockV1Norm(document.getElementById('inventorySearch')?.value||'');
+
+  const totalAll=allItems.reduce(
+    (sum,item)=>sum+Math.max(0,Number(item.quantidade||0)),
+    0
+  );
+  const categoriesAll=new Set(
+    allItems
+      .map(item=>stockV1Text(item.categoria)||'Sem categoria')
+      .filter(Boolean)
+  );
+
+  const info=document.getElementById('inventorySearchInfo');
+
+  // PROVADOR PRO ESTOQUE BUSCA SOB DEMANDA V1A1
+  // Sem pesquisa: resumo apenas. Nenhuma gaveta fica exposta.
+  if(!query){
+    if(info){
+      info.textContent=
+        `${allItems.length} variação(ões) • ${totalAll} peça(s) em estoque • ${categoriesAll.size} categoria(s)`;
+    }
+
+    inv.innerHTML=`
+      <div class="stock-empty muted">
+        🔎 Digite SKU, codigo de barras, nome, categoria, cor, tamanho ou marca para consultar o estoque.
+      </div>`;
+    return;
+  }
+
+  const items=allItems.filter(item=>stockV1Blob(item).includes(query));
+  const total=items.reduce(
+    (sum,item)=>sum+Math.max(0,Number(item.quantidade||0)),
+    0
+  );
+  const categoriesFound=new Set(
+    items
+      .map(item=>stockV1Text(item.categoria)||'Sem categoria')
+      .filter(Boolean)
+  );
+
+  if(info){
+    info.textContent=
+      `${items.length} resultado(s) • ${total} peça(s) • ${categoriesFound.size} categoria(s)`;
+  }
+
+  if(!items.length){
+    inv.innerHTML='<div class="stock-empty muted">Nenhum item encontrado.</div>';
+    return;
+  }
+
+  const byCategory=new Map();
+  for(const item of items){ const category=stockV1Text(item.categoria)||'Sem categoria'; if(!byCategory.has(category)) byCategory.set(category,[]); byCategory.get(category).push(item); }
+  inv.innerHTML=[...byCategory.entries()].sort((a,b)=>a[0].localeCompare(b[0],'pt-BR')).map(([category,catItems])=>{
+    const catTotal=catItems.reduce((sum,item)=>sum+Math.max(0,Number(item.quantidade||0)),0); const byModel=new Map();
+    for(const item of catItems){ const model=stockV1Text(item.nome)||'Sem nome'; if(!byModel.has(model)) byModel.set(model,[]); byModel.get(model).push(item); }
+    const models=[...byModel.entries()].map(([model,variants])=>{
+      const modelTotal=variants.reduce((sum,item)=>sum+Math.max(0,Number(item.quantidade||0)),0);
+      const rows=variants.map(item=>{ const id=encodeURIComponent(stockV1Text(item.id)); const qtd=Math.max(0,Number(item.quantidade||0)); return `
+        <div class="stock-variant">
+          ${item.imagem ? `<img src="${stockV1Esc(item.imagem)}" alt="${stockV1Esc(item.nome)}">` : '<div></div>'}
+          <div>
+            <div class="stock-variant-line">
+              ${item.sku ? `<span class="stock-chip"><strong>SKU:</strong>&nbsp;${stockV1Esc(item.sku)}</span>` : ''}
+              ${item.codigoBarras ? `<span class="stock-chip"><strong>Cod. barras:</strong>&nbsp;${stockV1Esc(item.codigoBarras)}</span>` : ''}
+              ${item.cor ? `<span class="stock-chip">Cor: ${stockV1Esc(item.cor)}</span>` : ''}
+              ${item.tamanho ? `<span class="stock-chip">Tam.: ${stockV1Esc(item.tamanho)}</span>` : ''}
+              <span class="stock-chip stock-qtd">Estoque: ${qtd}</span>
+            </div>
+            <div class="muted">${stockV1Esc(item.subcategoria||'')}${item.marca ? ' • '+stockV1Esc(item.marca) : ''}</div>
+            <div class="stock-actions">
+              <button type="button" class="small-btn" data-stock-action="entrada" data-stock-id="${id}">+ Entrada</button>
+              <button type="button" class="small-btn" data-stock-action="saida" data-stock-id="${id}">− Saída</button>
+              <button type="button" class="small-btn" data-stock-action="ajuste" data-stock-id="${id}">Ajustar</button>
+              <button type="button" class="small-btn" data-stock-action="historico" data-stock-id="${id}">Histórico</button>
+              <button type="button" class="small-btn" data-stock-action="editar" data-stock-id="${id}">Editar</button>
+              <button type="button" class="small-btn danger" data-stock-action="excluir" data-stock-id="${id}">Excluir</button>
+            </div>
+          </div>
+        </div>`; }).join('');
+      return `<details class="stock-model-drawer" ${query ? 'open' : ''}><summary><span>${stockV1Esc(model)}</span><span class="muted">${variants.length} variação(ões) • ${modelTotal} peça(s)</span></summary><div class="stock-model-body">${rows}</div></details>`;
+    }).join('');
+    return `<details class="stock-category-drawer" ${query ? 'open' : ''}><summary><span>📁 ${stockV1Esc(category)}</span><span class="muted">${byModel.size} modelo(s) • ${catTotal} peça(s)</span></summary><div class="stock-category-body">${models}</div></details>`;
+  }).join('');
+  stockV1Bind();
+}
+
+
+function customerV1Text(value){ return String(value ?? '').trim(); }
+function customerV1Norm(value){
+  return customerV1Text(value)
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g,'')
+    .toLowerCase();
+}
+function customerV1Digits(value){ return customerV1Text(value).replace(/\D+/g,''); }
+function customerV1Esc(value){
+  return customerV1Text(value)
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;')
+    .replace(/'/g,'&#39;');
+}
+function customerV1FullName(c){
+  return [customerV1Text(c?.nome),customerV1Text(c?.sobrenome)]
+    .filter(Boolean).join(' ') || 'Cliente sem nome';
+}
+function customerV1SearchBlob(c){
+  return customerV1Norm([
+    c?.nome,c?.sobrenome,c?.cpf,c?.telefone,c?.whatsapp,c?.email,
+    c?.cep,c?.endereco,c?.numero,c?.bairro,c?.cidade,c?.estado
+  ].filter(Boolean).join(' '));
+}
+function customerV1MaskCpf(value){
+  const d=customerV1Digits(value);
+  if(d.length!==11) return d ? 'CPF cadastrado' : 'Sem CPF';
+  return `***.***.***-${d.slice(-2)}`;
+}
+function customerV1FormatCpf(value){
+  const d=customerV1Digits(value).slice(0,11);
+  if(d.length<=3) return d;
+  if(d.length<=6) return d.replace(/(\d{3})(\d+)/,'$1.$2');
+  if(d.length<=9) return d.replace(/(\d{3})(\d{3})(\d+)/,'$1.$2.$3');
+  return d.replace(/(\d{3})(\d{3})(\d{3})(\d{1,2})/,'$1.$2.$3-$4');
+}
+function customerV1FormatCep(value){
+  const d=customerV1Digits(value).slice(0,8);
+  return d.length>5 ? d.replace(/(\d{5})(\d+)/,'$1-$2') : d;
+}
+function customerV1FormatPhone(value){
+  const d=customerV1Digits(value).slice(0,13);
+  if(d.length===11) return d.replace(/(\d{2})(\d{5})(\d{4})/,'($1) $2-$3');
+  if(d.length===10) return d.replace(/(\d{2})(\d{4})(\d{4})/,'($1) $2-$3');
+  return customerV1Text(value);
+}
+function customerV1BindList(){
+  document.querySelectorAll('[data-customer-action]').forEach(btn=>{
+    btn.addEventListener('click',async()=>{
+      const id=decodeURIComponent(btn.dataset.customerId||'');
+      if(btn.dataset.customerAction==='edit') await window.editCustomer(id);
+      if(btn.dataset.customerAction==='delete') await window.removeCustomer(id);
+    });
+  });
+}
+
 async function renderCustomers(){
   const list = document.getElementById('customers');
-  const customers = await Estoque.customers();
-  list.innerHTML = customers.map(c=>`
-    <div class="customer">
-      <h3 style="margin:0 0 6px">${c.nome}</h3>
-      <div class="muted">${c.telefone || 'Sem telefone'}</div>
-      <div class="muted" style="margin-top:8px">${c.obs || 'Sem observações'}</div>
-      <div class="item-actions">
-        <button class="small-btn" onclick="editCustomer('${c.id}')">Editar</button>
-        <button class="small-btn danger" onclick="removeCustomer('${c.id}')">Excluir</button>
-      </div>
-    </div>`).join('');
+  if(!list) return;
+
+  const allRaw = await Estoque.customers();
+  const all = (Array.isArray(allRaw) ? allRaw : [])
+    .sort((a,b)=>customerV1FullName(a).localeCompare(customerV1FullName(b),'pt-BR'));
+
+  const query = customerV1Norm(
+    document.getElementById('customerSearch')?.value || ''
+  );
+
+  const info=document.getElementById('customerSearchInfo');
+
+  // PROVADOR PRO CLIENTES BUSCA SOB DEMANDA V1A1
+  // Sem pesquisa: mostra somente a quantidade total. Nenhuma gaveta fica exposta.
+  if(!query){
+    if(info){
+      info.textContent=`${all.length} cliente(s) cadastrado(s)`;
+    }
+
+    list.innerHTML=`
+      <div class="customer-empty muted">
+        🔎 Digite nome, sobrenome, CPF ou WhatsApp para localizar um cliente.
+      </div>`;
+    return;
+  }
+
+  const customers = all.filter(c=>customerV1SearchBlob(c).includes(query));
+
+  if(info){
+    info.textContent=`${customers.length} encontrado(s) de ${all.length} cliente(s) cadastrado(s)`;
+  }
+
+  if(!customers.length){
+    list.innerHTML='<div class="customer-empty muted">Nenhum cliente encontrado.</div>';
+    return;
+  }
+
+  list.innerHTML=customers.map(c=>{
+    const id=encodeURIComponent(customerV1Text(c.id));
+    const fullName=customerV1Esc(customerV1FullName(c));
+    const maskedCpf=customerV1Esc(customerV1MaskCpf(c.cpf));
+    const phone=customerV1Esc(customerV1FormatPhone(c.telefone || c.whatsapp || ''));
+    const address=[
+      customerV1Text(c.endereco),
+      customerV1Text(c.numero),
+      customerV1Text(c.complemento)
+    ].filter(Boolean).join(', ');
+    const cityState=[
+      customerV1Text(c.bairro),
+      customerV1Text(c.cidade),
+      customerV1Text(c.estado).toUpperCase()
+    ].filter(Boolean).join(' • ');
+
+    return `
+      <details class="customer-card" open>
+        <summary>
+          <span class="customer-card-name">👤 ${fullName}</span>
+          <span class="customer-card-meta muted">${maskedCpf}${phone ? '<br>'+phone : ''}</span>
+        </summary>
+        <div class="customer-card-body">
+          <div class="customer-data-grid">
+            <div class="customer-data-row">
+              <div class="customer-data-label">WhatsApp</div>
+              <div class="customer-data-value">${phone || 'Não informado'}</div>
+            </div>
+            <div class="customer-data-row">
+              <div class="customer-data-label">E-mail</div>
+              <div class="customer-data-value">${customerV1Esc(c.email || 'Não informado')}</div>
+            </div>
+            <div class="customer-data-row">
+              <div class="customer-data-label">CEP</div>
+              <div class="customer-data-value">${customerV1Esc(customerV1FormatCep(c.cep || '')) || 'Não informado'}</div>
+            </div>
+            <div class="customer-data-row">
+              <div class="customer-data-label">Endereço</div>
+              <div class="customer-data-value">${customerV1Esc(address) || 'Não informado'}</div>
+            </div>
+            <div class="customer-data-row">
+              <div class="customer-data-label">Localidade</div>
+              <div class="customer-data-value">${customerV1Esc(cityState) || 'Não informado'}</div>
+            </div>
+            <div class="customer-data-row">
+              <div class="customer-data-label">Observações</div>
+              <div class="customer-data-value">${customerV1Esc(c.obs || 'Sem observações')}</div>
+            </div>
+          </div>
+          <div class="item-actions">
+            <button type="button" class="small-btn" data-customer-action="edit" data-customer-id="${id}">Editar dados</button>
+            <button type="button" class="small-btn danger" data-customer-action="delete" data-customer-id="${id}">Excluir</button>
+          </div>
+        </div>
+      </details>`;
+  }).join('');
+
+  customerV1BindList();
 }
+
+async function customerV1RenderSyncStatus(){
+  const el=document.getElementById('customerSyncInfo');
+  if(!el || !window.Estoque?.getCustomerSyncStatus) return;
+  const status=await Estoque.getCustomerSyncStatus();
+  const pending=Math.max(0,Number(status?.pending||0));
+  const state=String(status?.state||'local');
+  if(state==='offline') el.textContent=`[OFFLINE] Clientes salvos neste dispositivo${pending?` • ${pending} pendente(s)`:''}`;
+  else if(state==='pending') el.textContent=`[PENDENTE] Sincronização de clientes${pending?` • ${pending} pendente(s)`:''}`;
+  else if(state==='conflict') el.textContent=`[CONFLITO] Clientes aguardando revisão${pending?` • ${pending} pendente(s)`:''}`;
+  else if(state==='synced') el.textContent='[OK] Clientes sincronizados';
+  else el.textContent='[LOCAL] Clientes neste dispositivo';
+}
+
 function clearForm(){
-  itemId.value=''; nome.value=''; renderCategoryOptions(''); quantidade.value='1'; preco.value=''; imagemFile.value=''; imageData.value=''; previewImg.src=''; saveBtn.textContent='Salvar roupa';
+  itemId.value='';
+  nome.value='';
+  renderCategoryOptions('');
+  subcategoria.value='';
+  cor.value='';
+  tamanho.value='P';
+  marca.value='';
+  sku.value='';
+  codigoBarras.value='';
+  quantidade.value='1';
+  quantidade.disabled=false;
+  if(document.getElementById('quantidadeLabel')){
+    document.getElementById('quantidadeLabel').textContent='Quantidade inicial';
+  }
+  if(document.getElementById('quantidadeHint')){
+    document.getElementById('quantidadeHint').textContent='No primeiro cadastro, informe a quantidade inicial. Depois use + Entrada, - Saída ou Ajustar no estoque.';
+  }
+  preco.value='';
+  imagemFile.value='';
+  imageData.value='';
+  previewImg.src='';
+  saveBtn.textContent='Salvar roupa';
 }
 function clearCustomerForm(){
-  customerId.value=''; clienteNome.value=''; clienteTelefone.value=''; clienteObs.value=''; saveCustomerBtn.textContent='Salvar cliente';
+  customerId.value='';
+  clienteNome.value='';
+  clienteSobrenome.value='';
+  clienteCpf.value='';
+  clienteTelefone.value='';
+  clienteEmail.value='';
+  clienteCep.value='';
+  clienteEndereco.value='';
+  clienteNumero.value='';
+  clienteComplemento.value='';
+  clienteBairro.value='';
+  clienteCidade.value='';
+  clienteEstado.value='';
+  clienteObs.value='';
+  saveCustomerBtn.textContent='Salvar cliente';
 }
 imagemFile.onchange = ()=>{
   const file = imagemFile.files && imagemFile.files[0];
@@ -653,171 +1227,202 @@ imagemFile.onchange = ()=>{
   r.readAsDataURL(file);
 };
 saveBtn.onclick = async ()=>{
-const item = {
-  id: itemId.value || ('look_' + Date.now()),
-  nome: nome.value.trim(),
+  const existing = itemId.value
+    ? await Estoque.byId(itemId.value)
+    : null;
 
-  categoria: categoria.value,
-  subcategoria: subcategoria.value.trim(),
-  cor: cor.value.trim(),
-  tamanho: tamanho.value,
-  marca: marca.value.trim(),
+  const quantidadeInicial = Math.max(
+    0,
+    Number(quantidade.value || 0)
+  );
 
-  quantidade: Number(quantidade.value || 0),
-  preco: preco.value.trim(),
-  imagem: imageData.value || ''
-};
-  if(!item.nome || !item.categoria || !item.imagem){ alert('Preencha nome, categoria e imagem.'); return; }
+  let skuValue = skuV1Normalize(sku.value);
+  const barcodeValue = barcodeV1Normalize(codigoBarras.value);
+
+  if(!skuValue){
+    skuValue = await skuV1Next(existing?.id || itemId.value || '');
+    sku.value = skuValue;
+  }
+
+  const uniqueCheck = await skuV1ValidateUnique(
+    skuValue,
+    barcodeValue,
+    existing?.id || itemId.value || ''
+  );
+
+  if(!uniqueCheck.ok){
+    if(uniqueCheck.field === 'sku'){
+      alert(`O codigo / SKU "${skuValue}" ja esta sendo usado por "${uniqueCheck.item?.nome || 'outra roupa'}".`);
+      return;
+    }
+
+    alert(`O codigo de barras "${barcodeValue}" ja esta sendo usado por "${uniqueCheck.item?.nome || 'outra roupa'}".`);
+    return;
+  }
+
+  const item = {
+    ...(existing || {}),
+    id: existing?.id || itemId.value || ('look_' + Date.now()),
+    nome: nome.value.trim(),
+    categoria: categoria.value,
+    subcategoria: subcategoria.value.trim(),
+    cor: cor.value.trim(),
+    tamanho: tamanho.value,
+    marca: marca.value.trim(),
+    sku: skuValue,
+    codigoBarras: barcodeValue,
+
+    // PROVADOR PRO CADASTRO ESTOQUE V1C
+    // Em edicao, estoque e historico pertencem ao modulo de estoque.
+    quantidade: existing
+      ? Math.max(0, Number(existing.quantidade || 0))
+      : quantidadeInicial,
+
+    preco: preco.value.trim(),
+    imagem: imageData.value || existing?.imagem || ''
+  };
+
+  if(!item.nome || !item.categoria || !item.imagem){
+    alert('Preencha nome, categoria e imagem.');
+    return;
+  }
+
   await Estoque.save(item);
-alert('SALVOU');
+
   clearForm();
   await renderInventory();
-alert('Roupa salva e fica gravada offline.');
 
-location.reload();
+  alert(existing
+    ? 'Dados da roupa atualizados. A quantidade do estoque foi preservada.'
+    : 'Roupa cadastrada. A partir de agora, altere a quantidade pelos controles de estoque.');
+
+  location.reload();
 };
+
 window.editItem = async (id)=>{
-  const item = await Estoque.byId(id); if(!item) return;
-itemId.value = item.id;
-nome.value = item.nome;
+  const item = await Estoque.byId(id);
+  if(!item) return;
 
-renderCategoryOptions(item.categoria || '');
-subcategoria.value = item.subcategoria || '';
-cor.value = item.cor || '';
-tamanho.value = item.tamanho || 'M';
-marca.value = item.marca || '';
+  itemId.value = item.id;
+  nome.value = item.nome;
+  renderCategoryOptions(item.categoria || '');
+  subcategoria.value = item.subcategoria || '';
+  cor.value = item.cor || '';
+  tamanho.value = item.tamanho || 'P';
+  marca.value = item.marca || '';
+  sku.value = item.sku || '';
+  codigoBarras.value = item.codigoBarras || item.ean || '';
 
-quantidade.value = item.quantidade;
-preco.value = item.preco || '';
+  quantidade.value = Math.max(0, Number(item.quantidade || 0));
+  quantidade.disabled = true;
 
-imageData.value = item.imagem;
-previewImg.src = item.imagem;
+  if(document.getElementById('quantidadeLabel')){
+    document.getElementById('quantidadeLabel').textContent='Estoque atual (somente leitura)';
+  }
+  if(document.getElementById('quantidadeHint')){
+    document.getElementById('quantidadeHint').textContent='Para alterar a quantidade, use + Entrada, - Saída ou Ajustar na gaveta de estoque.';
+  }
 
-saveBtn.textContent = 'Atualizar roupa';
+  preco.value = item.preco || '';
+  imageData.value = item.imagem || '';
+  previewImg.src = item.imagem || '';
+
+  saveBtn.textContent = 'Atualizar dados da roupa';
 };
 window.removeItem = async (id)=>{ if(!confirm('Excluir esta roupa?')) return; await Estoque.remove(id); await renderInventory(); };
 
 saveCustomerBtn.onclick = async ()=>{
-  const c = {id:customerId.value||'', nome:clienteNome.value.trim(), telefone:clienteTelefone.value.trim(), obs:clienteObs.value.trim()};
-  if(!c.nome){ alert('Informe o nome do cliente.'); return; }
-  await Estoque.saveCustomer(c); clearCustomerForm(); await renderCustomers();
-};
-window.editCustomer = async (id)=>{
-  const arr = await Estoque.customers(); const c = arr.find(x=>x.id===id); if(!c) return;
-  customerId.value=c.id; clienteNome.value=c.nome; clienteTelefone.value=c.telefone||''; clienteObs.value=c.obs||''; saveCustomerBtn.textContent='Atualizar cliente';
-};
-window.removeCustomer = async (id)=>{ if(!confirm('Excluir este cliente?')) return; await Estoque.removeCustomer(id); await renderCustomers(); };
+  const customers=await Estoque.customers();
+  const existing=customerId.value
+    ? customers.find(c=>String(c.id)===String(customerId.value))
+    : null;
 
-restoreBtn.onclick = async ()=>{ await Estoque.restoreSeed(); await renderInventory(); alert('Estoque inicial restaurado.'); };
-clearBtn.onclick = clearForm;
-clearCustomerBtn.onclick = clearCustomerForm;
-restoreCustomersBtn.onclick = async ()=>{ await Estoque.restoreCustomers(); await renderCustomers(); alert('Clientes iniciais restaurados.'); };
-
-let restObjectUrls = [];
-
-function limparRestObjectUrls(){
-  restObjectUrls.forEach(url=>{
-    try{ URL.revokeObjectURL(url); }catch(e){}
-  });
-  restObjectUrls = [];
-}
-
-function criarRestUrl(file){
-  const url = URL.createObjectURL(file);
-  restObjectUrls.push(url);
-  return url;
-}
-
-function restUid(){
-  return 'midia-' +
-    Date.now() +
-    '-' +
-    Math.random().toString(36).slice(2,9);
-}
-
-async function getRestPlaylist(){
-  const lista = await DB.getKV('rest_playlist');
-  return Array.isArray(lista) ? lista : [];
-}
-
-async function saveRestPlaylist(lista){
-  await DB.setKV(
-    'rest_playlist',
-    Array.isArray(lista) ? lista : []
-  );
-}
-
-async function getRestSettings(){
-  const salvo = await DB.getKV('rest_settings');
-
-  return {
-    imageSeconds:
-      Number(salvo && salvo.imageSeconds) || 6,
-
-    fitMode:
-      salvo && salvo.fitMode === 'contain'
-        ? 'contain'
-        : 'cover'
-  };
-}
-
-async function saveRestSettings(){
-  await DB.setKV('rest_settings',{
-    imageSeconds:
-      Number(restImageSeconds.value) || 6,
-
-    fitMode:
-      restFitMode.value === 'contain'
-        ? 'contain'
-        : 'cover'
-  });
-}
-
-restFile.onchange = async ()=>{
-  const arquivos =
-    Array.from(restFile.files || []);
-
-  if(!arquivos.length) return;
-
-  const validos = arquivos.filter(file=>
-    file.type.startsWith('image/') ||
-    file.type.startsWith('video/')
-  );
-
-  if(!validos.length){
-    alert('Escolha fotos ou videos validos.');
-    restFile.value = '';
+  const cpfDigits=customerV1Digits(clienteCpf.value);
+  if(cpfDigits && cpfDigits.length!==11){
+    alert('CPF deve ter 11 números.');
     return;
   }
 
-  const lista = await getRestPlaylist();
+  const duplicateCpf=cpfDigits && customers.find(c=>
+    String(c.id)!==String(existing?.id || '') &&
+    customerV1Digits(c.cpf)===cpfDigits
+  );
+  if(duplicateCpf){
+    alert('Já existe um cliente cadastrado com este CPF.');
+    return;
+  }
 
-  validos.forEach(file=>{
-    lista.push({
-      id:restUid(),
-      name:file.name,
-      type:file.type.startsWith('video/')
-        ? 'video'
-        : 'image',
-      file
-    });
-  });
+  const now=new Date().toISOString();
+  const c={
+    ...(existing || {}),
+    id:existing?.id || customerId.value || ('cliente_'+Date.now()+'_'+Math.random().toString(36).slice(2,8)),
+    nome:clienteNome.value.trim(),
+    sobrenome:clienteSobrenome.value.trim(),
+    cpf:cpfDigits,
+    telefone:customerV1Digits(clienteTelefone.value),
+    email:clienteEmail.value.trim().toLowerCase(),
+    cep:customerV1Digits(clienteCep.value),
+    endereco:clienteEndereco.value.trim(),
+    numero:clienteNumero.value.trim(),
+    complemento:clienteComplemento.value.trim(),
+    bairro:clienteBairro.value.trim(),
+    cidade:clienteCidade.value.trim(),
+    estado:clienteEstado.value.trim().toUpperCase().slice(0,2),
+    obs:clienteObs.value.trim(),
+    createdAt:existing?.createdAt || now,
+    updatedAt:now
+  };
 
-  await saveRestPlaylist(lista);
+  if(!c.nome){
+    alert('Informe o nome do cliente.');
+    return;
+  }
 
-  await DB.setKV('rest_meta',{
-    mode:'playlist',
-    type:'mixed',
-    name:
-      lista.length +
-      (lista.length === 1
-        ? ' midia'
-        : ' midias')
-  });
+  await Estoque.saveCustomer(c);
+  clearCustomerForm();
+  await renderCustomers();
 
-  restFile.value = '';
+  alert(existing
+    ? 'Dados do cliente atualizados.'
+    : 'Cliente cadastrado.');
+};
 
-  await renderRestPreview();
+window.editCustomer = async (id)=>{
+  const arr=await Estoque.customers();
+  const c=arr.find(x=>String(x.id)===String(id));
+  if(!c) return;
+
+  customerId.value=c.id || '';
+  clienteNome.value=c.nome || '';
+  clienteSobrenome.value=c.sobrenome || '';
+  clienteCpf.value=customerV1FormatCpf(c.cpf || '');
+  clienteTelefone.value=c.telefone || c.whatsapp || '';
+  clienteEmail.value=c.email || '';
+  clienteCep.value=customerV1FormatCep(c.cep || '');
+  clienteEndereco.value=c.endereco || '';
+  clienteNumero.value=c.numero || '';
+  clienteComplemento.value=c.complemento || '';
+  clienteBairro.value=c.bairro || '';
+  clienteCidade.value=c.cidade || '';
+  clienteEstado.value=c.estado || '';
+  clienteObs.value=c.obs || '';
+
+  saveCustomerBtn.textContent='Atualizar cliente';
+
+  const drawer=document.getElementById('customerFormDrawer');
+  if(drawer){
+    drawer.open=true;
+    drawer.scrollIntoView({behavior:'smooth',block:'start'});
+  }
+};
+
+window.removeCustomer = async (id)=>{
+  const arr=await Estoque.customers();
+  const c=arr.find(x=>String(x.id)===String(id));
+  const name=c ? customerV1FullName(c) : 'este cliente';
+  if(!confirm(`Excluir ${name}?`)) return;
+  await Estoque.removeCustomer(id);
+  await renderCustomers();
 };
 
 restImageSeconds.onchange = async ()=>{
@@ -1069,13 +1674,20 @@ async function prepararLojaSelecionada(){
 
     if(!Array.isArray(estoque)) estoque = [];
 
-    await DB.clear(DB.STORES.ESTOQUE);
+    if(typeof Estoque.syncPendingMovements==='function') await Estoque.syncPendingMovements();
 
-    for(const item of estoque){
-      await DB.put(DB.STORES.ESTOQUE, item);
+    const pendingStockOps = typeof Estoque.pendingMovements==='function'
+      ? await Estoque.pendingMovements()
+      : [];
+
+    if(!pendingStockOps.length){
+      await DB.clear(DB.STORES.ESTOQUE);
+      for(const item of estoque) await DB.put(DB.STORES.ESTOQUE, item);
+    }else{
+      console.warn('Estoque remoto NAO substituiu o estoque local porque existem movimentacoes pendentes:',pendingStockOps.length);
     }
 
-    console.log('LOJA ATIVA:', store.slug, 'ITENS:', estoque.length);
+    console.log('LOJA ATIVA:', store.slug, 'ITENS:', estoque.length, 'PENDENTES:', pendingStockOps.length);
     return store;
   }catch(e){
     console.error('Erro ao preparar loja selecionada:', e);
@@ -1083,11 +1695,46 @@ async function prepararLojaSelecionada(){
   }
 }
 
+document.getElementById('customerSearch')?.addEventListener('input',()=>{
+  renderCustomers().catch(error=>console.error('Falha ao pesquisar clientes:',error));
+});
+clienteCpf?.addEventListener('input',()=>{ clienteCpf.value=customerV1FormatCpf(clienteCpf.value); });
+clienteCep?.addEventListener('input',()=>{ clienteCep.value=customerV1FormatCep(clienteCep.value); });
+clienteEstado?.addEventListener('input',()=>{ clienteEstado.value=clienteEstado.value.toUpperCase().replace(/[^A-Z]/g,'').slice(0,2); });
+
+document.getElementById('generateSkuBtn')?.addEventListener('click',async()=>{
+  const next = await skuV1Next(itemId.value || '');
+  sku.value = next;
+  sku.focus();
+});
+
+sku?.addEventListener('input',()=>{
+  sku.value = skuV1Normalize(sku.value);
+});
+
+codigoBarras?.addEventListener('input',()=>{
+  codigoBarras.value = barcodeV1Normalize(codigoBarras.value);
+});
+
+document.getElementById('inventorySearch')?.addEventListener('input',()=>{
+  renderInventory().catch(error=>console.error('Falha ao pesquisar estoque:',error));
+});
+
+window.addEventListener('provador-stock-sync',()=>{ stockV1RenderSyncStatus().catch(()=>{}); });
+window.addEventListener('provador-customer-sync',()=>{ customerV1RenderSyncStatus().catch(()=>{}); });
+window.addEventListener('online',async()=>{ await stockV1RenderSyncStatus(); await customerV1RenderSyncStatus(); await renderInventory(); await renderCustomers(); });
+window.addEventListener('offline',()=>{ stockV1RenderSyncStatus().catch(()=>{}); customerV1RenderSyncStatus().catch(()=>{}); });
+
+// PROVADOR PRO STOCK SYNC V1B
+// PROVADOR PRO ESTOQUE GAVETAS PESQUISA V1A
 (async()=>{
   const activeStore = await prepararLojaSelecionada();
   await loadStoreCategories(activeStore);
   await AppStore.ensureSeed();
   await renderInventory();
+  await stockV1RenderSyncStatus();
+  await Estoque.bootstrapCustomerSync();
+  await customerV1RenderSyncStatus();
   await renderCustomers();
   await renderRestPreview();
 })();

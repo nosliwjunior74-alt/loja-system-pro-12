@@ -17,7 +17,7 @@ const {
   WebhookSignatureValidator,
   InvalidWebhookSignatureError
 } = require('mercadopago');
-const { db: activeDb, listStores, getStoreById, getStoreBySlug, createStore, updateStore, setStorePassword, deleteStore, verifyStoreLogin, createPayment, listPayments, updatePaymentStatus, createProducerCheckoutOrder, listProducerCheckoutOrders, getProducerCheckoutOrderById, getProducerCheckoutOrderByToken, getProducerCheckoutOrderByExternalId, updateProducerCheckoutOrder, claimProducerCheckoutActivationNotification, completeProducerCheckoutActivationNotification, failProducerCheckoutActivationNotification, activatePaidProducerCheckoutStore, createCustomerOrder, getCustomerOrderById, getCustomerOrderByToken, getCustomerOrderByExternalId, updateCustomerOrder, listCustomerOrdersByStore, listProducerPlans, getProducerPlan, updateProducerPlan, getFinanceSummary, getFinanceChart, grantTrustAccess, cancelTrustAccess, recordAiUsage, getAiUsageMonthly } = require('./db');
+const { db: activeDb, listStores, getStoreById, getStoreBySlug, createStore, updateStore, setStorePassword, deleteStore, verifyStoreLogin, createPayment, listPayments, updatePaymentStatus, createProducerCheckoutOrder, listProducerCheckoutOrders, getProducerCheckoutOrderById, getProducerCheckoutOrderByToken, getProducerCheckoutOrderByExternalId, updateProducerCheckoutOrder, claimProducerCheckoutActivationNotification, completeProducerCheckoutActivationNotification, failProducerCheckoutActivationNotification, activatePaidProducerCheckoutStore, createCustomerOrder, getCustomerOrderById, getCustomerOrderByToken, getCustomerOrderByExternalId, updateCustomerOrder, listCustomerOrdersByStore, listProducerPlans, getProducerPlan, updateProducerPlan, getFinanceSummary, getFinanceChart, grantTrustAccess, cancelTrustAccess, recordAiUsage, getAiUsageMonthly, confirmPosSale, listPosSalesByStore, listPosSaleEventsByStore, reversePosSale, exchangePosSale } = require('./db');
 const { runPostPaymentFlow } = require('./modules/pro-commerce/post-payment');
 const { normalizePhone, sendManualWelcomeWhatsApp } = require('./modules/pro-commerce/notifications/whatsapp');
 const { sendManualWelcomeEmail } = require('./modules/pro-commerce/notifications/email');
@@ -3234,6 +3234,284 @@ app.get('/api/public/session-store', (req,res)=>{
     store
   });
 });
+// PROVADOR PRO STOCK SYNC V1B
+app.post('/api/public/stock-movements/sync', express.json(), (req,res)=>{
+  const targetStoreId =
+    (req.session?.adminLoggedIn && req.session?.activeStoreId)
+      ? req.session.activeStoreId
+      : req.session?.clientStoreId;
+
+  if(!targetStoreId){
+    return res.status(401).json({ error:'unauthorized' });
+  }
+
+  const current = getStoreById(targetStoreId, baseUrl(req));
+  if(!current){
+    return res.status(404).json({ error:'Loja nao encontrada' });
+  }
+
+  const operations = Array.isArray(req.body?.operations)
+    ? req.body.operations.slice(0,200)
+    : [];
+
+  if(!operations.length){
+    return res.json({
+      ok:true,
+      acknowledged:[],
+      conflicts:[],
+      estoque:Array.isArray(current.estoque) ? current.estoque : []
+    });
+  }
+
+  let inventory = Array.isArray(current.estoque)
+    ? current.estoque.map(item=>({...item}))
+    : [];
+
+  const acknowledged = [];
+  const conflicts = [];
+  let changed = false;
+
+  const safeInt = value=>{
+    const n=Number(value);
+    return Number.isInteger(n) ? n : null;
+  };
+
+  for(const raw of operations){
+    const op = raw && typeof raw === 'object' ? raw : {};
+    const opId = String(op.id || '').trim().slice(0,160);
+    const itemId = String(op.itemId || '').trim().slice(0,180);
+    const type = String(op.tipo || op.type || '').trim().toLowerCase();
+
+    if(!opId || !itemId || !['entrada','saida','ajuste','delete'].includes(type)){
+      conflicts.push({ id:opId || '', itemId, code:'invalid_operation' });
+      continue;
+    }
+
+    const index = inventory.findIndex(item=>String(item?.id || '') === itemId);
+
+    if(type === 'delete'){
+      if(index >= 0){
+        inventory.splice(index,1);
+        changed = true;
+      }
+      acknowledged.push(opId);
+      continue;
+    }
+
+    if(index < 0){
+      conflicts.push({ id:opId, itemId, code:'item_not_found' });
+      continue;
+    }
+
+    const item = {...inventory[index]};
+    const history = Array.isArray(item.movimentacoes)
+      ? [...item.movimentacoes]
+      : [];
+
+    if(history.some(m=>String(m?.id || '') === opId)){
+      acknowledged.push(opId);
+      continue;
+    }
+
+    const currentQty = Math.max(0,Number(item.quantidade || 0));
+    const amount = safeInt(op.quantidade);
+    const baseQty = safeInt(op.baseQuantity);
+    const targetQty = safeInt(op.targetQuantity);
+    let nextQty = currentQty;
+
+    if(type === 'entrada'){
+      if(amount === null || amount <= 0){
+        conflicts.push({ id:opId, itemId, code:'invalid_quantity' });
+        continue;
+      }
+      nextQty = currentQty + amount;
+    }
+
+    if(type === 'saida'){
+      if(amount === null || amount <= 0){
+        conflicts.push({ id:opId, itemId, code:'invalid_quantity' });
+        continue;
+      }
+      if(amount > currentQty){
+        conflicts.push({ id:opId, itemId, code:'insufficient_stock', currentQuantity:currentQty, requested:amount });
+        continue;
+      }
+      nextQty = currentQty - amount;
+    }
+
+    if(type === 'ajuste'){
+      if(targetQty === null || targetQty < 0){
+        conflicts.push({ id:opId, itemId, code:'invalid_target_quantity' });
+        continue;
+      }
+      if(baseQty !== null && baseQty !== currentQty && currentQty !== targetQty){
+        conflicts.push({
+          id:opId,
+          itemId,
+          code:'adjustment_conflict',
+          baseQuantity:baseQty,
+          currentQuantity:currentQty,
+          targetQuantity:targetQty
+        });
+        continue;
+      }
+      nextQty = targetQty;
+    }
+
+    const movement = {
+      id:opId,
+      tipo:type,
+      quantidade:type === 'ajuste' ? Math.abs(nextQty-currentQty) : amount,
+      anterior:currentQty,
+      posterior:nextQty,
+      motivo:String(op.motivo || '').trim().slice(0,300),
+      data:String(op.data || new Date().toISOString()).slice(0,60),
+      syncedAt:new Date().toISOString()
+    };
+
+    item.quantidade = nextQty;
+    item.movimentacoes = [...history,movement];
+    item.stockUpdatedAt = movement.syncedAt;
+    inventory[index] = item;
+    acknowledged.push(opId);
+    changed = true;
+  }
+
+  if(changed){
+    updateStore(current.id,{ estoque:inventory },baseUrl(req));
+  }
+
+  const refreshed = getStoreById(current.id,baseUrl(req));
+
+  return res.json({
+    ok:true,
+    acknowledged,
+    conflicts,
+    estoque:Array.isArray(refreshed?.estoque) ? refreshed.estoque : inventory,
+    updatedAt:refreshed?.updatedAt || ''
+  });
+});
+
+// PROVADOR PRO CAIXA / POS SALE FASE C
+app.post('/api/public/pos-sales/confirm', express.json({limit:'256kb'}), (req,res)=>{
+  const targetStoreId = (req.session?.adminLoggedIn && req.session?.activeStoreId) ? req.session.activeStoreId : req.session?.clientStoreId;
+  if(!targetStoreId) return res.status(401).json({ error:'unauthorized' });
+  try{
+    const result = confirmPosSale({saleId:req.body?.saleId,storeId:targetStoreId,customerId:req.body?.customerId,paymentMethod:req.body?.paymentMethod,items:req.body?.items});
+    return res.json({ok:true,sale:result.sale,estoque:Array.isArray(result.estoque)?result.estoque:[],idempotent:Boolean(result.idempotent)});
+  }catch(error){
+    const code = String(error?.code || 'pos_sale_error');
+    const status = ['insufficient_stock','invalid_price','sale_id_conflict','movement_conflict'].includes(code) ? 409 : (['item_not_found','customer_not_found','store_not_found'].includes(code) ? 404 : 400);
+    return res.status(status).json({ok:false,error:code,message:String(error?.message||'Nao foi possivel confirmar a venda.'),details:error?.details&&typeof error.details==='object'?error.details:{}});
+  }
+});
+
+
+// PROVADOR PRO CAIXA / POS FASE D V1 — HISTORICO, ESTORNO E TROCA
+app.get('/api/public/pos-sales/history', (req,res)=>{
+  const targetStoreId=(req.session?.adminLoggedIn&&req.session?.activeStoreId)?req.session.activeStoreId:req.session?.clientStoreId;
+  if(!targetStoreId)return res.status(401).json({error:'unauthorized'});
+  try{return res.json({ok:true,sales:listPosSalesByStore(targetStoreId,150),events:listPosSaleEventsByStore(targetStoreId,500)});}catch(error){return res.status(500).json({ok:false,error:'history_error',message:String(error?.message||'Falha ao carregar historico.')});}
+});
+app.post('/api/public/pos-sales/reverse', express.json({limit:'128kb'}), (req,res)=>{
+  const targetStoreId=(req.session?.adminLoggedIn&&req.session?.activeStoreId)?req.session.activeStoreId:req.session?.clientStoreId;if(!targetStoreId)return res.status(401).json({error:'unauthorized'});
+  try{const result=reversePosSale({saleId:req.body?.saleId,storeId:targetStoreId,operationId:req.body?.operationId,type:req.body?.type,returnToStock:req.body?.returnToStock});return res.json({ok:true,...result});}catch(error){const code=String(error?.code||'pos_reverse_error');const status=['sale_not_found','item_not_found'].includes(code)?404:409;return res.status(status).json({ok:false,error:code,message:String(error?.message||'Nao foi possivel reverter a venda.'),details:error?.details||{}});}
+});
+app.post('/api/public/pos-sales/exchange', express.json({limit:'256kb'}), (req,res)=>{
+  const targetStoreId=(req.session?.adminLoggedIn&&req.session?.activeStoreId)?req.session.activeStoreId:req.session?.clientStoreId;if(!targetStoreId)return res.status(401).json({error:'unauthorized'});
+  try{const result=exchangePosSale({saleId:req.body?.saleId,storeId:targetStoreId,operationId:req.body?.operationId,returns:req.body?.returns,outgoing:req.body?.outgoing,paymentMethod:req.body?.paymentMethod});return res.json({ok:true,...result});}catch(error){const code=String(error?.code||'pos_exchange_error');const status=['sale_not_found','item_not_found'].includes(code)?404:409;return res.status(status).json({ok:false,error:code,message:String(error?.message||'Nao foi possivel concluir a troca.'),details:error?.details||{}});}
+});
+
+// PROVADOR PRO CUSTOMERS SYNC V1B
+app.post('/api/public/customer-operations/sync', express.json(), (req,res)=>{
+  const targetStoreId =
+    (req.session?.adminLoggedIn && req.session?.activeStoreId)
+      ? req.session.activeStoreId
+      : req.session?.clientStoreId;
+
+  if(!targetStoreId) return res.status(401).json({ error:'unauthorized' });
+
+  const current = getStoreById(targetStoreId, baseUrl(req));
+  if(!current) return res.status(404).json({ error:'Loja nao encontrada' });
+
+  const operations = Array.isArray(req.body?.operations)
+    ? req.body.operations.slice(0,200)
+    : [];
+
+  let customers = Array.isArray(current.customers)
+    ? current.customers.map(customer=>({...customer}))
+    : [];
+
+  const acknowledged=[];
+  const conflicts=[];
+  let changed=false;
+  const digits=value=>String(value||'').replace(/\D+/g,'');
+
+  for(const raw of operations){
+    const op=raw && typeof raw==='object' ? raw : {};
+    const opId=String(op.id||'').trim().slice(0,160);
+    const customerId=String(op.customerId||op.customer?.id||'').trim().slice(0,180);
+    const type=String(op.type||op.tipo||'').trim().toLowerCase();
+
+    if(!opId || !customerId || !['upsert','delete'].includes(type)){
+      conflicts.push({id:opId,customerId,code:'invalid_operation'});
+      continue;
+    }
+
+    const index=customers.findIndex(c=>String(c?.id||'')===customerId);
+
+    if(type==='delete'){
+      if(index>=0){ customers.splice(index,1); changed=true; }
+      acknowledged.push(opId);
+      continue;
+    }
+
+    const incoming=op.customer && typeof op.customer==='object'
+      ? {...op.customer,id:customerId}
+      : null;
+    if(!incoming || !String(incoming.nome||'').trim()){
+      conflicts.push({id:opId,customerId,code:'invalid_customer'});
+      continue;
+    }
+
+    const cpf=digits(incoming.cpf);
+    if(cpf){
+      const duplicate=customers.find(c=>
+        String(c?.id||'')!==customerId && digits(c?.cpf)===cpf
+      );
+      if(duplicate){
+        conflicts.push({id:opId,customerId,code:'duplicate_cpf',duplicateCustomerId:String(duplicate.id||'')});
+        continue;
+      }
+    }
+
+    const previous=index>=0 ? customers[index] : {};
+    const next={
+      ...previous,
+      ...incoming,
+      id:customerId,
+      cpf,
+      updatedAt:String(incoming.updatedAt||new Date().toISOString()),
+      customerSyncOperationId:opId
+    };
+    if(index>=0) customers[index]=next;
+    else customers.push(next);
+    acknowledged.push(opId);
+    changed=true;
+  }
+
+  if(changed) updateStore(current.id,{customers},baseUrl(req));
+  const refreshed=getStoreById(current.id,baseUrl(req));
+
+  return res.json({
+    ok:true,
+    acknowledged,
+    conflicts,
+    customers:Array.isArray(refreshed?.customers) ? refreshed.customers : customers,
+    updatedAt:refreshed?.updatedAt || ''
+  });
+});
+
 app.put('/api/public/store-branding', (req,res)=>{
   const targetStoreId =
     (req.session?.adminLoggedIn && req.session?.activeStoreId)

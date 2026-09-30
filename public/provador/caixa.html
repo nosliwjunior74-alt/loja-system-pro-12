@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <title>Caixa | Provador Pro</title>
+  <link rel="stylesheet" href="css/caixa.css">
+</head>
+<body>
+  <main class="cash-shell">
+    <header class="cash-header">
+      <div class="brand-heading">
+        <div id="storeBrand" class="store-brand" hidden><img id="storeLogo" class="store-logo" alt=""></div>
+        <div>
+        <span class="eyebrow">PROVADOR PRO</span>
+        <h1>Caixa / Checkout</h1>
+        <p id="storeLabel">Carregando loja...</p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <span id="connectionStatus" class="status-chip">[OK] Local</span>
+        <a class="ghost-btn" href="../manual/manual-painel-cliente.html#caixa" target="_blank" rel="noopener">❓ Manual do Caixa</a>
+        <a class="ghost-btn" href="admin.html">← Painel da Loja</a>
+      </div>
+    </header>
+
+    <section class="cash-grid">
+      <div class="catalog-column">
+        <section class="cash-card search-card">
+          <div class="section-title-row">
+            <div>
+              <span class="step">1</span>
+              <h2>Localizar produto</h2>
+            </div>
+            <span id="inventorySummary" class="muted"></span>
+          </div>
+          <label for="productSearch">SKU, código de barras ou nome</label>
+          <input id="productSearch" class="big-input" autocomplete="off" inputmode="search" placeholder="Ex.: 003, 789..., blazer">
+          <div id="searchHelp" class="hint">Digite para pesquisar. Leitores de código de barras podem preencher este campo diretamente.</div>
+          <div id="productResults" class="product-results" aria-live="polite"></div>
+        </section>
+
+        <section class="cash-card customer-card">
+          <div class="section-title-row">
+            <div>
+              <span class="step">2</span>
+              <h2>Cliente <small>(opcional)</small></h2>
+            </div>
+            <button id="clearCustomerBtn" type="button" class="text-btn">Sem cliente</button>
+          </div>
+          <input id="customerSearch" class="big-input" autocomplete="off" placeholder="Nome, sobrenome, CPF ou WhatsApp">
+          <div id="customerResults" class="customer-results"></div>
+          <div id="selectedCustomer" class="selected-customer" hidden></div>
+        </section>
+
+        <section class="cash-card history-card">
+          <div class="section-title-row"><div><span class="step">4</span><h2>Histórico de vendas</h2></div><button id="refreshHistoryBtn" type="button" class="text-btn">Atualizar</button></div>
+          <input id="historySearch" class="big-input" autocomplete="off" placeholder="Venda, cliente, produto ou SKU">
+          <div id="historyStatus" class="hint">Carregando histórico...</div>
+          <div id="historyList" class="history-list"></div>
+        </section>
+      </div>
+
+      <aside class="cart-column">
+        <section class="cash-card cart-card">
+          <div class="section-title-row">
+            <div>
+              <span class="step">3</span>
+              <h2>Carrinho</h2>
+            </div>
+            <button id="clearCartBtn" type="button" class="text-btn">Limpar</button>
+          </div>
+          <div id="cartItems" class="cart-items"></div>
+          <div id="emptyCart" class="empty-state">Nenhum produto no carrinho.</div>
+
+          <div class="totals">
+            <div><span>Itens</span><strong id="cartCount">0</strong></div>
+            <div class="total-line"><span>Total</span><strong id="cartTotal">R$ 0,00</strong></div>
+          </div>
+
+          <div class="payment-block">
+            <span class="payment-label">Forma de pagamento</span>
+            <div class="payment-grid" id="paymentGrid">
+              <button type="button" class="pay-btn active" data-method="pix">PIX</button>
+              <button type="button" class="pay-btn" data-method="dinheiro">Dinheiro</button>
+              <button type="button" class="pay-btn" data-method="debito">Débito</button>
+              <button type="button" class="pay-btn" data-method="credito">Crédito</button>
+            </div>
+          </div>
+
+          <button id="confirmSaleBtn" type="button" class="confirm-btn" disabled>Confirmar venda</button>
+          <p class="phase-note">FASE D V1: histórico, cancelamento/estorno e troca vinculados à venda. O modo Offline/outbox entra na FASE D V1B.</p>
+        </section>
+      </aside>
+    </section>
+  </main>
+  <div id="exchangeModal" class="modal-backdrop" hidden><div class="exchange-modal"><div class="modal-head"><h2>Troca de produto</h2><button id="closeExchangeBtn" type="button" class="text-btn">Fechar</button></div><div id="exchangeBody"></div></div></div>
+  <script src="js/caixa.js"></script>
+</body>
+</html>

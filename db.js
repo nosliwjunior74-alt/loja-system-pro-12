@@ -112,6 +112,7 @@ function ensureTables(){
 try { db.exec("ALTER TABLE stores ADD COLUMN products TEXT"); } catch(e) {}
 try { db.exec("ALTER TABLE stores ADD COLUMN looks TEXT"); } catch(e) {}
 try { db.exec("ALTER TABLE stores ADD COLUMN roupas TEXT"); } catch(e) {}
+try { db.exec("ALTER TABLE stores ADD COLUMN customers TEXT"); } catch(e) {}
 try { db.exec("ALTER TABLE stores ADD COLUMN vitrine_hero_image TEXT"); } catch(e) {}
 try { db.exec("ALTER TABLE stores ADD COLUMN vitrine_promo_eyebrow TEXT"); } catch(e) {}
 try { db.exec("ALTER TABLE stores ADD COLUMN vitrine_promo_title TEXT"); } catch(e) {}
@@ -182,6 +183,42 @@ db.exec(`
 
   CREATE INDEX IF NOT EXISTS idx_customer_orders_external
     ON customer_orders(external_id);
+
+  CREATE TABLE IF NOT EXISTS pos_sales (
+    id TEXT PRIMARY KEY,
+    store_id TEXT NOT NULL,
+    customer_id TEXT,
+    customer_name TEXT,
+    customer_email TEXT,
+    customer_phone TEXT,
+    items_json TEXT NOT NULL DEFAULT '[]',
+    amount_cents INTEGER NOT NULL DEFAULT 0,
+    currency TEXT NOT NULL DEFAULT 'BRL',
+    payment_method TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'confirmed',
+    created_at TEXT NOT NULL,
+    updated_at TEXT,
+    FOREIGN KEY(store_id) REFERENCES stores(id) ON DELETE CASCADE
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_pos_sales_store ON pos_sales(store_id);
+  CREATE INDEX IF NOT EXISTS idx_pos_sales_status ON pos_sales(status);
+  CREATE INDEX IF NOT EXISTS idx_pos_sales_created ON pos_sales(created_at);
+
+  CREATE TABLE IF NOT EXISTS pos_sale_events (
+    id TEXT PRIMARY KEY,
+    sale_id TEXT NOT NULL,
+    store_id TEXT NOT NULL,
+    type TEXT NOT NULL,
+    payload_json TEXT NOT NULL DEFAULT '{}',
+    created_at TEXT NOT NULL,
+    FOREIGN KEY(sale_id) REFERENCES pos_sales(id) ON DELETE CASCADE,
+    FOREIGN KEY(store_id) REFERENCES stores(id) ON DELETE CASCADE
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_pos_sale_events_store ON pos_sale_events(store_id);
+  CREATE INDEX IF NOT EXISTS idx_pos_sale_events_sale ON pos_sale_events(sale_id);
+  CREATE INDEX IF NOT EXISTS idx_pos_sale_events_created ON pos_sale_events(created_at);
 `);
 // ===== PLANOS EDITAVEIS DO PRODUTOR =====
 db.exec(`
@@ -446,6 +483,7 @@ function rowToStore(row, baseUrl=''){
 store.products = JSON.parse(synced.products || '[]');
 store.looks = JSON.parse(synced.looks || '[]');
 store.roupas = JSON.parse(synced.roupas || '[]');
+store.customers = JSON.parse(synced.customers || '[]');
   store.licenseStatus = rawLicenseStatus(synced);
   const origin = baseUrl || '';
   store.publicLink = store.customDomain ? `https://${store.customDomain}` : (origin ? `${origin}/s/${store.slug}` : `/s/${store.slug}`);
@@ -477,6 +515,7 @@ store.estoque = parseSafe(row.estoque);
 store.looks = parseSafe(row.looks);
 store.products = parseSafe(row.products);
 store.roupas = parseSafe(row.roupas);
+store.customers = parseSafe(row.customers);
   return store;
 }
  function parseSafe(v){
@@ -506,6 +545,7 @@ store.estoque = parseSafe(row.estoque);
 store.looks = parseSafe(row.looks);
 store.products = parseSafe(row.products);
 store.roupas = parseSafe(row.roupas);
+store.customers = parseSafe(row.customers);
 
   return store;
 }
@@ -552,6 +592,7 @@ estoque,
 products,
 looks,
 roupas,
+customers,
 created_at,
 updated_at
 )
@@ -567,6 +608,7 @@ updated_at
 @products,
 @looks,
 @roupas,
+@customers,
 @created_at,
 @updated_at
 )`).run({
@@ -604,7 +646,8 @@ updated_at
     custom_domain: payload.customDomain || '', support_config: JSON.stringify(payload.supportConfig || {}), estoque: JSON.stringify(payload.estoque || []),
 products: JSON.stringify(payload.products || []),
 looks: JSON.stringify(payload.looks || []),
-roupas: JSON.stringify(payload.roupas || []), created_at: now, updated_at: now
+roupas: JSON.stringify(payload.roupas || []),
+customers: JSON.stringify(payload.customers || []), created_at: now, updated_at: now
   });
   if(payload.createInitialPayment !== false){
     createPayment({storeId:id, gateway:'manual', method:'pix', kind:'subscription', amountCents:cents(payload.amountCents || 9900), status:'pending', dueAt: payload.initialDueAt || todayStr(), notes:'Cobrança inicial automática'});
@@ -622,6 +665,7 @@ estoque=@estoque,
 products=@products,
 looks=@looks,
 roupas=@roupas,
+customers=@customers,
 updated_at=@updated_at WHERE id=@id`).run({
     id, slug, name: payload.name ?? current.name, sub: payload.sub ?? current.sub, color: payload.color ?? current.color, logo: payload.logo ?? current.logo,
     vitrine_hero_image: payload.vitrineHeroImage !== undefined ? payload.vitrineHeroImage : (current.vitrine_hero_image ?? ''),
@@ -682,6 +726,7 @@ estoque: payload.estoque !== undefined ? JSON.stringify(payload.estoque) : (curr
 products: payload.products !== undefined ? JSON.stringify(payload.products) : (current.products ?? `[]`),
 looks: payload.looks !== undefined ? JSON.stringify(payload.looks) : (current.looks ?? `[]`),
 roupas: payload.roupas !== undefined ? JSON.stringify(payload.roupas) : (current.roupas ?? `[]`),
+customers: payload.customers !== undefined ? JSON.stringify(payload.customers) : (current.customers ?? `[]`),
 updated_at: new Date().toISOString(),
 id,
 baseUrl
@@ -1487,6 +1532,193 @@ function createCustomerOrder(payload={}){
   );
 }
 
+function posSaleRowToView(row){
+  if(!row) return null;
+  let items = [];
+  try{
+    const parsed = JSON.parse(row.items_json || '[]');
+    items = Array.isArray(parsed) ? parsed : [];
+  }catch(e){}
+  return {
+    id: String(row.id || ''), storeId: String(row.store_id || ''),
+    customerId: String(row.customer_id || ''), customerName: String(row.customer_name || ''),
+    customerEmail: String(row.customer_email || ''), customerPhone: String(row.customer_phone || ''),
+    items, amountCents: Number(row.amount_cents || 0), currency: String(row.currency || 'BRL'),
+    paymentMethod: String(row.payment_method || ''), status: String(row.status || 'confirmed'),
+    createdAt: String(row.created_at || ''), updatedAt: String(row.updated_at || '')
+  };
+}
+function posPriceToCents(value){
+  if(typeof value === 'number' && Number.isFinite(value)) return Math.max(0,Math.round(value*100));
+  let raw = String(value ?? '').trim();
+  if(!raw) return 0;
+  raw = raw.replace(/\s/g,'').replace(/R\$/gi,'');
+  if(raw.includes(',') && raw.includes('.')) raw = raw.replace(/\./g,'').replace(',','.');
+  else if(raw.includes(',')) raw = raw.replace(',','.');
+  const n = Number(raw);
+  return Number.isFinite(n) ? Math.max(0,Math.round(n*100)) : 0;
+}
+function posSaleError(code,message,details={}){
+  const error = new Error(message || code || 'pos_sale_error');
+  error.code = code || 'pos_sale_error';
+  error.details = details && typeof details === 'object' ? details : {};
+  return error;
+}
+function confirmPosSale(payload={}){
+  const saleId = String(payload.id || payload.saleId || '').trim().slice(0,160);
+  const storeId = String(payload.storeId || '').trim().slice(0,180);
+  const paymentMethod = String(payload.paymentMethod || '').trim().toLowerCase();
+  const customerId = String(payload.customerId || '').trim().slice(0,180);
+  const requestedItems = Array.isArray(payload.items) ? payload.items.slice(0,100) : [];
+  if(!saleId) throw posSaleError('invalid_sale_id','ID da venda ausente.');
+  if(!storeId) throw posSaleError('invalid_store','Loja ausente.');
+  if(!['pix','dinheiro','debito','credito'].includes(paymentMethod)) throw posSaleError('invalid_payment','Forma de pagamento invalida.');
+  if(!requestedItems.length) throw posSaleError('empty_cart','Carrinho vazio.');
+
+  const transaction = db.transaction(()=>{
+    const existing = db.prepare('SELECT * FROM pos_sales WHERE id = ?').get(saleId);
+    if(existing){
+      if(String(existing.store_id || '') !== storeId) throw posSaleError('sale_id_conflict','ID de venda ja pertence a outra loja.');
+      const currentRow = db.prepare('SELECT estoque FROM stores WHERE id = ?').get(storeId);
+      let currentInventory = [];
+      try{ currentInventory = JSON.parse(currentRow?.estoque || '[]'); }catch(e){}
+      return { sale:posSaleRowToView(existing), estoque:Array.isArray(currentInventory)?currentInventory:[], idempotent:true };
+    }
+
+    const storeRow = db.prepare('SELECT * FROM stores WHERE id = ?').get(storeId);
+    if(!storeRow) throw posSaleError('store_not_found','Loja nao encontrada.');
+    let inventory = [];
+    try{ inventory = JSON.parse(storeRow.estoque || '[]'); }catch(e){}
+    if(!Array.isArray(inventory)) inventory = [];
+    inventory = inventory.map(item=>item && typeof item === 'object' ? {...item} : item);
+
+    const aggregated = new Map();
+    for(const raw of requestedItems){
+      const itemId = String(raw?.itemId || raw?.id || '').trim().slice(0,180);
+      const quantity = Number(raw?.quantity ?? raw?.quantidade);
+      if(!itemId || !Number.isInteger(quantity) || quantity <= 0) throw posSaleError('invalid_item','Item ou quantidade invalida.',{itemId,quantity});
+      aggregated.set(itemId,(aggregated.get(itemId)||0)+quantity);
+    }
+
+    let customer = null;
+    if(customerId){
+      let customers = [];
+      try{ customers = JSON.parse(storeRow.customers || '[]'); }catch(e){}
+      if(!Array.isArray(customers)) customers = [];
+      customer = customers.find(c=>String(c?.id || '')===customerId) || null;
+      if(!customer) throw posSaleError('customer_not_found','Cliente nao encontrado nesta loja.',{customerId});
+    }
+
+    const now = new Date().toISOString();
+    const snapshots = [];
+    let totalCents = 0;
+    for(const [itemId,quantity] of aggregated){
+      const index = inventory.findIndex(item=>String(item?.id || '')===itemId);
+      if(index < 0) throw posSaleError('item_not_found','Produto nao encontrado no estoque.',{itemId});
+      const item = {...inventory[index]};
+      const currentQty = Math.max(0,Number(item.quantidade || 0));
+      if(quantity > currentQty) throw posSaleError('insufficient_stock','Estoque insuficiente para concluir a venda.',{itemId,name:String(item.nome||'Produto'),currentQuantity:currentQty,requested:quantity});
+      const unitPriceCents = posPriceToCents(item.preco);
+      if(unitPriceCents <= 0) throw posSaleError('invalid_price','Produto sem preco valido para venda no Caixa.',{itemId,name:String(item.nome||'Produto'),sku:String(item.sku||'')});
+      const lineTotalCents = unitPriceCents * quantity;
+      totalCents += lineTotalCents;
+      snapshots.push({itemId,sku:String(item.sku||''),barcode:String(item.codigoBarras||item.ean||''),name:String(item.nome||'Produto'),color:String(item.cor||''),size:String(item.tamanho||''),quantity,unitPriceCents,lineTotalCents});
+    }
+
+    for(const snapshot of snapshots){
+      const index = inventory.findIndex(item=>String(item?.id || '')===snapshot.itemId);
+      const item = {...inventory[index]};
+      const history = Array.isArray(item.movimentacoes) ? [...item.movimentacoes] : [];
+      const movementId = `pos-sale:${saleId}:${snapshot.itemId}`;
+      if(history.some(m=>String(m?.id || '')===movementId)) throw posSaleError('movement_conflict','Movimentacao desta venda ja existe no estoque.',{itemId:snapshot.itemId});
+      const previous = Math.max(0,Number(item.quantidade || 0));
+      const next = previous - snapshot.quantity;
+      const movement = {id:movementId,tipo:'saida',quantidade:snapshot.quantity,anterior:previous,posterior:next,motivo:'Saída — Venda Caixa',data:now,syncedAt:now,vendaId:saleId,origem:'caixa'};
+      item.quantidade = next;
+      item.movimentacoes = [...history,movement];
+      item.stockUpdatedAt = now;
+      inventory[index] = item;
+    }
+
+    db.prepare('UPDATE stores SET estoque = ?, updated_at = ? WHERE id = ?').run(JSON.stringify(inventory),now,storeId);
+    const customerName = customer ? [customer.nome,customer.sobrenome].filter(Boolean).join(' ').trim() : '';
+    db.prepare(`INSERT INTO pos_sales (id,store_id,customer_id,customer_name,customer_email,customer_phone,items_json,amount_cents,currency,payment_method,status,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)`).run(
+      saleId,storeId,customer?String(customer.id||''):null,customerName,customer?String(customer.email||''):'',customer?String(customer.whatsapp||customer.telefone||''):'',JSON.stringify(snapshots),totalCents,'BRL',paymentMethod,'confirmed',now,now
+    );
+    const created = db.prepare('SELECT * FROM pos_sales WHERE id = ?').get(saleId);
+    return { sale:posSaleRowToView(created), estoque:inventory, idempotent:false };
+  });
+  return transaction();
+}
+
+
+function posSaleEventRowToView(row){
+  if(!row) return null;
+  let payload={};
+  try{ payload=JSON.parse(row.payload_json||'{}')||{}; }catch(e){}
+  return {id:String(row.id||''),saleId:String(row.sale_id||''),storeId:String(row.store_id||''),type:String(row.type||''),payload,createdAt:String(row.created_at||'')};
+}
+function getPosSaleById(id){ return posSaleRowToView(db.prepare('SELECT * FROM pos_sales WHERE id = ?').get(String(id||''))); }
+function listPosSalesByStore(storeId,limit=100){
+  const safeLimit=Math.max(1,Math.min(500,Number(limit)||100));
+  return db.prepare(`SELECT * FROM pos_sales WHERE store_id = ? ORDER BY created_at DESC LIMIT ${safeLimit}`).all(String(storeId||'')).map(posSaleRowToView);
+}
+function listPosSaleEventsByStore(storeId,limit=300){
+  const safeLimit=Math.max(1,Math.min(1000,Number(limit)||300));
+  return db.prepare(`SELECT * FROM pos_sale_events WHERE store_id = ? ORDER BY created_at DESC LIMIT ${safeLimit}`).all(String(storeId||'')).map(posSaleEventRowToView);
+}
+function posCurrentInventory(storeId){
+  const row=db.prepare('SELECT estoque FROM stores WHERE id = ?').get(String(storeId||''));
+  let inventory=[]; try{inventory=JSON.parse(row?.estoque||'[]')}catch(e){}
+  return Array.isArray(inventory)?inventory:[];
+}
+function reversePosSale(payload={}){
+  const saleId=String(payload.saleId||'').trim().slice(0,160), storeId=String(payload.storeId||'').trim().slice(0,180), operationId=String(payload.operationId||'').trim().slice(0,180);
+  const type=String(payload.type||'cancel').trim().toLowerCase(); const returnToStock=payload.returnToStock!==false;
+  if(!saleId||!storeId||!operationId) throw posSaleError('invalid_operation','Dados da operacao incompletos.');
+  if(!['cancel','refund'].includes(type)) throw posSaleError('invalid_reverse_type','Tipo de reversao invalido.');
+  return db.transaction(()=>{
+    const prior=db.prepare('SELECT * FROM pos_sale_events WHERE id = ?').get(operationId);
+    if(prior){
+      if(String(prior.store_id||'')!==storeId||String(prior.sale_id||'')!==saleId||String(prior.type||'')!==type) throw posSaleError('operation_id_conflict','ID de operacao ja utilizado.');
+      return {sale:getPosSaleById(saleId),event:posSaleEventRowToView(prior),estoque:posCurrentInventory(storeId),idempotent:true};
+    }
+    const saleRow=db.prepare('SELECT * FROM pos_sales WHERE id = ?').get(saleId);
+    if(!saleRow||String(saleRow.store_id||'')!==storeId) throw posSaleError('sale_not_found','Venda nao encontrada nesta loja.');
+    if(['cancelled','refunded'].includes(String(saleRow.status||''))) throw posSaleError('sale_already_reversed','Venda ja cancelada/estornada.');
+    const sale=posSaleRowToView(saleRow), storeRow=db.prepare('SELECT estoque FROM stores WHERE id = ?').get(storeId); let inventory=[]; try{inventory=JSON.parse(storeRow?.estoque||'[]')}catch(e){}; if(!Array.isArray(inventory))inventory=[]; inventory=inventory.map(i=>i&&typeof i==='object'?{...i}:i);
+    const now=new Date().toISOString(), applied=[];
+    for(const snapshot of sale.items){
+      const index=inventory.findIndex(i=>String(i?.id||'')===String(snapshot.itemId||'')); if(index<0) throw posSaleError('item_not_found','Produto da venda nao existe mais no estoque.',{itemId:snapshot.itemId,name:snapshot.name});
+      const item={...inventory[index]}; const history=Array.isArray(item.movimentacoes)?[...item.movimentacoes]:[]; const qty=Math.max(0,Number(snapshot.quantity||0));
+      if(returnToStock&&qty>0){ const previous=Math.max(0,Number(item.quantidade||0)), next=previous+qty, movementId=`pos-${type}:${operationId}:${snapshot.itemId}`; if(!history.some(m=>String(m?.id||'')===movementId)){item.quantidade=next;item.movimentacoes=[...history,{id:movementId,tipo:'entrada',quantidade:qty,anterior:previous,posterior:next,motivo:type==='refund'?'Entrada — Estorno Caixa':'Entrada — Cancelamento Caixa',data:now,syncedAt:now,vendaId:saleId,origem:'caixa',operacaoId:operationId}];item.stockUpdatedAt=now;inventory[index]=item;} }
+      applied.push({itemId:snapshot.itemId,name:snapshot.name,quantity:qty,returnedToStock:returnToStock});
+    }
+    if(returnToStock)db.prepare('UPDATE stores SET estoque = ?, updated_at = ? WHERE id = ?').run(JSON.stringify(inventory),now,storeId);
+    const status=type==='refund'?'refunded':'cancelled'; db.prepare('UPDATE pos_sales SET status = ?, updated_at = ? WHERE id = ?').run(status,now,saleId);
+    const payloadJson=JSON.stringify({returnToStock,items:applied,amountCents:sale.amountCents}); db.prepare('INSERT INTO pos_sale_events (id,sale_id,store_id,type,payload_json,created_at) VALUES (?,?,?,?,?,?)').run(operationId,saleId,storeId,type,payloadJson,now);
+    return {sale:getPosSaleById(saleId),event:posSaleEventRowToView(db.prepare('SELECT * FROM pos_sale_events WHERE id = ?').get(operationId)),estoque:inventory,idempotent:false};
+  })();
+}
+function exchangePosSale(payload={}){
+  const saleId=String(payload.saleId||'').trim().slice(0,160), storeId=String(payload.storeId||'').trim().slice(0,180), operationId=String(payload.operationId||'').trim().slice(0,180);
+  const returns=Array.isArray(payload.returns)?payload.returns.slice(0,100):[], outgoing=Array.isArray(payload.outgoing)?payload.outgoing.slice(0,100):[];
+  if(!saleId||!storeId||!operationId) throw posSaleError('invalid_operation','Dados da troca incompletos.'); if(!returns.length&&!outgoing.length) throw posSaleError('empty_exchange','Troca sem itens.');
+  return db.transaction(()=>{
+    const prior=db.prepare('SELECT * FROM pos_sale_events WHERE id = ?').get(operationId); if(prior){ if(String(prior.store_id||'')!==storeId||String(prior.sale_id||'')!==saleId||String(prior.type||'')!=='exchange') throw posSaleError('operation_id_conflict','ID de operacao ja utilizado.'); return {sale:getPosSaleById(saleId),event:posSaleEventRowToView(prior),estoque:posCurrentInventory(storeId),idempotent:true}; }
+    const saleRow=db.prepare('SELECT * FROM pos_sales WHERE id = ?').get(saleId); if(!saleRow||String(saleRow.store_id||'')!==storeId) throw posSaleError('sale_not_found','Venda nao encontrada nesta loja.'); if(['cancelled','refunded'].includes(String(saleRow.status||''))) throw posSaleError('sale_not_exchangeable','Venda cancelada/estornada nao pode ser trocada.'); const sale=posSaleRowToView(saleRow);
+    const events=db.prepare("SELECT * FROM pos_sale_events WHERE sale_id = ? AND store_id = ? AND type = 'exchange'").all(saleId,storeId).map(posSaleEventRowToView); const alreadyReturned=new Map(); for(const ev of events){for(const r of (ev.payload?.returns||[])){alreadyReturned.set(String(r.itemId||''),(alreadyReturned.get(String(r.itemId||''))||0)+Math.max(0,Number(r.quantity||0)));}}
+    const returnAgg=new Map(); for(const raw of returns){const itemId=String(raw?.itemId||'').trim(),quantity=Number(raw?.quantity||0),returnToStock=raw?.returnToStock!==false;if(!itemId||!Number.isInteger(quantity)||quantity<=0)throw posSaleError('invalid_return','Item devolvido invalido.');const key=itemId;const prev=returnAgg.get(key)||{quantity:0,returnToStock};prev.quantity+=quantity;prev.returnToStock=prev.returnToStock&&returnToStock;returnAgg.set(key,prev);}
+    const outAgg=new Map();for(const raw of outgoing){const itemId=String(raw?.itemId||'').trim(),quantity=Number(raw?.quantity||0);if(!itemId||!Number.isInteger(quantity)||quantity<=0)throw posSaleError('invalid_outgoing','Novo item invalido.');outAgg.set(itemId,(outAgg.get(itemId)||0)+quantity);}
+    const storeRow=db.prepare('SELECT estoque FROM stores WHERE id = ?').get(storeId);let inventory=[];try{inventory=JSON.parse(storeRow?.estoque||'[]')}catch(e){}if(!Array.isArray(inventory))inventory=[];inventory=inventory.map(i=>i&&typeof i==='object'?{...i}:i); const now=new Date().toISOString(), returnRows=[], outgoingRows=[];let returnCents=0,outgoingCents=0;
+    for(const [itemId,data] of returnAgg){const sold=sale.items.find(i=>String(i.itemId||'')===itemId);if(!sold)throw posSaleError('return_not_in_sale','Item devolvido nao pertence a venda.',{itemId});const available=Math.max(0,Number(sold.quantity||0)-(alreadyReturned.get(itemId)||0));if(data.quantity>available)throw posSaleError('return_quantity_exceeded','Quantidade devolvida maior que a disponivel para troca.',{itemId,available});const idx=inventory.findIndex(i=>String(i?.id||'')===itemId);if(idx<0)throw posSaleError('item_not_found','Produto devolvido nao existe mais no estoque.',{itemId});returnCents+=Math.max(0,Number(sold.unitPriceCents||0))*data.quantity;returnRows.push({itemId,name:sold.name,sku:sold.sku,quantity:data.quantity,unitPriceCents:Number(sold.unitPriceCents||0),returnToStock:data.returnToStock,index:idx});}
+    for(const [itemId,quantity] of outAgg){const idx=inventory.findIndex(i=>String(i?.id||'')===itemId);if(idx<0)throw posSaleError('item_not_found','Novo produto nao encontrado no estoque.',{itemId});const item=inventory[idx],stock=Math.max(0,Number(item.quantidade||0));if(quantity>stock)throw posSaleError('insufficient_stock','Estoque insuficiente para a troca.',{itemId,name:String(item.nome||'Produto'),currentQuantity:stock,requested:quantity});const unitPriceCents=posPriceToCents(item.preco);if(unitPriceCents<=0)throw posSaleError('invalid_price','Novo produto sem preco valido.',{itemId,name:String(item.nome||'Produto')});outgoingCents+=unitPriceCents*quantity;outgoingRows.push({itemId,name:String(item.nome||'Produto'),sku:String(item.sku||''),quantity,unitPriceCents,index:idx});}
+    for(const r of returnRows){if(!r.returnToStock)continue;const item={...inventory[r.index]},hist=Array.isArray(item.movimentacoes)?[...item.movimentacoes]:[],previous=Math.max(0,Number(item.quantidade||0)),next=previous+r.quantity,movementId=`pos-exchange-in:${operationId}:${r.itemId}`;item.quantidade=next;item.movimentacoes=[...hist,{id:movementId,tipo:'entrada',quantidade:r.quantity,anterior:previous,posterior:next,motivo:'Entrada — Troca Caixa',data:now,syncedAt:now,vendaId:saleId,origem:'caixa',operacaoId:operationId}];item.stockUpdatedAt=now;inventory[r.index]=item;}
+    for(const o of outgoingRows){const item={...inventory[o.index]},hist=Array.isArray(item.movimentacoes)?[...item.movimentacoes]:[],previous=Math.max(0,Number(item.quantidade||0));if(o.quantity>previous)throw posSaleError('insufficient_stock','Estoque insuficiente para a troca.',{itemId:o.itemId,currentQuantity:previous,requested:o.quantity});const next=previous-o.quantity,movementId=`pos-exchange-out:${operationId}:${o.itemId}`;item.quantidade=next;item.movimentacoes=[...hist,{id:movementId,tipo:'saida',quantidade:o.quantity,anterior:previous,posterior:next,motivo:'Saída — Troca Caixa',data:now,syncedAt:now,vendaId:saleId,origem:'caixa',operacaoId:operationId}];item.stockUpdatedAt=now;inventory[o.index]=item;}
+    db.prepare('UPDATE stores SET estoque = ?, updated_at = ? WHERE id = ?').run(JSON.stringify(inventory),now,storeId);const differenceCents=outgoingCents-returnCents;const eventPayload={returns:returnRows.map(({index,...x})=>x),outgoing:outgoingRows.map(({index,...x})=>x),returnCents,outgoingCents,differenceCents,paymentMethod:String(payload.paymentMethod||'').trim().toLowerCase()};db.prepare('INSERT INTO pos_sale_events (id,sale_id,store_id,type,payload_json,created_at) VALUES (?,?,?,?,?,?)').run(operationId,saleId,storeId,'exchange',JSON.stringify(eventPayload),now);db.prepare('UPDATE pos_sales SET updated_at = ? WHERE id = ?').run(now,saleId);return {sale:getPosSaleById(saleId),event:posSaleEventRowToView(db.prepare('SELECT * FROM pos_sale_events WHERE id = ?').get(operationId)),estoque:inventory,idempotent:false};
+  })();
+}
+
 function getCustomerOrderById(id){
   return customerOrderRowToView(
     db.prepare('SELECT * FROM customer_orders WHERE id = ?').get(id)
@@ -1763,4 +1995,4 @@ function updateProducerPlan(id, payload={}){
 }
 
 ensureSeedStore();
-module.exports = { db, slugify, uniqueSlug, listStores, getStoreById, getStoreBySlug, getStoreRowById, getStoreRowBySlug, createStore, updateStore, setStorePassword, deleteStore, verifyStoreLogin, licenseStatus: rawLicenseStatus, generateLicenseKey, createPayment, listPayments, updatePaymentStatus, createProducerCheckoutOrder, getProducerCheckoutOrderById, getProducerCheckoutOrderByToken, getProducerCheckoutOrderByExternalId, listProducerCheckoutOrders, updateProducerCheckoutOrder, claimProducerCheckoutActivationNotification, completeProducerCheckoutActivationNotification, failProducerCheckoutActivationNotification, activatePaidProducerCheckoutStore, createCustomerOrder, getCustomerOrderById, getCustomerOrderByToken, getCustomerOrderByExternalId, updateCustomerOrder, listCustomerOrdersByStore, listProducerPlans, getProducerPlan, updateProducerPlan, getFinanceSummary, getFinanceChart, syncStoreLicense, grantTrustAccess, cancelTrustAccess, currentAiPeriod, getAiUsageMonthly, recordAiUsage };
+module.exports = { db, slugify, uniqueSlug, listStores, getStoreById, getStoreBySlug, getStoreRowById, getStoreRowBySlug, createStore, updateStore, setStorePassword, deleteStore, verifyStoreLogin, licenseStatus: rawLicenseStatus, generateLicenseKey, createPayment, listPayments, updatePaymentStatus, createProducerCheckoutOrder, getProducerCheckoutOrderById, getProducerCheckoutOrderByToken, getProducerCheckoutOrderByExternalId, listProducerCheckoutOrders, updateProducerCheckoutOrder, claimProducerCheckoutActivationNotification, completeProducerCheckoutActivationNotification, failProducerCheckoutActivationNotification, activatePaidProducerCheckoutStore, createCustomerOrder, getCustomerOrderById, getCustomerOrderByToken, getCustomerOrderByExternalId, updateCustomerOrder, listCustomerOrdersByStore, listProducerPlans, getProducerPlan, updateProducerPlan, getFinanceSummary, getFinanceChart, syncStoreLicense, grantTrustAccess, cancelTrustAccess, currentAiPeriod, getAiUsageMonthly, recordAiUsage, confirmPosSale, getPosSaleById, listPosSalesByStore, listPosSaleEventsByStore, reversePosSale, exchangePosSale };

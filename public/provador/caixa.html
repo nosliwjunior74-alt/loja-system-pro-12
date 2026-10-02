@@ -89,12 +89,13 @@
           </div>
 
           <button id="confirmSaleBtn" type="button" class="confirm-btn" disabled>Confirmar venda</button>
-          <p class="phase-note">FASE D V1: histórico, cancelamento/estorno e troca vinculados à venda. O modo Offline/outbox entra na FASE D V1B.</p>
+          <p class="phase-note">FASE D V1B: Caixa Online + Offline com fila local segura, sincronização automática e proteção contra operação duplicada.</p>
         </section>
       </aside>
     </section>
   </main>
   <div id="exchangeModal" class="modal-backdrop" hidden><div class="exchange-modal"><div class="modal-head"><h2>Troca de produto</h2><button id="closeExchangeBtn" type="button" class="text-btn">Fechar</button></div><div id="exchangeBody"></div></div></div>
+  <script src="js/salvar.js"></script>
   <script src="js/caixa.js"></script>
 </body>
 </html>

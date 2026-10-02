@@ -292,6 +292,8 @@ Este guia explica a rotina normal da loja, desde o login até cadastro de roupas
 <h3>9.4. Histórico, cancelamento e estorno</h3>
 <ul>
 <li>O <strong>Histórico de vendas</strong> mostra venda, itens, cliente, pagamento, valor, data, ID e status.</li>
+<li>Para evitar poluição visual, o histórico é organizado em <strong>gavetas retráteis</strong>: Vendas confirmadas, Cancelamentos, Estornos, Trocas e Pendentes de sincronização.</li>
+<li>As gavetas ficam fechadas por padrão e exibem a quantidade de registros. Ao pesquisar no histórico, as gavetas com resultados são abertas automaticamente.</li>
 <li><strong>Cancelar</strong> ou <strong>Estornar</strong> pergunta se as peças devem voltar ao estoque disponível.</li>
 <li>Se escolher <strong>SIM</strong>, a quantidade retorna ao estoque. Se escolher <strong>NÃO</strong>, o status muda, mas a peça não volta para venda.</li>
 <li>O evento fica registrado na venda original.</li>
@@ -310,7 +312,7 @@ Este guia explica a rotina normal da loja, desde o login até cadastro de roupas
 <li>O Caixa usa automaticamente o <strong>nome, logo e cor principal</strong> da loja ativa.</li>
 <li>O layout é responsivo para computador, tablet, celular e telas maiores.</li>
 </ul>
-<div class="warning"><strong>Offline do Caixa:</strong> nesta versão, venda e operações de pós-venda exigem conexão com o servidor. O modo Offline/outbox completo do Caixa será habilitado em etapa própria para preservar a segurança do estoque.</div>
+<div class="warning"><strong>Offline do Caixa:</strong> o Caixa pode registrar venda, cancelamento, estorno e troca localmente quando o servidor estiver indisponível. Essas operações aparecem como <strong>PENDENTE</strong> e são sincronizadas automaticamente quando o servidor volta, com proteção contra processamento duplicado.</div>
 </div>
 </details>
 

@@ -247,10 +247,87 @@ insertProducerPlan.run('simples','Simples',9700,79700,1,1,seedPlanNow,seedPlanNo
 insertProducerPlan.run('profissional','Profissional',19700,149700,1,2,seedPlanNow,seedPlanNow);
 insertProducerPlan.run('premium','Premium',29700,259700,1,3,seedPlanNow,seedPlanNow);
 
+// ===== MODULOS / ENTITLEMENTS EXTENSIVEIS DO PRODUTOR =====
+db.exec(`
+  CREATE TABLE IF NOT EXISTS app_modules (
+    module_key TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    description TEXT,
+    active INTEGER NOT NULL DEFAULT 1,
+    sort_order INTEGER NOT NULL DEFAULT 0,
+    created_at TEXT NOT NULL,
+    updated_at TEXT
+  );
+
+  CREATE TABLE IF NOT EXISTS store_module_entitlements (
+    store_id TEXT NOT NULL,
+    module_key TEXT NOT NULL,
+    producer_override TEXT NOT NULL DEFAULT 'automatic',
+    valid_until TEXT,
+    reason TEXT,
+    changed_by TEXT,
+    created_at TEXT NOT NULL,
+    updated_at TEXT,
+    PRIMARY KEY (store_id, module_key),
+    FOREIGN KEY(store_id) REFERENCES stores(id) ON DELETE CASCADE,
+    FOREIGN KEY(module_key) REFERENCES app_modules(module_key) ON DELETE CASCADE
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_store_module_entitlements_store
+    ON store_module_entitlements(store_id);
+
+  CREATE TABLE IF NOT EXISTS entitlement_audit (
+    id TEXT PRIMARY KEY,
+    store_id TEXT NOT NULL,
+    scope TEXT NOT NULL,
+    module_key TEXT,
+    action TEXT NOT NULL,
+    previous_value TEXT,
+    new_value TEXT,
+    reason TEXT,
+    changed_by TEXT,
+    created_at TEXT NOT NULL,
+    FOREIGN KEY(store_id) REFERENCES stores(id) ON DELETE CASCADE
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_entitlement_audit_store
+    ON entitlement_audit(store_id);
+`);
+
+const seedModuleNow = new Date().toISOString();
+const insertAppModule = db.prepare(`
+  INSERT OR IGNORE INTO app_modules
+  (module_key,name,description,active,sort_order,created_at,updated_at)
+  VALUES (?,?,?,?,?,?,?)
+`);
+[
+  ['provador','Provador','Provador virtual principal',1,1],
+  ['caixa','Caixa','Caixa e vendas da loja',1,2],
+  ['estoque','Estoque','Estoque e movimentacoes',1,3],
+  ['clientes','Clientes','Cadastro e gestao de clientes',1,4],
+  ['display_system','Display System','Display e telas da loja',1,5],
+  ['marketing','Marketing','Campanhas e marketing',1,6],
+  ['multi_paineis','Multi-Paineis','Paineis de vendedores e gerentes',1,7],
+  ['provador_pessoal','Provador Pessoal','Closet e provador pessoal',1,8]
+].forEach(([key,name,description,active,sortOrder])=>{
+  insertAppModule.run(key,name,description,active,sortOrder,seedModuleNow,seedModuleNow);
+});
+
 function maybeAddColumn(table, column, typeDef){
   const cols = db.prepare(`PRAGMA table_info(${table})`).all().map(c=>c.name);
   if(!cols.includes(column)) db.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${typeDef}`);
 }
+maybeAddColumn('app_modules','monthly_price_cents','INTEGER NOT NULL DEFAULT 0');
+maybeAddColumn('app_modules','annual_price_cents','INTEGER NOT NULL DEFAULT 0');
+maybeAddColumn('app_modules','one_time_price_cents','INTEGER NOT NULL DEFAULT 0');
+maybeAddColumn('app_modules','sell_separately','INTEGER NOT NULL DEFAULT 0');
+maybeAddColumn('app_modules','upgrade_available','INTEGER NOT NULL DEFAULT 0');
+maybeAddColumn('app_modules','trial_available','INTEGER NOT NULL DEFAULT 0');
+maybeAddColumn('app_modules','trial_days','INTEGER NOT NULL DEFAULT 0');
+maybeAddColumn('app_modules','show_price_to_store','INTEGER NOT NULL DEFAULT 1');
+maybeAddColumn('app_modules','promo_price_cents','INTEGER NOT NULL DEFAULT 0');
+maybeAddColumn('app_modules','promo_until','TEXT');
+maybeAddColumn('app_modules','billing_mode',"TEXT NOT NULL DEFAULT 'subscription'");
 maybeAddColumn('stores','custom_domain','TEXT');
 maybeAddColumn('stores','support_config','TEXT');
 maybeAddColumn('stores','cpf','TEXT');
@@ -276,6 +353,11 @@ maybeAddColumn('stores','trust_access_granted_by','TEXT');
 maybeAddColumn('stores','trust_access_reason','TEXT');
 maybeAddColumn('stores','trust_access_previous_status','TEXT');
 maybeAddColumn('stores','trust_access_active','INTEGER NOT NULL DEFAULT 0');
+maybeAddColumn('stores','producer_full_access_active','INTEGER NOT NULL DEFAULT 0');
+maybeAddColumn('stores','producer_full_access_until','TEXT');
+maybeAddColumn('stores','producer_full_access_granted_at','TEXT');
+maybeAddColumn('stores','producer_full_access_granted_by','TEXT');
+maybeAddColumn('stores','producer_full_access_reason','TEXT');
 maybeAddColumn('stores','producer_payment_methods',"TEXT DEFAULT '[\"pix\"]'");
 maybeAddColumn('stores','customer_payment_methods',"TEXT DEFAULT '[]'");
 maybeAddColumn('payments','notes','TEXT');
@@ -1799,6 +1881,226 @@ function getFinanceChart(months = 6){
   return { labels, paid, pending, overdue };
 }
 
+
+function listAppModules(){
+  return db.prepare(`
+    SELECT module_key, name, description, active, sort_order,
+           monthly_price_cents, annual_price_cents, one_time_price_cents,
+           sell_separately, upgrade_available, trial_available, trial_days,
+           show_price_to_store, promo_price_cents, promo_until, billing_mode,
+           created_at, updated_at
+    FROM app_modules
+    ORDER BY sort_order ASC, name ASC
+  `).all().map(row=>(
+    {
+      key:row.module_key,
+      name:row.name,
+      description:row.description || '',
+      active:Boolean(row.active),
+      sortOrder:Number(row.sort_order || 0),
+      monthlyPriceCents:Number(row.monthly_price_cents || 0),
+      annualPriceCents:Number(row.annual_price_cents || 0),
+      oneTimePriceCents:Number(row.one_time_price_cents || 0),
+      sellSeparately:Boolean(row.sell_separately),
+      upgradeAvailable:Boolean(row.upgrade_available),
+      trialAvailable:Boolean(row.trial_available),
+      trialDays:Number(row.trial_days || 0),
+      showPriceToStore:Boolean(row.show_price_to_store),
+      promoPriceCents:Number(row.promo_price_cents || 0),
+      promoUntil:row.promo_until || '',
+      billingMode:row.billing_mode || 'subscription',
+      createdAt:row.created_at,
+      updatedAt:row.updated_at || ''
+    }
+  ));
+}
+
+function updateAppModuleCommercial(moduleKey, payload={}){
+  const row = db.prepare('SELECT * FROM app_modules WHERE module_key = ?').get(moduleKey);
+  if(!row) return null;
+  const now = new Date().toISOString();
+  const cents = value => Math.max(0, Math.round(Number(value || 0) || 0));
+  const bool = value => value === true || value === 1 || value === '1' ? 1 : 0;
+  const billingMode = ['subscription','one_time','hybrid'].includes(String(payload.billingMode||''))
+    ? String(payload.billingMode)
+    : (row.billing_mode || 'subscription');
+  db.prepare(`
+    UPDATE app_modules SET
+      monthly_price_cents=?,
+      annual_price_cents=?,
+      one_time_price_cents=?,
+      sell_separately=?,
+      upgrade_available=?,
+      trial_available=?,
+      trial_days=?,
+      show_price_to_store=?,
+      promo_price_cents=?,
+      promo_until=?,
+      billing_mode=?,
+      updated_at=?
+    WHERE module_key=?
+  `).run(
+    cents(payload.monthlyPriceCents ?? row.monthly_price_cents),
+    cents(payload.annualPriceCents ?? row.annual_price_cents),
+    cents(payload.oneTimePriceCents ?? row.one_time_price_cents),
+    bool(payload.sellSeparately ?? row.sell_separately),
+    bool(payload.upgradeAvailable ?? row.upgrade_available),
+    bool(payload.trialAvailable ?? row.trial_available),
+    Math.max(0, Math.floor(Number(payload.trialDays ?? row.trial_days) || 0)),
+    bool(payload.showPriceToStore ?? row.show_price_to_store),
+    cents(payload.promoPriceCents ?? row.promo_price_cents),
+    String(payload.promoUntil ?? row.promo_until ?? '').trim() || null,
+    billingMode,
+    now,
+    moduleKey
+  );
+  return listAppModules().find(m=>m.key===moduleKey) || null;
+}
+
+function addEntitlementAudit(storeId, scope, moduleKey, action, previousValue, newValue, reason, changedBy){
+  db.prepare(`
+    INSERT INTO entitlement_audit
+    (id,store_id,scope,module_key,action,previous_value,new_value,reason,changed_by,created_at)
+    VALUES (?,?,?,?,?,?,?,?,?,?)
+  `).run(
+    nanoid(), storeId, scope, moduleKey || null, action,
+    previousValue == null ? null : String(previousValue),
+    newValue == null ? null : String(newValue),
+    String(reason || '').trim(),
+    String(changedBy || 'admin').trim() || 'admin',
+    new Date().toISOString()
+  );
+}
+
+function getStoreEntitlements(storeId){
+  const store = db.prepare('SELECT * FROM stores WHERE id = ?').get(storeId);
+  if(!store) return null;
+  const rows = db.prepare(`
+    SELECT m.module_key, m.name, m.description, m.active, m.sort_order,
+           m.monthly_price_cents, m.annual_price_cents, m.one_time_price_cents,
+           m.sell_separately, m.upgrade_available, m.trial_available, m.trial_days,
+           m.show_price_to_store, m.promo_price_cents, m.promo_until, m.billing_mode,
+           e.producer_override, e.valid_until, e.reason, e.changed_by, e.created_at, e.updated_at
+    FROM app_modules m
+    LEFT JOIN store_module_entitlements e
+      ON e.module_key = m.module_key AND e.store_id = ?
+    ORDER BY m.sort_order ASC, m.name ASC
+  `).all(storeId);
+  return {
+    storeId,
+    enforcementActive:false,
+    fullAccess:{
+      active:Boolean(store.producer_full_access_active),
+      validUntil:store.producer_full_access_until || '',
+      grantedAt:store.producer_full_access_granted_at || '',
+      grantedBy:store.producer_full_access_granted_by || '',
+      reason:store.producer_full_access_reason || ''
+    },
+    modules:rows.map(row=>({
+      key:row.module_key,
+      name:row.name,
+      description:row.description || '',
+      active:Boolean(row.active),
+      sortOrder:Number(row.sort_order || 0),
+      monthlyPriceCents:Number(row.monthly_price_cents || 0),
+      annualPriceCents:Number(row.annual_price_cents || 0),
+      oneTimePriceCents:Number(row.one_time_price_cents || 0),
+      sellSeparately:Boolean(row.sell_separately),
+      upgradeAvailable:Boolean(row.upgrade_available),
+      trialAvailable:Boolean(row.trial_available),
+      trialDays:Number(row.trial_days || 0),
+      showPriceToStore:Boolean(row.show_price_to_store),
+      promoPriceCents:Number(row.promo_price_cents || 0),
+      promoUntil:row.promo_until || '',
+      billingMode:row.billing_mode || 'subscription',
+      producerOverride:row.producer_override || 'automatic',
+      validUntil:row.valid_until || '',
+      reason:row.reason || '',
+      changedBy:row.changed_by || '',
+      createdAt:row.created_at || '',
+      updatedAt:row.updated_at || ''
+    }))
+  };
+}
+
+function setProducerFullAccess(storeId, payload={}, changedBy='admin'){
+  const store = db.prepare('SELECT * FROM stores WHERE id = ?').get(storeId);
+  if(!store) return null;
+  const active = payload.active ? 1 : 0;
+  const validUntil = active ? (String(payload.validUntil || '').trim() || null) : null;
+  const reason = String(payload.reason || '').trim();
+  const now = new Date().toISOString();
+  const previous = JSON.stringify({
+    active:Boolean(store.producer_full_access_active),
+    validUntil:store.producer_full_access_until || ''
+  });
+  db.prepare(`
+    UPDATE stores SET
+      producer_full_access_active = ?,
+      producer_full_access_until = ?,
+      producer_full_access_granted_at = ?,
+      producer_full_access_granted_by = ?,
+      producer_full_access_reason = ?,
+      updated_at = ?
+    WHERE id = ?
+  `).run(
+    active, validUntil, active ? now : null,
+    String(changedBy || 'admin').trim() || 'admin', reason, now, storeId
+  );
+  addEntitlementAudit(
+    storeId, 'store', null,
+    active ? 'producer_full_access_enabled' : 'producer_full_access_disabled',
+    previous,
+    JSON.stringify({active:Boolean(active),validUntil:validUntil || ''}),
+    reason,
+    changedBy
+  );
+  return getStoreEntitlements(storeId);
+}
+
+function setStoreModuleEntitlement(storeId, moduleKey, payload={}, changedBy='admin'){
+  const store = db.prepare('SELECT id FROM stores WHERE id = ?').get(storeId);
+  if(!store) return null;
+  const moduleRow = db.prepare('SELECT module_key FROM app_modules WHERE module_key = ?').get(moduleKey);
+  if(!moduleRow) throw new Error('Modulo nao encontrado.');
+  const override = String(payload.producerOverride || 'automatic').trim().toLowerCase();
+  if(!['automatic','allow','block'].includes(override)) throw new Error('Override de modulo invalido.');
+  const validUntil = override === 'automatic' ? null : (String(payload.validUntil || '').trim() || null);
+  const reason = String(payload.reason || '').trim();
+  const now = new Date().toISOString();
+  const previous = db.prepare(`
+    SELECT producer_override, valid_until FROM store_module_entitlements
+    WHERE store_id = ? AND module_key = ?
+  `).get(storeId,moduleKey);
+  db.prepare(`
+    INSERT INTO store_module_entitlements
+    (store_id,module_key,producer_override,valid_until,reason,changed_by,created_at,updated_at)
+    VALUES (?,?,?,?,?,?,?,?)
+    ON CONFLICT(store_id,module_key) DO UPDATE SET
+      producer_override=excluded.producer_override,
+      valid_until=excluded.valid_until,
+      reason=excluded.reason,
+      changed_by=excluded.changed_by,
+      updated_at=excluded.updated_at
+  `).run(storeId,moduleKey,override,validUntil,reason,String(changedBy || 'admin').trim() || 'admin',now,now);
+  addEntitlementAudit(
+    storeId, 'module', moduleKey, 'producer_module_override_changed',
+    previous ? JSON.stringify(previous) : '',
+    JSON.stringify({producerOverride:override,validUntil:validUntil || ''}),
+    reason,
+    changedBy
+  );
+  return getStoreEntitlements(storeId);
+}
+
+function listEntitlementAudit(storeId, limit=100){
+  const n=Math.min(500,Math.max(1,Number(limit)||100));
+  return db.prepare(`
+    SELECT * FROM entitlement_audit WHERE store_id = ?
+    ORDER BY created_at DESC LIMIT ?
+  `).all(storeId,n);
+}
+
 function currentAiPeriod(){
   return new Date().toISOString().slice(0, 7);
 }
@@ -1995,4 +2297,4 @@ function updateProducerPlan(id, payload={}){
 }
 
 ensureSeedStore();
-module.exports = { db, slugify, uniqueSlug, listStores, getStoreById, getStoreBySlug, getStoreRowById, getStoreRowBySlug, createStore, updateStore, setStorePassword, deleteStore, verifyStoreLogin, licenseStatus: rawLicenseStatus, generateLicenseKey, createPayment, listPayments, updatePaymentStatus, createProducerCheckoutOrder, getProducerCheckoutOrderById, getProducerCheckoutOrderByToken, getProducerCheckoutOrderByExternalId, listProducerCheckoutOrders, updateProducerCheckoutOrder, claimProducerCheckoutActivationNotification, completeProducerCheckoutActivationNotification, failProducerCheckoutActivationNotification, activatePaidProducerCheckoutStore, createCustomerOrder, getCustomerOrderById, getCustomerOrderByToken, getCustomerOrderByExternalId, updateCustomerOrder, listCustomerOrdersByStore, listProducerPlans, getProducerPlan, updateProducerPlan, getFinanceSummary, getFinanceChart, syncStoreLicense, grantTrustAccess, cancelTrustAccess, currentAiPeriod, getAiUsageMonthly, recordAiUsage, confirmPosSale, getPosSaleById, listPosSalesByStore, listPosSaleEventsByStore, reversePosSale, exchangePosSale };
+module.exports = { db, slugify, uniqueSlug, listStores, getStoreById, getStoreBySlug, getStoreRowById, getStoreRowBySlug, createStore, updateStore, setStorePassword, deleteStore, verifyStoreLogin, licenseStatus: rawLicenseStatus, generateLicenseKey, createPayment, listPayments, updatePaymentStatus, createProducerCheckoutOrder, getProducerCheckoutOrderById, getProducerCheckoutOrderByToken, getProducerCheckoutOrderByExternalId, listProducerCheckoutOrders, updateProducerCheckoutOrder, claimProducerCheckoutActivationNotification, completeProducerCheckoutActivationNotification, failProducerCheckoutActivationNotification, activatePaidProducerCheckoutStore, createCustomerOrder, getCustomerOrderById, getCustomerOrderByToken, getCustomerOrderByExternalId, updateCustomerOrder, listCustomerOrdersByStore, listProducerPlans, getProducerPlan, updateProducerPlan, getFinanceSummary, getFinanceChart, syncStoreLicense, grantTrustAccess, cancelTrustAccess, listAppModules, updateAppModuleCommercial, getStoreEntitlements, setProducerFullAccess, setStoreModuleEntitlement, listEntitlementAudit, currentAiPeriod, getAiUsageMonthly, recordAiUsage, confirmPosSale, getPosSaleById, listPosSalesByStore, listPosSaleEventsByStore, reversePosSale, exchangePosSale };

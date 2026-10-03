@@ -67,8 +67,10 @@ function abrirTela(url, btn){
     normalizarUrl(url) === 'provador/provador.html'
   );
 
+  const separator = String(url).includes('?') ? '&' : '?';
+
   frame.src =
-    url;
+    url + separator + '_v=' + Date.now();
 
   if(title && btn){
 

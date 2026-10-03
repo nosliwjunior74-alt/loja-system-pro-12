@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+﻿﻿<!DOCTYPE html>
 <html lang="pt-br">
 <head>
 <meta charset="UTF-8">
@@ -595,6 +595,26 @@ button.small{
 <div class=actions style=padding-bottom:0><button id=saveProducerPlansBtn type=button>Salvar pre&ccedil;os</button></div><p class=status-message id=producerPlanStatus></p>
 </details>
 
+<!-- ===== CATALOGO GLOBAL DE APLICATIVOS / PRECOS ===== -->
+<details class="card" id="globalAppCatalogPanel" style="margin-bottom:18px;">
+  <summary style="cursor:pointer;font-weight:800;color:#7a3157;font-size:17px;padding:2px 0;">
+    Catálogo de Aplicativos / Preços Gerais
+    <span style="font-size:12px;font-weight:700;color:#9b6b84;margin-left:8px;">Configuração global</span>
+  </summary>
+  <div style="display:flex;justify-content:space-between;gap:16px;align-items:flex-start;flex-wrap:wrap;margin-top:14px;">
+    <div>
+      <h2 class="section-title" style="margin-bottom:4px;">Aplicativos e upgrades</h2>
+      <p class="section-sub" style="margin:0;">Defina uma vez os preços e condições comerciais de cada aplicativo. Estes valores são gerais e podem ser exibidos para todas as lojas.</p>
+    </div>
+    <span class="active-badge">Vale para todas as lojas</span>
+  </div>
+  <div style="margin-top:10px;padding:9px 10px;border-radius:10px;background:#eef8ff;color:#24546f;font-size:12px;">
+    Permissões e exceções continuam dentro de cada loja. Aqui ficam somente preço, upgrade, promoção e teste grátis globais.
+  </div>
+  <div id="globalAppCatalogList" style="margin-top:12px;font-size:13px;color:#5f4a57;">Carregando aplicativos...</div>
+  <p class="status-message" id="globalAppCatalogStatus"></p>
+</details>
+
 <div class="layout">
 
 <section class="card">
@@ -811,15 +831,43 @@ Formas de pagamento que esta loja aceita dos seus clientes.
     <button id="btnCancelTrust" type="button" disabled>Cancelar confiança</button>
   </div>
 
-  <div style="margin-top:12px;padding-top:10px;border-top:1px dashed #ead3df;">
-    <div style="display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;">
-      <strong style="color:#7a3157;font-size:13px;">Recuperação do checkout</strong>
+  <details id="producerEntitlementsPanel" style="margin-top:12px;padding-top:10px;border-top:1px dashed #ead3df;">
+    <summary style="cursor:pointer;font-weight:700;color:#7a3157;">Liberações do Produtor e aplicativos</summary>
+    <div style="margin-top:10px;">
+      <div style="padding:9px 10px;border-radius:10px;background:#fff4d6;color:#795500;font-size:12px;">
+        Preparação V1: estas configurações são salvas e auditadas, mas ainda não bloqueiam nem liberam automaticamente os aplicativos.
+      </div>
+      <div style="margin-top:10px;padding:10px;border:1px solid #ead3df;border-radius:10px;">
+        <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center;">
+          <strong>Liberação total da loja</strong>
+          <span id="producerFullAccessStatus" style="font-size:12px;color:#765568;">Regra normal</span>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">
+          <select id="producerFullAccessDuration" style="width:auto;min-width:170px;">
+            <option value="permanent">Até o Produtor cancelar</option>
+            <option value="1">1 dia</option>
+            <option value="7">7 dias</option>
+            <option value="30">30 dias</option>
+          </select>
+          <button id="btnProducerFullAccess" type="button" disabled>Liberar tudo</button>
+          <button id="btnCancelProducerFullAccess" type="button" disabled>Voltar à regra normal</button>
+        </div>
+      </div>
+      <div id="producerModulesList" style="margin-top:10px;font-size:13px;color:#5f4a57;">Selecione uma loja para carregar os aplicativos.</div>
+    </div>
+  </details>
+
+  <details id="checkoutRecoveryPanel" style="margin-top:12px;padding-top:10px;border-top:1px dashed #ead3df;">
+    <summary style="cursor:pointer;font-weight:700;color:#7a3157;font-size:13px;">
+      Recuperação do checkout <span id="checkoutRecoveryCount" style="font-weight:400;color:#765568;">(0)</span>
+    </summary>
+    <div style="display:flex;gap:10px;align-items:center;justify-content:flex-end;flex-wrap:wrap;margin-top:8px;">
       <button id="btnRefreshCheckoutRecovery" type="button" style="width:auto;padding:6px 9px;">Atualizar</button>
     </div>
     <div id="checkoutRecoveryList" style="margin-top:8px;font-size:13px;color:#5f4a57;">
       Carregando pedidos que precisam de atenção...
     </div>
-  </div>
+  </details>
 </div>
 
 </div>
@@ -1976,6 +2024,8 @@ render();
 
 syncParent(active);
 
+await loadProducerEntitlements(active);
+
 }
 
 
@@ -2421,6 +2471,7 @@ render();
 syncParent(store);
 
 await loadPaymentAdminCompact(store);
+await loadProducerEntitlements(store);
 
 
 el('status').textContent=
@@ -3236,6 +3287,206 @@ async function loadPaymentAdminCompact(store=null){
   }
 }
 
+
+function entitlementUntilFromDuration(value){
+  if(value==='permanent')return '';
+  const days=Number(value||0);
+  if(!Number.isFinite(days)||days<=0)return '';
+  return new Date(Date.now()+days*24*60*60*1000).toISOString();
+}
+
+async function loadProducerEntitlements(store=null){
+  const fullStatus=el('producerFullAccessStatus');
+  const enableBtn=el('btnProducerFullAccess');
+  const cancelBtn=el('btnCancelProducerFullAccess');
+  const listEl=el('producerModulesList');
+  if(!fullStatus||!enableBtn||!cancelBtn||!listEl)return;
+
+  const selected=store||getActiveStore()||null;
+  if(!selected){
+    fullStatus.textContent='Regra normal';
+    enableBtn.disabled=true;
+    cancelBtn.disabled=true;
+    listEl.textContent='Selecione uma loja para carregar os aplicativos.';
+    return;
+  }
+  if(!online){
+    enableBtn.disabled=true;
+    cancelBtn.disabled=true;
+    listEl.textContent='Configuração de liberações disponível somente no modo online.';
+    return;
+  }
+
+  const data=await api('/api/admin/stores/'+encodeURIComponent(selected.id)+'/entitlements');
+  const full=data.fullAccess||{};
+  const fullUntil=String(full.validUntil||'').trim();
+  const fullActive=Boolean(full.active) && (!fullUntil || new Date(fullUntil)>new Date());
+  fullStatus.textContent=fullActive
+    ? (fullUntil ? `Liberada até ${new Date(fullUntil).toLocaleString('pt-BR')}` : 'Liberada até o Produtor cancelar')
+    : 'Regra normal';
+  enableBtn.disabled=!online||fullActive;
+  cancelBtn.disabled=!online||!full.active;
+
+  const modules=Array.isArray(data.modules)?data.modules:[];
+  if(!modules.length){
+    listEl.textContent='Nenhum aplicativo cadastrado.';
+    return;
+  }
+  listEl.innerHTML=modules.map(mod=>{
+    const key=escapeHtml(mod.key);
+    const current=String(mod.producerOverride||'automatic');
+    const until=String(mod.validUntil||'');
+    const meta=until ? ` · validade ${new Date(until).toLocaleString('pt-BR')}` : '';
+    return `<details data-module="${key}" style="margin-top:8px;border:1px solid #ead3df;border-radius:10px;padding:8px 10px;background:#fff;">
+      <summary style="cursor:pointer;font-weight:700;">${escapeHtml(mod.name)} <span style="font-weight:400;color:#765568;">· ${current==='allow'?'Liberado pelo Produtor':current==='block'?'Bloqueado pelo Produtor':'Automático'}${escapeHtml(meta)}</span></summary>
+      <div style="margin-top:8px;color:#6b7280;">${escapeHtml(mod.description||'')}</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;align-items:center;">
+        <select data-role="override" style="width:auto;min-width:190px;">
+          <option value="automatic" ${current==='automatic'?'selected':''}>Automático pelo plano</option>
+          <option value="allow" ${current==='allow'?'selected':''}>Liberado pelo Produtor</option>
+          <option value="block" ${current==='block'?'selected':''}>Bloqueado pelo Produtor</option>
+        </select>
+        <select data-role="duration" style="width:auto;min-width:150px;">
+          <option value="permanent">Até cancelar</option>
+          <option value="1">1 dia</option>
+          <option value="7">7 dias</option>
+          <option value="30">30 dias</option>
+        </select>
+        <button type="button" data-role="save" style="width:auto;">Salvar permissão</button>
+      </div>
+      <div style="margin-top:8px;font-size:12px;color:#765568;">Preço e upgrade são definidos no Catálogo de Aplicativos / Preços Gerais.</div>
+    </details>`;
+  }).join('');
+
+  listEl.querySelectorAll('[data-module]').forEach(card=>{
+    const btn=card.querySelector('[data-role="save"]');
+    btn.addEventListener('click',()=>saveModuleEntitlement(card).catch(e=>el('status').textContent=e.message));
+  });
+}
+
+function moduleMoneyToCents(value){
+  const normalized=String(value??'').trim().replace(/\./g,'').replace(',','.');
+  const n=Number(normalized||0);
+  return Number.isFinite(n)?Math.max(0,Math.round(n*100)):0;
+}
+function moduleCentsToMoney(value){
+  return (Number(value||0)/100).toFixed(2).replace('.',',');
+}
+
+async function loadGlobalAppCatalog(){
+  const listEl=el('globalAppCatalogList');
+  const statusEl=el('globalAppCatalogStatus');
+  if(!listEl||!statusEl)return;
+  listEl.textContent='Carregando aplicativos...';
+  statusEl.textContent='';
+  try{
+    const data=await api('/api/admin/modules');
+    const modules=Array.isArray(data?.modules)?data.modules:[];
+    if(!modules.length){
+      listEl.textContent='Nenhum aplicativo cadastrado.';
+      return;
+    }
+    listEl.innerHTML=modules.map(mod=>{
+      const key=escapeHtml(mod.key);
+      return `<details data-global-module="${key}" style="margin-top:8px;border:1px solid #ead3df;border-radius:10px;padding:8px 10px;background:#fff;">
+        <summary style="cursor:pointer;font-weight:700;">${escapeHtml(mod.name)} <span style="font-weight:400;color:#765568;">· preço geral</span></summary>
+        <div style="margin-top:8px;color:#6b7280;">${escapeHtml(mod.description||'')}</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-top:10px;">
+          <label>Mensal (R$)<input data-role="monthly-price" value="${moduleCentsToMoney(mod.monthlyPriceCents)}"></label>
+          <label>Anual (R$)<input data-role="annual-price" value="${moduleCentsToMoney(mod.annualPriceCents)}"></label>
+          <label>Avulso (R$)<input data-role="one-time-price" value="${moduleCentsToMoney(mod.oneTimePriceCents)}"></label>
+          <label>Promoção (R$)<input data-role="promo-price" value="${moduleCentsToMoney(mod.promoPriceCents)}"></label>
+          <label>Promoção até<input data-role="promo-until" type="date" value="${escapeHtml(String(mod.promoUntil||'').slice(0,10))}"></label>
+          <label>Cobrança<select data-role="billing-mode"><option value="subscription" ${mod.billingMode==='subscription'?'selected':''}>Assinatura</option><option value="one_time" ${mod.billingMode==='one_time'?'selected':''}>Pagamento único</option><option value="hybrid" ${mod.billingMode==='hybrid'?'selected':''}>Ambos</option></select></label>
+          <label>Dias de teste<input data-role="trial-days" type="number" min="0" value="${Number(mod.trialDays||0)}"></label>
+        </div>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:8px;">
+          <label><input data-role="sell-separately" type="checkbox" style="width:auto;" ${mod.sellSeparately?'checked':''}> Venda avulsa</label>
+          <label><input data-role="upgrade-available" type="checkbox" style="width:auto;" ${mod.upgradeAvailable?'checked':''}> Upgrade disponível</label>
+          <label><input data-role="trial-available" type="checkbox" style="width:auto;" ${mod.trialAvailable?'checked':''}> Teste grátis</label>
+          <label><input data-role="show-price" type="checkbox" style="width:auto;" ${mod.showPriceToStore?'checked':''}> Mostrar preço às lojas</label>
+        </div>
+        <button type="button" data-role="save-global-commercial" style="width:auto;margin-top:8px;">Salvar preço geral</button>
+      </details>`;
+    }).join('');
+    listEl.querySelectorAll('[data-global-module]').forEach(card=>{
+      const btn=card.querySelector('[data-role="save-global-commercial"]');
+      btn.addEventListener('click',()=>saveGlobalModuleCommercial(card).catch(e=>statusEl.textContent=e.message));
+    });
+  }catch(e){
+    listEl.textContent=e.message||'Não foi possível carregar o catálogo de aplicativos.';
+  }
+}
+
+async function saveGlobalModuleCommercial(card){
+  const moduleKey=card.getAttribute('data-global-module');
+  const q=role=>card.querySelector('[data-role="'+role+'"]');
+  const payload={
+    monthlyPriceCents:moduleMoneyToCents(q('monthly-price').value),
+    annualPriceCents:moduleMoneyToCents(q('annual-price').value),
+    oneTimePriceCents:moduleMoneyToCents(q('one-time-price').value),
+    promoPriceCents:moduleMoneyToCents(q('promo-price').value),
+    promoUntil:q('promo-until').value||'',
+    billingMode:q('billing-mode').value,
+    sellSeparately:q('sell-separately').checked,
+    upgradeAvailable:q('upgrade-available').checked,
+    trialAvailable:q('trial-available').checked,
+    trialDays:Math.max(0,Number(q('trial-days').value||0)),
+    showPriceToStore:q('show-price').checked
+  };
+  await api('/api/admin/modules/'+encodeURIComponent(moduleKey)+'/commercial',{
+    method:'PUT',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify(payload)
+  });
+  await loadGlobalAppCatalog();
+  el('globalAppCatalogStatus').textContent='Preço geral atualizado. O novo valor será usado para todas as lojas que exibirem este aplicativo.';
+}
+
+async function saveModuleEntitlement(card){
+  if(!activeStoreId)throw new Error('Selecione uma loja.');
+  const moduleKey=card.getAttribute('data-module');
+  const producerOverride=card.querySelector('[data-role="override"]').value;
+  const duration=card.querySelector('[data-role="duration"]').value;
+  const reason=window.prompt('Motivo desta configuração do aplicativo:','Ajuste manual do Produtor.');
+  if(reason===null)return;
+  const validUntil=producerOverride==='automatic' ? '' : entitlementUntilFromDuration(duration);
+  await api('/api/admin/stores/'+encodeURIComponent(activeStoreId)+'/modules/'+encodeURIComponent(moduleKey)+'/entitlement',{
+    method:'PUT',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({producerOverride,validUntil,reason:String(reason||'').trim()})
+  });
+  await loadProducerEntitlements(getActiveStore());
+  el('status').textContent='Configuração do aplicativo salva. Preparação V1 ainda sem enforcement automático.';
+}
+
+async function grantProducerFullAccess(){
+  if(!activeStoreId)throw new Error('Selecione uma loja.');
+  const reason=window.prompt('Motivo da liberação total do Produtor:','Liberação administrativa do Produtor.');
+  if(reason===null)return;
+  if(!window.confirm('Registrar liberação total para esta loja? Nesta V1 ela ainda não altera o acesso automaticamente.'))return;
+  const duration=el('producerFullAccessDuration').value;
+  await api('/api/admin/stores/'+encodeURIComponent(activeStoreId)+'/producer-full-access',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({active:true,validUntil:entitlementUntilFromDuration(duration),reason:String(reason||'').trim()})
+  });
+  await loadProducerEntitlements(getActiveStore());
+  el('status').textContent='Liberação total registrada. Preparação V1 ainda sem enforcement automático.';
+}
+
+async function cancelProducerFullAccess(){
+  if(!activeStoreId)throw new Error('Selecione uma loja.');
+  if(!window.confirm('Voltar esta loja para a regra normal do sistema?'))return;
+  await api('/api/admin/stores/'+encodeURIComponent(activeStoreId)+'/producer-full-access',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({active:false,reason:'Cancelado pelo Produtor no Painel Mestre.'})
+  });
+  await loadProducerEntitlements(getActiveStore());
+  el('status').textContent='Liberação total cancelada; configuração voltou para regra normal.';
+}
+
 async function confirmManualPayment(paymentId){
   if(!activeStoreId){
     throw new Error('Selecione uma loja antes de confirmar o pagamento.');
@@ -3330,11 +3581,13 @@ async function cancelSelectedStoreTrust(){
 async function loadCheckoutRecovery(){
   const listEl=el('checkoutRecoveryList');
   const refreshBtn=el('btnRefreshCheckoutRecovery');
+  const countEl=el('checkoutRecoveryCount');
 
   if(!listEl||!refreshBtn)return;
 
   if(!online){
     listEl.textContent='Recuperação do checkout disponível somente no modo online.';
+    if(countEl)countEl.textContent='(?)';
     refreshBtn.disabled=true;
     return;
   }
@@ -3345,6 +3598,7 @@ async function loadCheckoutRecovery(){
   try{
     const data=await api('/api/admin/producer-checkout/recovery');
     const orders=Array.isArray(data?.orders)?data.orders:[];
+    if(countEl)countEl.textContent='('+orders.length+')';
 
     if(!orders.length){
       listEl.textContent='Nenhum pedido do checkout precisa de recuperação.';
@@ -3498,10 +3752,13 @@ el('saveProducerPlansBtn').addEventListener('click',()=>saveProducerPlans().catc
 
 el('btnTrust72').addEventListener('click',()=>grantSelectedStoreTrust72().catch(e=>el('status').textContent=e.message));
 el('btnCancelTrust').addEventListener('click',()=>cancelSelectedStoreTrust().catch(e=>el('status').textContent=e.message));
+el('btnProducerFullAccess').addEventListener('click',()=>grantProducerFullAccess().catch(e=>el('status').textContent=e.message));
+el('btnCancelProducerFullAccess').addEventListener('click',()=>cancelProducerFullAccess().catch(e=>el('status').textContent=e.message));
 el('btnRefreshCheckoutRecovery').addEventListener('click',()=>loadCheckoutRecovery().catch(e=>el('status').textContent=e.message));
 
 loadStores().then(function(){return loadCheckoutRecovery();}).catch(function(e){el('status').textContent=e.message;});
 loadProducerPlans();
+loadGlobalAppCatalog();
 
 </script>
 

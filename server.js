@@ -17,7 +17,7 @@ const {
   WebhookSignatureValidator,
   InvalidWebhookSignatureError
 } = require('mercadopago');
-const { db: activeDb, listStores, getStoreById, getStoreBySlug, createStore, updateStore, setStorePassword, deleteStore, verifyStoreLogin, createPayment, listPayments, updatePaymentStatus, createProducerCheckoutOrder, listProducerCheckoutOrders, getProducerCheckoutOrderById, getProducerCheckoutOrderByToken, getProducerCheckoutOrderByExternalId, updateProducerCheckoutOrder, claimProducerCheckoutActivationNotification, completeProducerCheckoutActivationNotification, failProducerCheckoutActivationNotification, activatePaidProducerCheckoutStore, createCustomerOrder, getCustomerOrderById, getCustomerOrderByToken, getCustomerOrderByExternalId, updateCustomerOrder, listCustomerOrdersByStore, listProducerPlans, getProducerPlan, updateProducerPlan, getFinanceSummary, getFinanceChart, grantTrustAccess, cancelTrustAccess, recordAiUsage, getAiUsageMonthly, confirmPosSale, listPosSalesByStore, listPosSaleEventsByStore, reversePosSale, exchangePosSale } = require('./db');
+const { db: activeDb, listStores, getStoreById, getStoreBySlug, createStore, updateStore, setStorePassword, deleteStore, verifyStoreLogin, createPayment, listPayments, updatePaymentStatus, createProducerCheckoutOrder, listProducerCheckoutOrders, getProducerCheckoutOrderById, getProducerCheckoutOrderByToken, getProducerCheckoutOrderByExternalId, updateProducerCheckoutOrder, claimProducerCheckoutActivationNotification, completeProducerCheckoutActivationNotification, failProducerCheckoutActivationNotification, activatePaidProducerCheckoutStore, createCustomerOrder, getCustomerOrderById, getCustomerOrderByToken, getCustomerOrderByExternalId, updateCustomerOrder, listCustomerOrdersByStore, listProducerPlans, getProducerPlan, updateProducerPlan, getFinanceSummary, getFinanceChart, grantTrustAccess, cancelTrustAccess, listAppModules, updateAppModuleCommercial, getStoreEntitlements, setProducerFullAccess, setStoreModuleEntitlement, listEntitlementAudit, recordAiUsage, getAiUsageMonthly, confirmPosSale, listPosSalesByStore, listPosSaleEventsByStore, reversePosSale, exchangePosSale } = require('./db');
 const { runPostPaymentFlow } = require('./modules/pro-commerce/post-payment');
 const { normalizePhone, sendManualWelcomeWhatsApp } = require('./modules/pro-commerce/notifications/whatsapp');
 const { sendManualWelcomeEmail } = require('./modules/pro-commerce/notifications/email');
@@ -970,6 +970,56 @@ app.post('/api/admin/stores/:id/trust-access/cancel', requireAdminApi, (req,res)
     store
   });
 });
+// ===== ENTITLEMENTS / OVERRIDES DO PRODUTOR - V1 PREPARACAO =====
+// Nesta V1, os controles sao gravados e auditados, mas ainda NAO interferem
+// automaticamente na licenca ou no acesso dos aplicativos.
+app.get('/api/admin/stores/:id/entitlements', requireAdminApi, (req,res)=>{
+  const data = getStoreEntitlements(req.params.id);
+  if(!data) return res.status(404).json({ error:'Loja nao encontrada.' });
+  res.json({ ok:true, ...data });
+});
+
+app.post('/api/admin/stores/:id/producer-full-access', requireAdminApi, (req,res)=>{
+  const data = setProducerFullAccess(req.params.id, req.body || {}, ADMIN_USER);
+  if(!data) return res.status(404).json({ error:'Loja nao encontrada.' });
+  res.json({ ok:true, ...data });
+});
+
+app.put('/api/admin/stores/:id/modules/:moduleKey/entitlement', requireAdminApi, (req,res)=>{
+  try{
+    const data = setStoreModuleEntitlement(
+      req.params.id,
+      req.params.moduleKey,
+      req.body || {},
+      ADMIN_USER
+    );
+    if(!data) return res.status(404).json({ error:'Loja nao encontrada.' });
+    res.json({ ok:true, ...data });
+  }catch(err){
+    res.status(400).json({ error:err.message || 'Nao foi possivel atualizar o modulo.' });
+  }
+});
+
+app.get('/api/admin/stores/:id/entitlements/audit', requireAdminApi, (req,res)=>{
+  const store = getStoreById(req.params.id, baseUrl(req));
+  if(!store) return res.status(404).json({ error:'Loja nao encontrada.' });
+  res.json({ ok:true, audit:listEntitlementAudit(req.params.id, req.query.limit) });
+});
+
+app.get('/api/admin/modules', requireAdminApi, (req,res)=>{
+  res.json({ ok:true, modules:listAppModules() });
+});
+
+app.put('/api/admin/modules/:moduleKey/commercial', requireAdminApi, (req,res)=>{
+  try{
+    const module = updateAppModuleCommercial(req.params.moduleKey, req.body || {});
+    if(!module) return res.status(404).json({ error:'Aplicativo nao encontrado.' });
+    res.json({ ok:true, module });
+  }catch(err){
+    res.status(400).json({ error:err.message || 'Nao foi possivel atualizar a configuracao comercial.' });
+  }
+});
+
 app.post('/api/admin/stores/:id/reset-password', requireAdminApi, (req,res)=>{
   const store = getStoreById(req.params.id, baseUrl(req));
 

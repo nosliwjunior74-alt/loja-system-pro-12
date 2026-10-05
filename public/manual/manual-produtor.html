@@ -10,4 +10,25 @@
 <div class="card"><h2>5. Recuperação do checkout</h2><p>A área <strong>Recuperação do checkout</strong> fica em uma gaveta fechada por padrão e mostra um contador de pedidos que precisam de atenção. Abra somente quando precisar recuperar uma ativação ou confirmar manualmente um pagamento.</p><ul><li><strong>Confirmar pagamento e liberar:</strong> confirma manualmente um pedido pendente e tenta concluir a ativação.</li><li><strong>Repetir liberação:</strong> tenta novamente uma ativação de pedido já pago.</li></ul></div>
 <div class="card"><h2>6. Fluxo recomendado</h2><ol><li>Configure planos e preços globais.</li><li>Configure o Catálogo de Aplicativos e seus preços gerais.</li><li>Cadastre ou selecione a loja.</li><li>Deixe os aplicativos em Automático sempre que a loja seguir o plano normal.</li><li>Use liberação/bloqueio do Produtor apenas como exceção.</li><li>Use a Recuperação do checkout somente quando houver pedido que precise de intervenção.</li></ol></div>
 <div class="card"><h2>7. Segurança e auditoria</h2><p>As exceções do Produtor registram informações de auditoria. Evite liberar módulos sem motivo administrativo. Antes de publicação de mudanças importantes, mantenha o fluxo: backup → teste local → validação → commit → push → validação online.</p></div>
-</div><script src="../shared/brand-sync.js"></script></body></html>
+</div><script src="../shared/brand-sync.js"></script>
+<section id="licenca-offline-v1c" style="margin:24px 0;padding:18px;border:1px solid #ddd;border-radius:12px">
+<h2>Correção Licença Offline V1 — validação final</h2>
+<p><strong>Regra de 72 horas:</strong> quando o dispositivo fica sem internet, o Caixa pode operar somente enquanto a credencial offline assinada estiver válida. Ao vencer, novas vendas, cancelamentos, estornos e trocas ficam bloqueados até uma renovação online. O bloqueio não apaga estoque, cache nem operações pendentes.</p>
+<p><strong>Preço/cadastro offline:</strong> alterações de dados da roupa, incluindo preço, são salvas no IndexedDB e entram em uma fila de sincronização. Quando a internet voltar, a alteração é enviada ao servidor. Movimentações de quantidade continuam protegidas pela fila de estoque existente.</p>
+<p><strong>Segurança:</strong> a chave privada permanece somente no servidor. O navegador recebe a credencial assinada e a chave pública de validação.</p>
+</section>
+</body></html>
+<!-- LICENCA OFFLINE V1 72H -->
+<section class="card" id="licenca-offline-v1">
+<h2>Licença Offline V1 — tolerância de 72 horas</h2>
+<p>Quando a loja está online e com licença ativa, o servidor emite automaticamente uma credencial offline assinada para o Caixa. Essa credencial permite continuar a operação local por até <strong>72 horas</strong> caso a internet caia.</p>
+<ol>
+<li>A chave privada de assinatura fica somente no servidor e é criada no diretório de dados protegido do sistema.</li>
+<li>O navegador recebe apenas a credencial assinada e a chave pública necessária para conferir a assinatura.</li>
+<li>Cada reconexão válida renova automaticamente a janela de 72 horas.</li>
+<li>Se a licença comercial da loja estiver inativa/expirada, o servidor não emite nova credencial e também bloqueia novas operações do Caixa online.</li>
+<li>Quando a tolerância offline termina, o Caixa bloqueia novas operações, mas preserva estoque local, cache e fila pendente para sincronização posterior.</li>
+</ol>
+<p><strong>Configuração:</strong> o prazo padrão é 72h. O servidor aceita a variável <code>OFFLINE_LICENSE_HOURS</code> apenas para configuração técnica controlada.</p>
+<p><strong>Recuperação:</strong> basta reconectar o dispositivo à internet com a licença da loja válida. A renovação ocorre automaticamente no carregamento do Caixa.</p>
+</section>

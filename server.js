@@ -8,6 +8,7 @@ const fs = require('fs');
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 const os = require('os');
+const { createOfflineLicenseManager } = require('./offline-license');
 const QRCode = require('qrcode');
 const {
   MercadoPagoConfig,
@@ -112,6 +113,11 @@ const ADMIN_PASSWORD_HASH = process.env.ADMIN_PASSWORD_HASH || '';
 const LOGIN_PEPPER = process.env.LOGIN_PEPPER || '';
 const SESSION_NAME = process.env.SESSION_NAME || 'loja_system_sid';
 const SESSION_SECRET = process.env.SESSION_SECRET || crypto.randomBytes(32).toString('hex');
+const OFFLINE_LICENSE_HOURS = Math.max(1, Number(process.env.OFFLINE_LICENSE_HOURS || 72) || 72);
+const OFFLINE_LICENSE_DATA_DIR = process.env.DATA_DIR || (process.env.RAILWAY_ENVIRONMENT ? '/data' : path.join(__dirname,'data'));
+const offlineLicenseManager = createOfflineLicenseManager({dataDir:OFFLINE_LICENSE_DATA_DIR,graceHours:OFFLINE_LICENSE_HOURS});
+function storeLicenseAllowsOffline(store){ return store && (store.licenseStatus === 'ativa' || store.licenseStatus === 'em degustação'); }
+function requireActiveStoreLicense(req,res,next){ const id=(req.session?.adminLoggedIn&&req.session?.activeStoreId)?req.session.activeStoreId:req.session?.clientStoreId; const store=id?getStoreById(id,baseUrl(req)):null; if(!store)return res.status(401).json({error:'unauthorized'}); if(!storeLicenseAllowsOffline(store))return res.status(403).json({ok:false,error:'license_inactive',message:'Licença da loja inativa ou expirada.'}); req.licensedStore=store; next(); }
 
 if (process.env.NODE_ENV === 'production' && !process.env.SESSION_SECRET) {
   console.error('ERRO CRITICO: SESSION_SECRET nao configurado em producao.');
@@ -3280,10 +3286,10 @@ app.get('/api/public/session-store', (req,res)=>{
     });
   }
 
-  return res.json({
-    store
-  });
+  const offlineLicense = storeLicenseAllowsOffline(store) ? offlineLicenseManager.issue(store) : null;
+  return res.json({ store, offlineLicense });
 });
+app.get('/api/public/offline-license/renew',(req,res)=>{ const id=(req.session?.adminLoggedIn&&req.session?.activeStoreId)?req.session.activeStoreId:req.session?.clientStoreId; const store=id?getStoreById(id,baseUrl(req)):null; if(!store)return res.status(401).json({error:'unauthorized'}); if(!storeLicenseAllowsOffline(store))return res.status(403).json({ok:false,error:'license_inactive',message:'Licença da loja inativa ou expirada.'}); return res.json({ok:true,offlineLicense:offlineLicenseManager.issue(store)}); });
 // PROVADOR PRO STOCK SYNC V1B
 app.post('/api/public/stock-movements/sync', express.json(), (req,res)=>{
   const targetStoreId =
@@ -3332,12 +3338,37 @@ app.post('/api/public/stock-movements/sync', express.json(), (req,res)=>{
     const itemId = String(op.itemId || '').trim().slice(0,180);
     const type = String(op.tipo || op.type || '').trim().toLowerCase();
 
-    if(!opId || !itemId || !['entrada','saida','ajuste','delete'].includes(type)){
+    if(!opId || !itemId || !['entrada','saida','ajuste','delete','upsert'].includes(type)){
       conflicts.push({ id:opId || '', itemId, code:'invalid_operation' });
       continue;
     }
 
     const index = inventory.findIndex(item=>String(item?.id || '') === itemId);
+
+    if(type === 'upsert'){
+      const incoming = op.item && typeof op.item === 'object' ? op.item : null;
+      if(!incoming || String(incoming.id || '') !== itemId){
+        conflicts.push({ id:opId, itemId, code:'invalid_item' });
+        continue;
+      }
+      const cleanText = (value,max=300)=>String(value ?? '').slice(0,max);
+      const metadata = {
+        nome:cleanText(incoming.nome,180), categoria:cleanText(incoming.categoria,120), subcategoria:cleanText(incoming.subcategoria,120),
+        cor:cleanText(incoming.cor,100), tamanho:cleanText(incoming.tamanho,60), marca:cleanText(incoming.marca,120),
+        sku:cleanText(incoming.sku,100), codigoBarras:cleanText(incoming.codigoBarras,120), preco:cleanText(incoming.preco,60),
+        imagem:cleanText(incoming.imagem,2000000)
+      };
+      if(index >= 0){
+        const currentItem={...inventory[index]};
+        inventory[index]={...currentItem,...metadata,id:itemId,quantidade:Math.max(0,Number(currentItem.quantidade||0)),movimentacoes:Array.isArray(currentItem.movimentacoes)?currentItem.movimentacoes:[],catalogUpdatedAt:new Date().toISOString()};
+      }else{
+        const initialQty=Math.max(0,Number(incoming.quantidade||0));
+        inventory.push({...metadata,id:itemId,quantidade:initialQty,movimentacoes:Array.isArray(incoming.movimentacoes)?incoming.movimentacoes:[],catalogUpdatedAt:new Date().toISOString()});
+      }
+      acknowledged.push(opId);
+      changed = true;
+      continue;
+    }
 
     if(type === 'delete'){
       if(index >= 0){
@@ -3443,7 +3474,7 @@ app.post('/api/public/stock-movements/sync', express.json(), (req,res)=>{
 });
 
 // PROVADOR PRO CAIXA / POS SALE FASE C
-app.post('/api/public/pos-sales/confirm', express.json({limit:'256kb'}), (req,res)=>{
+app.post('/api/public/pos-sales/confirm', express.json({limit:'256kb'}), requireActiveStoreLicense, (req,res)=>{
   const targetStoreId = (req.session?.adminLoggedIn && req.session?.activeStoreId) ? req.session.activeStoreId : req.session?.clientStoreId;
   if(!targetStoreId) return res.status(401).json({ error:'unauthorized' });
   try{
@@ -3458,16 +3489,16 @@ app.post('/api/public/pos-sales/confirm', express.json({limit:'256kb'}), (req,re
 
 
 // PROVADOR PRO CAIXA / POS FASE D V1 — HISTORICO, ESTORNO E TROCA
-app.get('/api/public/pos-sales/history', (req,res)=>{
+app.get('/api/public/pos-sales/history', requireActiveStoreLicense, (req,res)=>{
   const targetStoreId=(req.session?.adminLoggedIn&&req.session?.activeStoreId)?req.session.activeStoreId:req.session?.clientStoreId;
   if(!targetStoreId)return res.status(401).json({error:'unauthorized'});
   try{return res.json({ok:true,sales:listPosSalesByStore(targetStoreId,150),events:listPosSaleEventsByStore(targetStoreId,500)});}catch(error){return res.status(500).json({ok:false,error:'history_error',message:String(error?.message||'Falha ao carregar historico.')});}
 });
-app.post('/api/public/pos-sales/reverse', express.json({limit:'128kb'}), (req,res)=>{
+app.post('/api/public/pos-sales/reverse', express.json({limit:'128kb'}), requireActiveStoreLicense, (req,res)=>{
   const targetStoreId=(req.session?.adminLoggedIn&&req.session?.activeStoreId)?req.session.activeStoreId:req.session?.clientStoreId;if(!targetStoreId)return res.status(401).json({error:'unauthorized'});
   try{const result=reversePosSale({saleId:req.body?.saleId,storeId:targetStoreId,operationId:req.body?.operationId,type:req.body?.type,returnToStock:req.body?.returnToStock});return res.json({ok:true,...result});}catch(error){const code=String(error?.code||'pos_reverse_error');const status=['sale_not_found','item_not_found'].includes(code)?404:409;return res.status(status).json({ok:false,error:code,message:String(error?.message||'Nao foi possivel reverter a venda.'),details:error?.details||{}});}
 });
-app.post('/api/public/pos-sales/exchange', express.json({limit:'256kb'}), (req,res)=>{
+app.post('/api/public/pos-sales/exchange', express.json({limit:'256kb'}), requireActiveStoreLicense, (req,res)=>{
   const targetStoreId=(req.session?.adminLoggedIn&&req.session?.activeStoreId)?req.session.activeStoreId:req.session?.clientStoreId;if(!targetStoreId)return res.status(401).json({error:'unauthorized'});
   try{const result=exchangePosSale({saleId:req.body?.saleId,storeId:targetStoreId,operationId:req.body?.operationId,returns:req.body?.returns,outgoing:req.body?.outgoing,paymentMethod:req.body?.paymentMethod});return res.json({ok:true,...result});}catch(error){const code=String(error?.code||'pos_exchange_error');const status=['sale_not_found','item_not_found'].includes(code)?404:409;return res.status(status).json({ok:false,error:code,message:String(error?.message||'Nao foi possivel concluir a troca.'),details:error?.details||{}});}
 });

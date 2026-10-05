@@ -46,6 +46,25 @@ async byId(id){
     return value;
   },
 
+  productUpsertOperation(item,isNew=false){
+    const snapshot={...(item&&typeof item==='object'?item:{})};
+    return {
+      id:'upsert_'+String(snapshot.id||'item')+'_'+Date.now()+'_'+Math.random().toString(36).slice(2,8),
+      itemId:String(snapshot.id||''),
+      tipo:'upsert',
+      isNew:Boolean(isNew),
+      item:snapshot,
+      data:new Date().toISOString()
+    };
+  },
+
+  async queueProductUpsert(item,isNew=false){
+    if(!item?.id) return null;
+    const op=this.productUpsertOperation(item,isNew);
+    await this.queueMovement(op);
+    return op;
+  },
+
   async queueMovement(operation){
     if(!operation || !operation.id) return;
     const pending=await this.pendingMovements();
@@ -118,91 +137,59 @@ async byId(id){
 
  async save(item){
 
+  const existing = item?.id ? await this.byId(item.id) : null;
   await DB.put(DB.STORES.ESTOQUE,item);
+
+  // Offline: cadastro/preco precisa entrar no outbox, nao apenas ficar no IndexedDB.
+  if(navigator.onLine===false){
+    await this.queueProductUpsert(item,!existing);
+    console.log('Produto salvo OFFLINE e enfileirado para sincronizacao:',item?.id);
+    return item;
+  }
 
   const pendingBeforeSave = await this.pendingMovements();
   if(pendingBeforeSave.length){
     await this.syncPendingMovements();
     const remainingAfterSync = await this.pendingMovements();
     if(remainingAfterSync.length){
-      console.warn('Produto salvo localmente; sincronizacao completa adiada porque ha movimentacoes pendentes.');
+      await this.queueProductUpsert(item,!existing);
+      console.warn('Produto salvo localmente e enfileirado; sincronizacao completa adiada porque ha operacoes pendentes.');
       return item;
     }
   }
 
   try{
-
     const lojaAtual =
       new URLSearchParams(location.search).get('loja') ||
       localStorage.getItem('loja_slug') ||
-     ''; 
+      '';
     if (!lojaAtual) {
-  console.error('Nenhuma loja detectada.');
-  return;
-}
-console.log('LOJA DETECTADA:', lojaAtual);
-    const r = await fetch(`/api/public/store/${encodeURIComponent(lojaAtual)}`);
+      console.error('Nenhuma loja detectada.');
+      await this.queueProductUpsert(item,!existing);
+      return item;
+    }
 
-    const texto = await r.text();
-
-console.log("RETORNO API:", texto);
-
-let data = {};
-
-try {
-    data = JSON.parse(texto);
-} catch(e) {
-    console.error("ERRO JSON API:", e);
-    console.log("CONTEÚDO RECEBIDO:", texto);
-    return;
-}
-
+    const r = await fetch(`/api/public/store/${encodeURIComponent(lojaAtual)}`,{cache:'no-store'});
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    const data = await r.json();
     const store = data.store || {};
-
-  let estoqueAtual = store.estoque || [];
-
-if (typeof estoqueAtual === 'string') {
-  try {
-    estoqueAtual = JSON.parse(estoqueAtual);
-  } catch (e) {
-    console.error('Erro ao converter estoque:', e);
-    estoqueAtual = [];
-  }
-}
-
-if (!Array.isArray(estoqueAtual)) {
-  estoqueAtual = [];
-}
-console.log('ITEM SALVO:', item);
-console.log('TIPO ITEM:', typeof item);
-console.log('ESTOQUE ATUAL:', estoqueAtual);
-    const novoEstoque = [
-      ...estoqueAtual.filter(i => i.id !== item.id),
-      item
-    ];
-console.log('LOJA ATUAL:', lojaAtual);
-console.log('ESTOQUE ENVIADO:', novoEstoque);
-    console.log('PAYLOAD FINAL:',
-  JSON.stringify({
-    estoque: novoEstoque
-  }, null, 2)
-);
-   await fetch('/api/public/store-branding', {
-  method:'PUT',
-  credentials:'include',
-  headers:{
-    'Content-Type':'application/json'
-  },
-  body:JSON.stringify({
-    estoque: novoEstoque
-  })
-});
-
+    let estoqueAtual = store.estoque || [];
+    while(typeof estoqueAtual === 'string'){
+      try{ estoqueAtual=JSON.parse(estoqueAtual); }catch(e){ estoqueAtual=[]; break; }
+    }
+    if(!Array.isArray(estoqueAtual)) estoqueAtual=[];
+    const novoEstoque=[...estoqueAtual.filter(i=>String(i?.id)!==String(item.id)),item];
+    const saveResponse=await fetch('/api/public/store-branding',{
+      method:'PUT',credentials:'include',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({estoque:novoEstoque})
+    });
+    if(!saveResponse.ok) throw new Error('HTTP '+saveResponse.status);
   }catch(e){
-    console.error('Erro sincronizando estoque online',e);
+    console.error('Erro sincronizando cadastro/preco online; operacao enfileirada.',e);
+    await this.queueProductUpsert(item,!existing);
   }
 
- return item;
+  return item;
 },
   async remove(id){
     await DB.delete(DB.STORES.ESTOQUE,id);

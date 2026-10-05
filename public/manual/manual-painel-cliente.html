@@ -445,5 +445,29 @@ window.addEventListener('afterprint',()=>{
  },60);
 })();
 </script>
+
+<section id="licenca-offline-v1c" style="margin:24px 0;padding:18px;border:1px solid #ddd;border-radius:12px">
+<h2>Licença Offline V1 — preço e bloqueio após 72h</h2>
+<p><strong>Regra de 72 horas:</strong> quando o dispositivo fica sem internet, o Caixa pode operar somente enquanto a credencial offline assinada estiver válida. Ao vencer, novas vendas, cancelamentos, estornos e trocas ficam bloqueados até uma renovação online. O bloqueio não apaga estoque, cache nem operações pendentes.</p>
+<p><strong>Preço/cadastro offline:</strong> alterações de dados da roupa, incluindo preço, são salvas no IndexedDB e entram em uma fila de sincronização. Quando a internet voltar, a alteração é enviada ao servidor. Movimentações de quantidade continuam protegidas pela fila de estoque existente.</p>
+<p><strong>Segurança:</strong> a chave privada permanece somente no servidor. O navegador recebe a credencial assinada e a chave pública de validação.</p>
+</section>
 </body>
 </html>
+
+<!-- LICENCA OFFLINE V1 72H -->
+<details id="licenca-offline-v1">
+<summary>Licença Offline do Caixa — até 72 horas</summary>
+<div class="content">
+<p>O Caixa pode continuar funcionando temporariamente quando a internet cair, desde que este dispositivo tenha se conectado ao sistema recentemente com a licença da loja válida.</p>
+<ul>
+<li>A autorização offline é renovada automaticamente quando o Caixa consegue acessar o servidor.</li>
+<li>A tolerância padrão é de <strong>72 horas</strong> a partir da última renovação válida.</li>
+<li>Durante esse período, as vendas e operações compatíveis continuam sendo registradas localmente e entram na fila de sincronização.</li>
+<li>Se as 72 horas vencerem, novas operações do Caixa são bloqueadas até que o dispositivo volte à internet e valide a licença.</li>
+<li>O bloqueio não apaga produtos, estoque em cache, histórico local nem operações pendentes.</li>
+</ul>
+<div class="warning"><strong>Não altere a data/hora do computador para tentar prolongar o prazo.</strong> O sistema possui proteção contra retorno artificial do relógio e poderá exigir uma validação online.</div>
+<div class="tip"><strong>Para renovar:</strong> conecte a internet, abra o Caixa e aguarde o status voltar a sincronizado. Não é necessário apagar dados do navegador.</div>
+</div>
+</details>

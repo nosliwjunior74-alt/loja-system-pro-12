@@ -53,3 +53,5 @@ Nenhum recurso será considerado finalizado sem manual detalhado, área de víde
 - Entitlement próprio para venda do módulo aos lojistas.
 - Transferência para humano, funil, checkout, consentimento/LGPD e logs fazem parte da arquitetura.
 - Nenhuma integração externa é marcada como ativa antes de OAuth/API e testes reais.
+
+- Contexto visual do Painel Mestre: ao abrir AI Marketing Pro no contexto PRODUTOR, o shell exibe identidade do Produtor/Loja Mestre em vez da identidade da loja selecionada; ao sair do contexto Produtor, a identidade da loja e restaurada.

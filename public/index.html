@@ -428,5 +428,111 @@ async function(arquivo){
 
 <script src="js/chatbot.js"></script>
 
+<script>
+// CONTEXTO_VISUAL_PRODUTOR_V1
+(function(){
+  const PRODUCER_URL = 'display_pro/produtor.html';
+  const state = { storeVisual:null, producer:false };
+
+  function byId(id){ return document.getElementById(id); }
+  function frameEl(){
+    return byId('contentFrame') || byId('mainFrame') || document.querySelector('iframe');
+  }
+
+  function readStoreVisual(){
+    if(state.producer) return;
+    const logo=byId('brandLogo');
+    state.storeVisual={
+      kicker: byId('brandKicker')?.textContent || '',
+      name: byId('brandName')?.textContent || '',
+      sub: byId('brandSub')?.textContent || '',
+      logo: logo?.getAttribute('src') || '',
+      active: byId('activeStoreName')?.textContent || '',
+      topbarSub: byId('topbarSub')?.textContent || ''
+    };
+  }
+
+  function applyProducerVisual(){
+    if(!state.storeVisual) readStoreVisual();
+    state.producer=true;
+
+    const kicker=byId('brandKicker');
+    const name=byId('brandName');
+    const sub=byId('brandSub');
+    const logo=byId('brandLogo');
+    const active=byId('activeStoreName');
+
+    if(kicker) kicker.textContent='PAINEL MESTRE • PRODUTOR';
+    if(name) name.textContent='Loja Mestre';
+    if(sub) sub.textContent='Central de administração do produtor';
+    if(logo){
+      logo.src='assets/default-logo.svg';
+      logo.alt='Provador Pro';
+    }
+    if(active) active.textContent='Produtor';
+    const topbarSub=byId('topbarSub');
+    if(topbarSub) topbarSub.textContent='Central do Produtor';
+  }
+
+  function restoreStoreVisual(){
+    if(!state.storeVisual){ state.producer=false; return; }
+    const v=state.storeVisual;
+    const kicker=byId('brandKicker');
+    const name=byId('brandName');
+    const sub=byId('brandSub');
+    const logo=byId('brandLogo');
+    const active=byId('activeStoreName');
+
+    if(kicker && v.kicker) kicker.textContent=v.kicker;
+    if(name && v.name) name.textContent=v.name;
+    if(sub && v.sub) sub.textContent=v.sub;
+    if(logo && v.logo) logo.src=v.logo;
+    if(active && v.active) active.textContent=v.active;
+    const topbarSub=byId('topbarSub');
+    if(topbarSub && v.topbarSub) topbarSub.textContent=v.topbarSub;
+    state.producer=false;
+  }
+
+  function isProducerUrl(url){
+    return String(url||'').replace(/^\.\//,'').includes(PRODUCER_URL);
+  }
+
+  function syncFromFrame(){
+    const frame=frameEl();
+    const src=frame?.getAttribute('src') || frame?.src || '';
+    if(isProducerUrl(src)){
+      setTimeout(applyProducerVisual,0);
+      setTimeout(applyProducerVisual,80);
+    }else if(state.producer){
+      restoreStoreVisual();
+    }else{
+      setTimeout(readStoreVisual,100);
+    }
+  }
+
+  document.addEventListener('click',function(ev){
+    const btn=ev.target.closest?.('[data-url]');
+    if(!btn) return;
+    const url=btn.getAttribute('data-url') || '';
+    if(isProducerUrl(url)){
+      readStoreVisual();
+      setTimeout(applyProducerVisual,0);
+      setTimeout(applyProducerVisual,100);
+    }else if(state.producer){
+      setTimeout(restoreStoreVisual,0);
+    }
+  },true);
+
+  window.addEventListener('load',function(){
+    readStoreVisual();
+    const frame=frameEl();
+    if(frame){
+      frame.addEventListener('load',syncFromFrame);
+      new MutationObserver(syncFromFrame).observe(frame,{attributes:true,attributeFilter:['src']});
+    }
+    syncFromFrame();
+  });
+})();
+</script>
 </body>
 </html>

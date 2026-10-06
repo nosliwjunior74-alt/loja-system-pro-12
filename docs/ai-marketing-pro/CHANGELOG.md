@@ -45,3 +45,7 @@ Adicionado Construtor de Sites Pro, site-preview, carregamento de dados da loja,
 - [2026-10-05 21:21] Checkout Online da Loja V1: tela publica separada do Caixa interno; customer_order pendente; preco/estoque validados no servidor; pagamento real da loja permanece para OAuth/API futura.
 
 - [2026-10-05 22:30] Provador publico do Lojista: Construtor passa a usar /provador/index.html?loja=<slug>, evitando /s/<slug> e tela de login. Checkout e Caixa preservados.
+
+- Contexto visual do Painel Mestre: ao abrir AI Marketing Pro no contexto PRODUTOR, o shell exibe identidade do Produtor/Loja Mestre em vez da identidade da loja selecionada; ao sair do contexto Produtor, a identidade da loja e restaurada.
+
+- Ajuste V1.1 do contexto visual: o subtitulo do cabecalho deixa de exibir o subtitulo da loja selecionada enquanto o AI Marketing Pro estiver em modo PRODUTOR; ao sair, o texto original da loja e restaurado.

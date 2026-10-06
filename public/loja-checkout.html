@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Checkout Online da Loja</title>
+  <link rel="stylesheet" href="/css/loja-checkout.css">
+</head>
+<body>
+  <main class="checkout-shell">
+    <header class="topbar">
+      <div class="brand">
+        <img id="storeLogo" alt="" hidden>
+        <div>
+          <span class="eyebrow">COMPRA ONLINE</span>
+          <h1 id="storeName">Sua loja</h1>
+          <p id="storeSub">Finalize seu pedido com segurança.</p>
+        </div>
+      </div>
+      <a id="backToStore" class="link-btn" href="#">Voltar à loja</a>
+    </header>
+
+    <div id="alertBox" class="alert" hidden></div>
+
+    <section class="grid">
+      <div>
+        <article class="card product-card">
+          <div class="step">1</div>
+          <h2>Seu produto</h2>
+          <div id="productBox" class="product-box">
+            <div class="loading">Carregando produto...</div>
+          </div>
+        </article>
+
+        <article class="card">
+          <div class="step">2</div>
+          <h2>Seus dados</h2>
+          <div class="form-grid">
+            <label>Nome completo *<input id="customerName" autocomplete="name"></label>
+            <label>WhatsApp *<input id="customerPhone" autocomplete="tel"></label>
+            <label>E-mail *<input id="customerEmail" type="email" autocomplete="email"></label>
+            <label>CPF (opcional)<input id="customerCpf"></label>
+          </div>
+        </article>
+
+        <article class="card">
+          <div class="step">3</div>
+          <h2>Recebimento</h2>
+          <div class="option-row">
+            <label class="choice active"><input type="radio" name="delivery" value="retirada" checked> Retirar na loja</label>
+            <label class="choice"><input type="radio" name="delivery" value="entrega"> Entrega</label>
+          </div>
+          <div id="addressFields" class="address-grid" hidden>
+            <label>CEP<input id="cep"></label>
+            <label>Endereço<input id="address"></label>
+            <label>Número<input id="number"></label>
+            <label>Bairro<input id="neighborhood"></label>
+            <label>Cidade<input id="city"></label>
+            <label>UF<input id="state" maxlength="2"></label>
+            <label class="full">Complemento<input id="complement"></label>
+          </div>
+        </article>
+
+        <article class="card">
+          <div class="step">4</div>
+          <h2>Pagamento</h2>
+          <p class="note">Nesta V1, o pedido online é criado com segurança, mas o pagamento da própria loja ainda não está conectado ao Mercado Pago/OAuth. Nenhuma cobrança real é feita nesta tela.</p>
+          <div class="payment-placeholder">
+            <strong>Pagamento online da loja: próxima etapa</strong>
+            <span>PIX e cartão serão liberados quando a conta comercial da loja estiver conectada.</span>
+          </div>
+        </article>
+      </div>
+
+      <aside class="card summary-card">
+        <h2>Resumo</h2>
+        <div id="summary"></div>
+        <button id="createOrderBtn" class="primary-btn" type="button">Criar pedido</button>
+        <p class="tiny">O estoque não é baixado nesta etapa. A baixa só deverá ocorrer após pagamento confirmado ou ação segura definida na próxima fase.</p>
+      </aside>
+    </section>
+
+    <section id="successCard" class="card success-card" hidden>
+      <h2>Pedido criado</h2>
+      <p id="successText"></p>
+      <a id="whatsappOrder" class="primary-btn as-link" href="#" target="_blank" rel="noopener">Continuar no WhatsApp da loja</a>
+    </section>
+  </main>
+
+  <script src="/js/loja-checkout.js"></script>
+</body>
+</html>

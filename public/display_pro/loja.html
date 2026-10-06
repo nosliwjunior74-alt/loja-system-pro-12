@@ -1,21 +1,101 @@
-<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Display da Loja</title><link rel="stylesheet" href="style.css"><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#ff2f7d"></head><body>
-<div class="topo"><h1 data-brand-name>Sua Loja</h1><p data-brand-sub>Display da loja</p></div>
-<div class="container">
-  <div class="card center">
-    <div class="logo-box"><img id='displayBrandLogo' src='../assets/default-logo.svg' alt='Logo da loja' style='max-width:72px;max-height:72px;object-fit:contain'></div>
-    <h2>Display da Loja</h2>
-    <p>Área visual da loja para campanhas, biblioteca e disparo social.</p>
-    <div class="barra" style="justify-content:center">
-      <button class="sec" onclick="ir('videos.html')">Biblioteca de Campanhas</button>
-      <button class="sec" onclick="ir('social.html')">Disparo Social</button>
-      <button class="sec" onclick="ir('agenda.html')">Calendário</button>
-      <button class="sec" onclick="ir('manual-loja.html')">Manual</button>
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>AI Marketing Pro — Loja</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="manifest" href="manifest.webmanifest">
+  <meta name="theme-color" content="#ff2f7d">
+</head>
+<body class="amp-body">
+  <header class="amp-topbar amp-store-topbar">
+    <div>
+      <div class="amp-kicker">DISPLAY PRO SYSTEM</div>
+      <h1><span data-brand-name>Sua Loja</span> · AI Marketing Pro</h1>
+      <p>Marketing e vendas da sua loja, separado das outras lojas e do Painel Mestre.</p>
     </div>
-    <div class="info">Esta tela é exclusiva da loja do cliente. O menu do produtor não aparece aqui.</div>
-  </div>
-</div>
-<div class="rodape"><span data-brand-name>Sua Loja</span></div>
-<script src="app.js"></script>
-<script src="client-brand.js"></script>
-<script src="../shared/brand-sync.js"></script>
-</body></html>
+    <div class="amp-context amp-context-store">LOJISTA</div>
+  </header>
+
+  <main class="amp-shell">
+    <section class="amp-summary-grid">
+      <article class="amp-summary amp-summary-primary"><span>Páginas de Vendas</span><strong>Central</strong><small>Venda produtos e ofertas da própria loja.</small></article>
+      <article class="amp-summary"><span>Campanhas</span><strong>Base ativa</strong><small>Biblioteca, calendário e disparo social preservados.</small></article>
+      <article class="amp-summary"><span>Funil Inteligente</span><strong>Estrutura</strong><small>Leads, etapas e recuperação exclusivos desta loja.</small></article>
+      <article class="amp-summary"><span>Analytics</span><strong>Planejado</strong><small>Métricas exclusivas desta loja.</small></article>
+    </section>
+
+    <section class="amp-section amp-featured">
+      <div class="amp-section-title">
+        <div><span class="amp-kicker">PRIORIDADE</span><h2>Páginas de Vendas da Loja</h2><p>Crie ofertas, landing pages e páginas para vender os produtos e serviços desta loja.</p></div>
+        <a class="amp-btn" href="paginas-vendas.html?context=loja">Abrir Páginas de Vendas</a>
+      </div>
+      <div class="amp-mini-grid"><div>Landing Pages</div><div>Páginas de Vendas</div><div>Editor Visual</div><div>Templates</div><div>Produtos / Checkout</div><div>Métricas</div></div>
+    </section>
+
+    <section class="amp-section">
+      <div class="amp-section-title"><div><span class="amp-kicker">MÓDULOS</span><h2>Marketing e Vendas da Loja</h2><p>O painel principal fica limpo; opções avançadas ficam em gavetas.</p></div></div>
+      <div class="amp-module-grid">
+        <article class="amp-module amp-active"><div class="amp-module-head"><span>📣 Marketing</span><b>BASE</b></div><p>Páginas, campanhas, SEO, copy e templates da loja.</p><a href="paginas-vendas.html?context=loja">Abrir núcleo</a></article>
+        <article class="amp-module amp-active"><div class="amp-module-head"><span>📱 Redes Sociais</span><b>PARCIAL</b></div><p>Conteúdo, calendário e disparos da loja.</p><div class="amp-actions"><a href="social.html">Disparo atual</a><a href="agenda.html">Calendário</a></div></article>
+        <article class="amp-module"><div class="amp-module-head"><span>🎯 Tráfego Pago + Orgânico</span><b>FASE 3</b></div><p>Google, Meta, TikTok, Pinterest e LinkedIn Ads.</p></article>
+        <article class="amp-module amp-active"><div class="amp-module-head"><span>🤝 Comercial / CRM</span><b>ESTRUTURA</b></div><p>Leads, clientes, pipeline, etapas do funil, remarketing e histórico desta loja.</p><a href="funil.html?context=loja">Abrir Funil Inteligente</a></article>
+        <article class="amp-module"><div class="amp-module-head"><span>💬 Atendimento</span><b>PLANEJADO</b></div><p>Chatbot IA, WhatsApp, e-mail e assistente comercial.</p></article>
+        <article class="amp-module"><div class="amp-module-head"><span>⚙️ Automações</span><b>PLANEJADO</b></div><p>WhatsApp, e-mail, SMS, fluxos e APIs desta loja.</p></article>
+        <article class="amp-module"><div class="amp-module-head"><span>🛒 Vendas</span><b>PLANEJADO</b></div><p>Produtos físicos/digitais, checkout, cupons, upsell, downsell e order bump.</p></article>
+        <article class="amp-module"><div class="amp-module-head"><span>🧩 Afiliados</span><b>PLANEJADO</b></div><p>Afiliados e comissões da própria loja.</p></article>
+        <article class="amp-module"><div class="amp-module-head"><span>💰 Financeiro</span><b>PLANEJADO</b></div><p>Receita, despesas, lucro, caixa, CAC, LTV e ROI da loja.</p></article>
+        <article class="amp-module"><div class="amp-module-head"><span>📊 Analytics</span><b>PLANEJADO</b></div><p>Conversões, relatórios e desempenho da loja.</p></article>
+        <article class="amp-module"><div class="amp-module-head"><span>✨ Inteligência Artificial</span><b>PLANEJADO</b></div><p>Conteúdo, atendimento, anúncios e recomendações estratégicas.</p></article>
+        <article class="amp-module amp-active"><div class="amp-module-head"><span>🌐 Construtor de Sites Pro</span><b>FASE 4</b></div><p>Crie o site da loja usando cadastro, produtos, checkout, WhatsApp e Provador já existentes.</p><a href="site-builder.html?context=loja">Criar meu site</a></article>
+      </div>
+    </section>
+
+
+    <section class="amp-section amp-featured">
+      <div class="amp-section-title">
+        <div><span class="amp-kicker">FASE 2</span><h2>Funil Inteligente da Loja</h2><p>Base visual/documental para capturar leads, identificar onde pararam e preparar recuperação por WhatsApp/e-mail, mantendo os dados isolados por loja.</p></div>
+        <a class="amp-btn" href="funil.html?context=loja">Abrir Funil</a>
+      </div>
+      <div class="amp-mini-grid"><div>Captura de Leads</div><div>Etapas</div><div>Pixel / Tags</div><div>Remarketing</div><div>Recuperação</div><div>Métricas</div></div>
+    </section>
+
+    <section class="amp-section amp-featured"><div class="amp-section-title"><div><span class="amp-kicker">FASE 3</span><h2>Anúncios, Orgânico e Creative Studio</h2><p>Estratégia por plataforma, localização, etapa do funil, redução de cliques irrelevantes e criação visual integrada.</p></div><div class="amp-actions"><a class="amp-btn" href="trafego.html?context=loja">Central de Anúncios</a><a class="amp-btn amp-btn-secondary" href="creative-studio.html?context=loja">Creative Studio</a></div></div></section>
+
+    <section class="amp-section amp-featured">
+      <div class="amp-section-title">
+        <div><span class="amp-kicker">FASE 4</span><h2>Construtor de Sites Pro</h2><p>Gere uma base de site para o Loja, conectada ao Provador, WhatsApp qualificado, funil e checkout existente.</p></div>
+        <a class="amp-btn" href="site-builder.html?context=loja">Abrir Construtor de Sites</a>
+      </div>
+      <div class="amp-mini-grid"><div>Site automático</div><div>Carrossel</div><div>WhatsApp</div><div>Provador</div><div>Checkout</div><div>Domínio / SEO</div></div>
+    </section>
+
+    <details class="amp-drawer">
+      <summary>📚 Central de Ajuda, Vídeos e PDFs <span>abrir gaveta</span></summary>
+      <div class="amp-drawer-content">
+        <p>Ajuda contextual por recurso da loja. Cada item terá manual passo a passo, vídeo tutorial e PDF. Vídeos ainda não gravados permanecem claramente como “Em preparação”.</p>
+        <div class="amp-link-grid"><a href="ajuda.html?context=loja">Abrir Central de Ajuda</a></div>
+      </div>
+    </details>
+
+    <details class="amp-drawer">
+      <summary>🧰 Ferramentas atuais da loja <span>abrir gaveta</span></summary>
+      <div class="amp-drawer-content amp-link-grid"><a href="videos.html">Biblioteca de Campanhas</a><a href="social.html">Disparo Social</a><a href="agenda.html">Calendário</a><a href="manual-loja.html">Manual da Loja</a></div>
+    </details>
+
+    <details class="amp-drawer">
+      <summary>🔌 Integrações da loja <span>abrir gaveta</span></summary>
+      <div class="amp-drawer-content amp-tag-list"><span>Provador Pro IA</span><span>WhatsApp</span><span>Instagram</span><span>Facebook</span><span>TikTok</span><span>Google</span><span>Mercado Pago</span><span>PIX</span></div>
+    </details>
+
+    <details class="amp-drawer">
+      <summary>🔒 Separação e privacidade <span>abrir gaveta</span></summary>
+      <div class="amp-drawer-content"><p>Este contexto pertence à loja ativa. Campanhas, leads, clientes, páginas, métricas e integrações devem ser isolados por loja. A Fase 1 não mistura dados e não ativa conectores futuros antes da implementação e validação.</p></div>
+    </details>
+  </main>
+  <footer class="amp-footer"><span data-brand-name>Sua Loja</span> · AI Marketing Pro · Fase 4</footer>
+  <script src="client-brand.js"></script>
+  <script src="../shared/brand-sync.js"></script>
+</body>
+</html>

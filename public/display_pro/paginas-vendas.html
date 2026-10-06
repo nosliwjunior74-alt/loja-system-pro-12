@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>AI Marketing Pro — Páginas de Vendas</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="amp-body">
+  <header class="amp-topbar">
+    <div><div class="amp-kicker">AI MARKETING PRO</div><h1>Páginas de Vendas</h1><p id="pvSubtitle">Núcleo de páginas, ofertas e conversão.</p></div>
+    <div id="pvContext" class="amp-context">CONTEXTO</div>
+  </header>
+  <main class="amp-shell">
+    <div class="amp-back"><a id="pvBack" href="index.html">← Voltar ao Hub</a></div>
+    <section class="amp-section amp-featured">
+      <div class="amp-section-title"><div><span class="amp-kicker">NÚCLEO OBRIGATÓRIO</span><h2>Da atração até a venda</h2><p>A arquitetura está preparada nesta fase. Recursos ainda não implementados ficam marcados como Planejado.</p></div></div>
+      <div class="amp-module-grid">
+        <article class="amp-module"><div class="amp-module-head"><span>🧲 Landing Pages</span><b>PLANEJADO</b></div><p>Captura de leads, campanhas e formulários.</p></article>
+        <article class="amp-module"><div class="amp-module-head"><span>🛍️ Páginas de Vendas</span><b>PLANEJADO</b></div><p>Oferta, prova, benefícios, preço, CTA e checkout.</p></article>
+        <article class="amp-module"><div class="amp-module-head"><span>🧱 Editor Visual</span><b>PLANEJADO</b></div><p>Blocos reutilizáveis e edição responsiva sem poluir o painel.</p></article>
+        <article class="amp-module"><div class="amp-module-head"><span>🎨 Templates</span><b>PLANEJADO</b></div><p>Biblioteca de modelos por objetivo e segmento.</p></article>
+        <article class="amp-module"><div class="amp-module-head"><span>💳 Ofertas / Checkout</span><b>PLANEJADO</b></div><p>Produtos, planos, cupons, order bump, upsell e downsell.</p></article>
+        <article class="amp-module"><div class="amp-module-head"><span>📈 Conversão</span><b>PLANEJADO</b></div><p>Visitas, leads, vendas, taxa de conversão, CAC e ROI.</p></article>
+      </div>
+    </section>
+
+    <details class="amp-drawer"><summary>⚙️ Configurações da página <span>abrir gaveta</span></summary><div class="amp-drawer-content"><p>Domínio, SEO, pixel, identidade visual, integrações e scripts serão concentrados aqui quando o Editor Visual for implementado.</p></div></details>
+    <details class="amp-drawer"><summary>🔁 Funil Inteligente e recuperação <span>abrir gaveta</span></summary><div class="amp-drawer-content"><p>Captura de leads, etapas, pixel/tags, remarketing, carrinho/checkout abandonado, recuperação e automações ficarão ligados a cada página sem ocupar a tela principal.</p><div class="amp-link-grid"><a id="pvFunnel" href="funil.html?context=loja">Abrir Funil Inteligente</a></div></div></details>
+    <details class="amp-drawer"><summary>📊 Métricas avançadas <span>abrir gaveta</span></summary><div class="amp-drawer-content"><p>Relatórios detalhados e filtros ficarão recolhidos por padrão para preservar uma interface limpa.</p></div></details>
+<details class="amp-drawer"><summary>📚 Manual, vídeo e PDF <span>abrir gaveta</span></summary><div class="amp-drawer-content"><p>Ajuda contextual desta área, com manual passo a passo, espaço para vídeo específico e PDF.</p><div class="amp-link-grid"><a id="pvHelp" href="ajuda.html?context=loja#paginas-vendas">Abrir ajuda desta área</a><a href="manuals/PAGINAS_DE_VENDAS.pdf" target="_blank">Abrir PDF</a></div></div></details>
+  </main>
+<script>
+(function(){
+  const q=new URLSearchParams(location.search); const c=q.get('context')==='produtor'?'produtor':'loja';
+  const badge=document.getElementById('pvContext'), sub=document.getElementById('pvSubtitle'), back=document.getElementById('pvBack');
+  if(c==='produtor'){badge.textContent='PRODUTOR';badge.classList.add('amp-context-producer');sub.textContent='Páginas para vender Provador Pro, planos, módulos e ofertas do Produtor.';back.href='produtor.html';}
+  else{badge.textContent='LOJISTA';badge.classList.add('amp-context-store');sub.textContent='Páginas para vender produtos, serviços e ofertas da loja ativa.';back.href='loja.html';}
+  const funnel=document.getElementById('pvFunnel'), help=document.getElementById('pvHelp'); if(funnel)funnel.href='funil.html?context='+c; if(help)help.href='ajuda.html?context='+c+'#paginas-vendas';
+})();
+</script>
+</body>
+</html>

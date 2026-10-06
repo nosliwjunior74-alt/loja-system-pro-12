@@ -1,0 +1,63 @@
+<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Tráfego e Publicação — AI Marketing Pro</title><link rel="stylesheet" href="style.css"></head><body class="amp-body">
+<header class="amp-topbar"><div><div class="amp-kicker">AI MARKETING PRO</div><h1>Tráfego Pago + Orgânico</h1><p>Planejar, gerar, revisar e preparar publicação por canal, com estratégia por etapa do funil.</p></div><div id="ctx" class="amp-context">CONTEXTO</div></header>
+<main class="amp-shell"><a class="amp-back" id="back" href="#">← Voltar ao Hub</a>
+<section class="amp-summary-grid"><article class="amp-summary amp-summary-primary"><span>Fluxo</span><strong>Gerar → Revisar → Publicar</strong><small>Publicação real exige conta autorizada.</small></article><article class="amp-summary"><span>Políticas</span><strong>Validador local</strong><small>Snapshot + referência oficial; sincronização externa pendente.</small></article><article class="amp-summary"><span>Funil</span><strong>Segmentação</strong><small>Visitou, Lead, Oferta, Checkout, Pendente, Comprou.</small></article><article class="amp-summary"><span>Local</span><strong>Geográfico</strong><small>Cidade/bairro/raio e Perfil da Empresa quando conectado.</small></article></section>
+<section class="amp-section amp-featured"><div class="amp-section-title"><div><span class="amp-kicker">ASSISTENTE</span><h2>Gerador de estratégia e anúncio</h2><p>Preencha o essencial. Opções avançadas ficam nas gavetas.</p></div><span class="amp-pill">FASE 3 · LOCAL</span></div>
+<div class="amp-form-grid"><label>Plataforma<select id="platform"><option value="google">Google Ads / Perfil da Empresa</option><option value="meta">Meta / Instagram / Facebook</option><option value="tiktok">TikTok</option><option value="pinterest">Pinterest</option><option value="linkedin">LinkedIn</option></select></label><label>Modo<select id="mode"><option value="pago">Tráfego pago</option><option value="organico">Orgânico</option></select></label><label>Objetivo<select id="goal"><option>Aquisição</option><option>Leads</option><option>Visitas à loja</option><option>Vendas</option><option>Remarketing</option><option>Recuperação</option></select></label><label>Etapa do lead<select id="stage"><option value="visitou">Visitou</option><option value="lead">Lead capturado</option><option value="oferta">Viu oferta</option><option value="checkout">Iniciou checkout</option><option value="pendente">Pagamento/checkout pendente</option><option value="comprou">Comprou</option></select></label><label>Produto / oferta<input id="product" placeholder="Ex.: Plano Premium ou Vestido Midi"></label><label>Benefício principal<input id="benefit" placeholder="Ex.: experimentar looks antes de comprar"></label><label>CTA<input id="cta" value="Saiba mais"></label><label>Página de destino<input id="destination" placeholder="https://..."></label></div>
+<details class="amp-drawer"><summary>📍 Estratégia local e redução de cliques desperdiçados <span>abrir gaveta</span></summary><div class="amp-drawer-content"><div class="amp-form-grid"><label>Campanha local?<select id="local"><option value="nao">Não</option><option value="sim">Sim</option></select></label><label>Cidade / bairro / região<input id="location" placeholder="Ex.: São Paulo - Mooca"></label><label>Raio inicial (km)<input id="radius" type="number" min="1" value="10"></label><label>Orçamento inicial<input id="budget" placeholder="Ex.: R$ 30/dia"></label></div><label>Palavras-chave negativas / exclusões<textarea id="negativeKeywords" rows="3" placeholder="grátis, emprego, curso, atacado..."></textarea></label><p class="amp-note">O sistema sugere filtros para reduzir tráfego irrelevante, mas orçamento, público e exclusões devem ser revisados antes de publicar.</p></div></details>
+<div class="amp-actions amp-actions-large"><button id="generate" class="amp-btn">1 · Gerar estratégia e anúncio</button><button id="review" class="amp-btn amp-btn-secondary" disabled>2 · Revisar / Validar</button><button id="publish" class="amp-btn amp-btn-success" disabled>3 · Enviar / Publicar</button></div></section>
+<section id="strategyBox" class="amp-section" hidden><div class="amp-section-title"><div><span class="amp-kicker">ESTRATÉGIA</span><h2>Plano sugerido</h2></div></div><ol id="strategy" class="amp-plan"></ol></section>
+<section id="adBox" class="amp-section" hidden><div class="amp-section-title"><div><span class="amp-kicker">RASCUNHO</span><h2>Prévia do anúncio</h2></div><span id="adStatus" class="amp-pill">RASCUNHO</span></div><div class="amp-preview-card"><h3 id="adTitle"></h3><p id="adText"></p><small id="stageNote"></small></div><div id="validation" class="amp-validation"></div></section>
+<details class="amp-drawer"><summary>🔌 Contas e conectores <span>abrir gaveta</span></summary><div class="amp-drawer-content"><div class="amp-connector-grid" id="connectors"></div><p class="amp-note">Nesta fase nenhuma conta externa é conectada automaticamente. OAuth/API real será implementado por canal e exige autorização do titular.</p></div></details>
+<details class="amp-drawer"><summary>🛡️ Políticas, privacidade e atualização <span>abrir gaveta</span></summary><div class="amp-drawer-content"><p>O validador local reduz riscos, mas não garante aprovação. A decisão final é da plataforma. Antes de publicação real, o projeto prevê sincronização/versionamento das regras oficiais e consentimento/LGPD para rastreamento.</p><div id="policyRefs" class="amp-link-grid"></div></div></details>
+<details class="amp-drawer"><summary>📚 Manual, vídeo e PDF <span>abrir gaveta</span></summary><div class="amp-drawer-content amp-link-grid"><a href="manuals/TRAFEGO_PAGO_ORGANICO.pdf" target="_blank">PDF Tráfego Pago + Orgânico</a><a href="manuals/ESTRATEGIA_LOCAL_GOOGLE.pdf" target="_blank">PDF Estratégia Local</a><a href="manuals/VALIDADOR_POLITICAS.pdf" target="_blank">PDF Validador</a><a href="ajuda.html">Central de Ajuda</a><span class="amp-disabled">🎥 Vídeos: Em preparação</span></div></details></main>
+<script src="ai-marketing-core.js"></script><script>
+(async()=>{
+  await AMP.resolveStore();
+  const c=AMP.state.context;
+  const el=id=>document.getElementById(id);
+  const refs={
+    ctx:el('ctx'),back:el('back'),connectors:el('connectors'),policyRefs:el('policyRefs'),
+    platform:el('platform'),mode:el('mode'),goal:el('goal'),stage:el('stage'),product:el('product'),benefit:el('benefit'),cta:el('cta'),destination:el('destination'),
+    local:el('local'),locationInput:el('location'),radius:el('radius'),budget:el('budget'),negativeKeywords:el('negativeKeywords'),
+    generate:el('generate'),review:el('review'),publish:el('publish'),strategyBox:el('strategyBox'),strategy:el('strategy'),adBox:el('adBox'),
+    adStatus:el('adStatus'),adTitle:el('adTitle'),adText:el('adText'),stageNote:el('stageNote'),validationBox:el('validation')
+  };
+  refs.ctx.textContent=c==='produtor'?'PRODUTOR':'LOJISTA';
+  refs.ctx.className='amp-context '+(c==='produtor'?'amp-context-producer':'amp-context-store');
+  refs.back.href=(c==='produtor'?'produtor.html':'loja.html');
+  const connectors=['Google Ads / Perfil da Empresa','Meta / Instagram / Facebook','TikTok','Pinterest','LinkedIn'];
+  connectors.forEach(x=>refs.connectors.insertAdjacentHTML('beforeend',`<div class="amp-connector"><strong>${x}</strong><span>Conta não conectada</span><button disabled>Conectar (próxima etapa)</button></div>`));
+  ['google','meta','tiktok','pinterest','linkedin'].forEach(p=>{const x=AMP.policySnapshot(p);refs.policyRefs.insertAdjacentHTML('beforeend',`<a href="${x.ref}" target="_blank" rel="noopener">Regras oficiais · ${x.label}</a>`)});
+  let payload=null,ad=null,validationResult=null;
+  function data(){return {
+    platform:refs.platform.value,mode:refs.mode.value,goal:refs.goal.value,stage:refs.stage.value,
+    product:refs.product.value.trim(),benefit:refs.benefit.value.trim(),cta:refs.cta.value.trim(),destination:refs.destination.value.trim(),
+    local:refs.local.value,location:refs.locationInput.value.trim(),radius:refs.radius.value,budget:refs.budget.value.trim(),negativeKeywords:refs.negativeKeywords.value.trim()
+  }}
+  refs.generate.addEventListener('click',()=>{
+    try{
+      payload=data();
+      ad=AMP.generateAd(payload);
+      const strat=AMP.buildStrategy(payload);
+      refs.strategy.innerHTML=strat.map(x=>`<li>${AMP.esc(x)}</li>`).join('');
+      refs.adTitle.textContent=ad.title; refs.adText.textContent=ad.text; refs.stageNote.textContent='Funil: '+ad.stageNote;
+      refs.strategyBox.hidden=false; refs.adBox.hidden=false; refs.review.disabled=false; refs.publish.disabled=true;
+      refs.validationBox.innerHTML=''; refs.adStatus.textContent='RASCUNHO';
+      AMP.save('draft-ad',{payload,ad,strategy:strat});
+      refs.strategyBox.scrollIntoView({behavior:'smooth',block:'start'});
+    }catch(err){ console.error('AI Marketing Pro - erro ao gerar:',err); alert('Não foi possível gerar o anúncio. Erro: '+(err?.message||err)); }
+  });
+  refs.review.addEventListener('click',()=>{
+    if(!ad)return;
+    validationResult=AMP.validateAd(payload,ad);
+    let html=`<h3>${validationResult.ok?'✅ Validação estrutural aprovada':'⛔ Ajustes obrigatórios'}</h3>`;
+    if(validationResult.issues.length)html+=`<ul>${validationResult.issues.map(x=>`<li>${AMP.esc(x)}</li>`).join('')}</ul>`;
+    if(validationResult.warnings.length)html+=`<h4>Atenções</h4><ul>${validationResult.warnings.map(x=>`<li>${AMP.esc(x)}</li>`).join('')}</ul>`;
+    html+=`<h4>Checklist ${AMP.esc(validationResult.label)}</h4><ul>${validationResult.checks.map(x=>`<li>${AMP.esc(x)}</li>`).join('')}</ul><p><a href="${validationResult.ref}" target="_blank">Abrir referência oficial</a></p>`;
+    refs.validationBox.innerHTML=html; refs.adStatus.textContent=validationResult.ok?'REVISADO':'AJUSTAR'; refs.publish.disabled=!validationResult.ok;
+    AMP.save('reviewed-ad',{payload,ad,validation:validationResult});
+  });
+  refs.publish.addEventListener('click',()=>{alert('Publicação real bloqueada nesta fase: conecte e autorize a conta da plataforma por OAuth/API. O rascunho revisado foi preservado.');});
+})();
+</script></body></html>

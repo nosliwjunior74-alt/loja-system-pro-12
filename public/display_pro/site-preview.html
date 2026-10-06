@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Prévia do Site</title>
+  <style>
+    :root{--brand:#7c3aed;--brand2:#4c1d95;--ink:#111827;--muted:#667085;--bg:#f8fafc;--card:#fff;--radius:24px}
+    *{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,Arial,sans-serif;background:var(--bg);color:var(--ink)}
+    .nav{display:flex;justify-content:space-between;align-items:center;padding:16px clamp(18px,5vw,70px);background:#fff;position:sticky;top:0;z-index:5;border-bottom:1px solid #eee}.brand{display:flex;align-items:center;gap:12px;font-weight:800}.brand img{width:42px;height:42px;object-fit:contain;border-radius:10px}.nav a{color:var(--ink);text-decoration:none;margin-left:16px}.btn{display:inline-flex;align-items:center;justify-content:center;padding:13px 18px;border-radius:12px;background:var(--brand);color:#fff!important;text-decoration:none;font-weight:800;border:0;cursor:pointer}.btn.alt{background:#fff;color:var(--brand)!important;border:2px solid var(--brand)}
+    .hero{padding:70px clamp(18px,7vw,100px);display:grid;grid-template-columns:1.2fr .8fr;gap:36px;align-items:center;background:linear-gradient(135deg,#fff,#f5efff)}.hero h1{font-size:clamp(36px,6vw,72px);line-height:1;margin:0 0 18px}.hero p{font-size:20px;color:var(--muted);max-width:700px}.hero-card{background:linear-gradient(145deg,var(--brand),var(--brand2));color:#fff;border-radius:28px;padding:36px;min-height:280px;display:flex;flex-direction:column;justify-content:center}.hero-actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:26px}
+    .section{padding:56px clamp(18px,6vw,90px)}.section h2{font-size:32px;margin:0 0 12px}.section p.lead{color:var(--muted);margin-top:0}.products{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(230px,280px);overflow-x:auto;gap:16px;padding-bottom:10px;scroll-snap-type:x proximity}.product{background:#fff;border:1px solid #ece7f5;border-radius:18px;padding:16px;scroll-snap-align:start;box-shadow:0 8px 25px rgba(29,20,50,.06)}.product img{width:100%;height:190px;object-fit:cover;border-radius:12px;background:#f1edf7}.product h3{margin:12px 0 6px}.price{font-weight:900;color:var(--brand)}
+    .features{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}.feature{background:#fff;border:1px solid #ece7f5;border-radius:18px;padding:22px}.trust{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:24px}.trust div{background:#fff;border:1px solid #ece7f5;border-radius:16px;padding:18px;text-align:center}.testimonial{background:#fff;border:1px solid #ece7f5;border-radius:18px;padding:22px}.faq details{background:#fff;border:1px solid #ece7f5;border-radius:14px;padding:14px 16px;margin:10px 0}.faq summary{font-weight:800;cursor:pointer}.footer{padding:32px clamp(18px,6vw,90px);background:#15111f;color:#fff;margin-top:30px}.wa{position:fixed;right:24px;bottom:24px;border-radius:999px;background:#25D366;color:white;border:0;font-weight:900;padding:16px 20px;cursor:pointer;box-shadow:0 10px 30px rgba(0,0,0,.2);z-index:10}
+    .modal{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;padding:20px;z-index:20}.modal.show{display:flex}.chat{width:min(520px,100%);background:#fff;border-radius:20px;padding:22px;max-height:88vh;overflow:auto}.chat h3{margin-top:0}.bubble{padding:12px 14px;border-radius:14px;background:#f2edf9;margin:8px 0}.bubble.me{background:#e9fff0;margin-left:40px}.options{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0}.options button{border:1px solid #ddd;background:#fff;padding:10px 12px;border-radius:999px;cursor:pointer}.chat input{width:100%;padding:12px;border:1px solid #ddd;border-radius:10px}.chat .actions{display:flex;gap:10px;margin-top:16px}.tiny{font-size:12px;color:#777}
+    @media(max-width:800px){.hero{grid-template-columns:1fr}.features,.trust{grid-template-columns:1fr}.nav .links{display:none}} body.tpl-boutique .hero{background:linear-gradient(135deg,#fff8fb,#f7efff)} body.tpl-boutique .hero h1{font-family:Georgia,serif;font-weight:600} body.tpl-minimal .hero{background:#fff} body.tpl-minimal .hero-card{background:#111827} body.tpl-modern .hero{background:radial-gradient(circle at 80% 20%,#ede9fe,transparent 28%),linear-gradient(135deg,#fff,#f8fafc)}
+  </style>
+</head>
+<body>
+  <nav class="nav"><div class="brand"><img id="logo" hidden><span id="brand">Sua Marca</span></div><div class="links"><a href="#produtos">Produtos</a><a id="provadorTop" href="#">Provador</a><button class="btn" id="buyTop">Comprar</button></div></nav>
+  <section class="hero"><div><div style="font-weight:900;color:var(--brand);letter-spacing:.12em">SITE GERADO PELO CONSTRUTOR PRO</div><h1 id="heroName">Sua marca pronta para vender</h1><p id="heroTagline">Seu site já nasce conectado ao marketing, funil, WhatsApp, checkout e Provador.</p><div class="hero-actions"><a class="btn" id="provadorBtn" href="#">Experimentar no Provador</a><button class="btn alt" id="buyBtn">Comprar agora</button></div></div><div class="hero-card"><h2>Atendimento inteligente</h2><p>IA + respostas programadas para qualificar o interesse e encaminhar para o comercial ou vendedor com contexto.</p><button class="btn alt" id="heroWa">Falar no WhatsApp</button></div></section>
+  <section class="section" id="produtos"><h2>Produtos e ofertas em destaque</h2><p class="lead">Carrossel conectado aos dados da loja quando disponíveis.</p><div class="products" id="products"></div></section>
+  <section class="section"><h2>Uma experiência completa</h2><div class="features"><div class="feature"><h3>👗 Provador integrado</h3><p>Leve o visitante direto para experimentar os produtos da própria loja.</p></div><div class="feature"><h3>💬 WhatsApp qualificado</h3><p>O cliente responde antes e o vendedor recebe um resumo pronto.</p></div><div class="feature"><h3>🛒 Checkout existente</h3><p>O site aponta para o checkout já usado pelo contexto, sem criar sistema paralelo.</p></div></div></section>
+  <section class="section" id="socialProof"><h2>Confiança para decidir</h2><p class="lead">Elementos de prova social e segurança que podem ser personalizados no editor.</p><div class="trust"><div><b>✓ Atendimento humano</b><p>IA ajuda, mas o cliente pode falar com uma pessoa.</p></div><div><b>✓ Checkout integrado</b><p>Fluxo de compra reaproveita o sistema existente.</p></div><div><b>✓ Experiência responsiva</b><p>Celular, tablet e computador.</p></div><div><b>✓ Funil conectado</b><p>Marketing e vendas no mesmo ecossistema.</p></div></div><div class="testimonial" style="margin-top:18px"><strong>Espaço para depoimentos reais</strong><p>O Produtor ou Lojista poderá adicionar avaliações, resultados e provas sociais verificáveis.</p></div></section>
+  <section class="section faq" id="faq"><h2>Perguntas frequentes</h2><details><summary>Como funciona?</summary><p>O site apresenta a oferta e encaminha o visitante para o fluxo correto: Provador, WhatsApp ou checkout.</p></details><details><summary>Posso falar com uma pessoa?</summary><p>Sim. O atendimento inteligente sempre pode oferecer transferência para o comercial ou vendedor.</p></details><details><summary>O pagamento é seguro?</summary><p>O site reutiliza o checkout já existente no sistema, respeitando o contexto do Produtor ou da Loja.</p></details></section>
+  <footer class="footer"><strong id="footBrand">Sua Marca</strong><div id="domainText" class="tiny"></div></footer>
+  <button class="wa" id="waFloat">💬 WhatsApp</button>
+  <div class="modal" id="waModal"><div class="chat"><h3>Atendimento rápido</h3><div id="chatBody"></div><div id="chatControls"></div><div class="actions"><button class="btn alt" id="closeWa">Fechar</button></div><p class="tiny">Ao continuar, você será encaminhado ao WhatsApp humano com o resumo das respostas. Respeite consentimento e privacidade.</p></div></div>
+<script>
+(() => {
+  const $=id=>document.getElementById(id); let c={};
+
+  function readFallback(){
+    try{return JSON.parse(localStorage.getItem('amp_site_builder_active_v1')||'{}')}catch(_){return {}}
+  }
+
+  function renderConfig(next){
+    c = next && typeof next === 'object' ? next : {};
+    document.body.className = '';
+    document.documentElement.style.setProperty('--brand',c.color||'#7c3aed');
+    document.body.classList.add('tpl-'+(c.template||'premium'));
+    const sec=c.sections||{};
+  $('brand').textContent=c.name||'Sua Marca'; $('footBrand').textContent=c.name||'Sua Marca'; $('heroName').textContent=c.name||'Sua marca pronta para vender'; $('heroTagline').textContent=c.tagline||'Seu site conectado ao marketing e vendas.';
+  if(c.logo){$('logo').src=c.logo;$('logo').hidden=false}
+  $('domainText').textContent=c.domain?`Domínio desejado: ${c.domain}`:(c.subdomain?`Subdomínio: ${c.subdomain}`:'Prévia local - domínio ainda não publicado');
+  const prov=c.provadorUrl||'#', checkout=c.checkoutUrl||'#'; $('provadorBtn').href=prov;$('provadorTop').href=prov;
+  const buy=(product=null)=>{
+    if(!checkout||checkout==='#'){alert('Configure a rota de checkout no construtor.');return;}
+    let target=checkout;
+    if(c.context==='loja' && product){
+      try{
+        const u=new URL(checkout,location.href);
+        if(c.storeSlug) u.searchParams.set('loja',String(c.storeSlug));
+        u.searchParams.set('ppPosAutoAdd','1');
+        if(product.id) u.searchParams.set('ppPosItemId',String(product.id));
+        if(product.sku) u.searchParams.set('ppPosSku',String(product.sku));
+        if(product.barcode) u.searchParams.set('ppPosBarcode',String(product.barcode));
+        if(product.name) u.searchParams.set('ppPosName',String(product.name));
+        target=u.href;
+      }catch(_){}
+    }
+    window.open(target,'_blank');
+  };
+  $('buyBtn').textContent=c.buyLabel||'Comprar agora';$('buyBtn').onclick=()=>buy();$('buyTop').onclick=()=>buy();
+  const products=Array.isArray(c.products)?c.products:[]; const list=products.length?products.slice(0,12):[{name:c.context==='produtor'?'Plano Provador Pro':'Produto em destaque',price:'',image:''},{name:c.context==='produtor'?'Módulos adicionais':'Nova coleção',price:'',image:''},{name:'Oferta especial',price:'',image:''}];
+  if(sec.products===false) document.getElementById('produtos').style.display='none'; if(sec.benefits===false) document.querySelector('.features')?.closest('.section')?.style.setProperty('display','none'); if(sec.socialProof===false) document.getElementById('socialProof').style.display='none'; if(sec.faq===false) document.getElementById('faq').style.display='none'; if(sec.whatsapp===false){document.getElementById('waFloat').style.display='none';document.getElementById('heroWa').style.display='none';}
+  $('products').innerHTML=list.map((p,i)=>`<article class="product">${p.image?`<img src="${String(p.image).replace(/"/g,'&quot;')}" alt="">`:`<div style="height:190px;border-radius:12px;background:linear-gradient(135deg,#eee7ff,#faf8ff);display:grid;place-items:center;font-size:48px">🛍️</div>`}<h3>${String(p.name||'Produto')}</h3>${p.price!==''?`<div class="price">R$ ${String(p.price).replace('.',',')}</div>`:''}<button class="btn" style="margin-top:12px;width:100%" onclick="window.__siteBuyByIndex(${i})">${c.buyLabel||'Comprar agora'}</button></article>`).join('');
+  window.__siteBuyByIndex=i=>buy(list[Number(i)]||null);
+  const modal=$('waModal'), body=$('chatBody'), controls=$('chatControls'); let answers={};
+  const steps=[{k:'interest',q:c.waQuestion||'O que você está procurando hoje?',opts:c.context==='produtor'?['Quero conhecer o Provador Pro','Quero ver planos','Quero uma demonstração','Quero falar com o comercial']:['Quero ver um produto','Quero saber tamanho/preço','Quero experimentar no provador','Quero falar com vendedor']},{k:'stage',q:'Em que momento você está?',opts:['Só pesquisando','Comparando opções','Quero comprar em breve','Quero comprar agora']},{k:'name',q:'Qual é o seu nome?',input:true}]; let step=0;
+  function bubble(t,me=false){body.insertAdjacentHTML('beforeend',`<div class="bubble ${me?'me':''}">${t}</div>`)}
+  function renderStep(){controls.innerHTML=''; if(step>=steps.length){finish();return;} const s=steps[step];bubble(s.q); if(s.input){controls.innerHTML='<input id="waInput" placeholder="Digite seu nome"><div class="actions"><button class="btn" id="waNext">Continuar</button></div>';$('waNext').onclick=()=>{const v=$('waInput').value.trim();if(!v)return;answers[s.k]=v;bubble(v,true);step++;renderStep();};}else{const d=document.createElement('div');d.className='options';s.opts.forEach(o=>{const b=document.createElement('button');b.textContent=o;b.onclick=()=>{answers[s.k]=o;bubble(o,true);step++;renderStep();};d.appendChild(b)});controls.appendChild(d)}}
+  function saveLead(){try{const k='amp_funnel_events_v1';const a=JSON.parse(localStorage.getItem(k)||'[]');a.push({id:crypto.randomUUID?crypto.randomUUID():String(Date.now()),at:new Date().toISOString(),context:c.context||'produtor',storeId:c.storeId||null,type:'whatsapp_qualified',stage:'lead',answers,source:'site-builder-preview'});localStorage.setItem(k,JSON.stringify(a.slice(-500)));}catch(_){}}
+  function finish(){saveLead();bubble('Perfeito. Vou te encaminhar para o atendimento humano com esse resumo.');const phone=String(c.whatsapp||'').replace(/\D/g,'');const summary=`Olá! Vim pelo site ${c.name||''}.\nNome: ${answers.name||''}\nInteresse: ${answers.interest||''}\nMomento: ${answers.stage||''}`;controls.innerHTML=`<div class="actions"><button class="btn" id="goSeller">Continuar no WhatsApp</button></div>`;$('goSeller').onclick=()=>{if(!phone){alert('O WhatsApp do vendedor ainda não foi configurado no construtor.');return;}window.open(`https://wa.me/${phone}?text=${encodeURIComponent(summary)}`,'_blank');};}
+  function openWa(){modal.classList.add('show');body.innerHTML='';answers={};step=0;bubble(c.waWelcome||'Olá! Vou fazer algumas perguntas rápidas para te ajudar melhor.');renderStep();}
+  $('waFloat').onclick=openWa;$('heroWa').onclick=openWa;$('closeWa').onclick=()=>modal.classList.remove('show');
+  }
+
+  renderConfig(readFallback());
+
+  window.addEventListener('message', event => {
+    if(event.origin !== location.origin) return;
+    const data = event.data || {};
+    if(data.type !== 'AMP_SITE_PREVIEW_DATA_V1') return;
+    renderConfig(data.payload || {});
+  });
+})();
+</script>
+</body>
+</html>

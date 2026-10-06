@@ -3109,6 +3109,89 @@ app.get('/api/public/provador-remote/:id/commands', provadorRemoteLimiter, (req,
   });
 });
 
+// ===== CHECKOUT ONLINE PUBLICO DA LOJA V1 =====
+function storeCheckoutNormalizeSlug(value){
+  return String(value||'').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,'-');
+}
+function storeCheckoutMoneyValue(v){
+  if(typeof v==='number'&&Number.isFinite(v))return Math.max(0,v);
+  let s=String(v??'').trim().replace(/\s/g,'').replace(/R\$/gi,'');
+  if(!s)return 0;
+  if(s.includes(',')&&s.includes('.'))s=s.replace(/\./g,'').replace(',','.');
+  else if(s.includes(','))s=s.replace(',','.');
+  const n=Number(s);return Number.isFinite(n)?Math.max(0,n):0;
+}
+function storeCheckoutItemName(i){return String(i?.nome||i?.name||i?.title||i?.produto||i?.sku||'Produto').trim();}
+function storeCheckoutFindItem(store, body){
+  const pools=[store?.estoque,store?.products,store?.roupas].filter(Array.isArray).flat();
+  const id=String(body?.itemId||'').trim(),sku=String(body?.sku||'').trim().toLowerCase();
+  let item=id?pools.find(i=>String(i?.id??'')===id):null;
+  if(!item&&sku)item=pools.find(i=>String(i?.sku||'').trim().toLowerCase()===sku)||null;
+  return item||null;
+}
+app.post('/api/public/store-checkout/:slug/orders', checkoutLimiter, express.json({limit:'128kb'}), (req,res)=>{
+  try{
+    const slug=storeCheckoutNormalizeSlug(req.params.slug);
+    const store=getStoreBySlug(slug,baseUrl(req));
+    if(!store)return res.status(404).json({error:'Loja nao encontrada.'});
+    if(store.status==='inativo')return res.status(403).json({error:'Loja indisponivel para compras online.'});
+    if(!storeLicenseAllowsOffline(store))return res.status(403).json({error:'Loja temporariamente indisponivel para compras.'});
+
+    const body=req.body||{};
+    const item=storeCheckoutFindItem(store,body);
+    if(!item)return res.status(404).json({error:'Produto nao encontrado nesta loja.'});
+
+    const quantity=Math.max(1,Math.min(99,Number(body.quantity||1)||1));
+    const stock=Math.max(0,Number(item.quantidade||0));
+    const unitPrice=storeCheckoutMoneyValue(item.preco??item.price??item.valor??0);
+    if(stock<quantity)return res.status(409).json({error:`Estoque insuficiente. Disponivel: ${stock}.`});
+    if(unitPrice<=0)return res.status(409).json({error:'Produto sem preco valido para compra online.'});
+
+    const customerName=String(body.customerName||'').trim().slice(0,160);
+    const customerEmail=String(body.customerEmail||'').trim().toLowerCase().slice(0,180);
+    const customerPhone=String(body.customerPhone||'').trim().slice(0,80);
+    const customerCpf=String(body.customerCpf||'').trim().slice(0,40);
+    const delivery=['retirada','entrega'].includes(String(body.delivery||''))?String(body.delivery):'retirada';
+    const address=body.address&&typeof body.address==='object'?body.address:{};
+    if(!customerName||!customerEmail||!customerPhone)return res.status(400).json({error:'Nome, e-mail e WhatsApp sao obrigatorios.'});
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customerEmail))return res.status(400).json({error:'E-mail invalido.'});
+
+    const amountCents=Math.round(unitPrice*100)*quantity;
+    const safeItem={
+      itemId:String(item.id||''),
+      sku:String(item.sku||''),
+      name:storeCheckoutItemName(item),
+      quantity,
+      unitPriceCents:Math.round(unitPrice*100)
+    };
+    const order=createCustomerOrder({
+      storeId:store.id,
+      customerName,
+      customerEmail,
+      customerPhone,
+      items:[safeItem],
+      amountCents,
+      currency:'BRL',
+      gateway:'pending_store_connection',
+      method:'pending',
+      status:'pending',
+      paymentDetails:{
+        source:'loja-checkout-v1',
+        customerCpf,
+        delivery,
+        address:delivery==='entrega'?address:{},
+        serverPriceValidated:true,
+        serverStockValidated:true,
+        paymentConnected:false
+      }
+    });
+    return res.status(201).json({ok:true,order:{id:order.id,checkoutToken:order.checkoutToken,status:order.status,amountCents:order.amountCents,items:order.items,createdAt:order.createdAt}});
+  }catch(err){
+    console.error('Checkout online da loja:',err);
+    return res.status(500).json({error:'Nao foi possivel criar o pedido online.'});
+  }
+});
+// ===== FIM CHECKOUT ONLINE PUBLICO DA LOJA V1 =====
 app.get('/api/public/store/:slug', (req, res) => {
   const slug = String(req.params.slug || '')
     .trim()

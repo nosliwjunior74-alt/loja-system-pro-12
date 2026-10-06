@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Construtor de Sites Pro</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="amp-body">
+  <header class="amp-topbar">
+    <div>
+      <div class="amp-kicker">AI MARKETING PRO</div>
+      <h1>Construtor de Sites Pro</h1>
+      <p id="builderSubtitle">Crie um site base com os dados já cadastrados e finalize apenas o que desejar.</p>
+    </div>
+    <div id="contextBadge" class="amp-context amp-context-producer">PRODUTOR</div>
+  </header>
+
+  <main class="amp-shell">
+    <div class="amp-actions" style="margin-bottom:16px">
+      <a class="amp-btn amp-btn-secondary" id="backHub" href="produtor.html">← Voltar ao Hub</a>
+      <button class="amp-btn" id="loadDataBtn" type="button">Carregar dados existentes</button>
+    </div>
+
+    <section class="amp-summary-grid">
+      <article class="amp-summary amp-summary-primary"><span>Base automática</span><strong>Ativa</strong><small>Nome, logo, cor, WhatsApp e produtos quando disponíveis.</small></article>
+      <article class="amp-summary"><span>Provador</span><strong>Integrado</strong><small>Botão direto para o Provador da loja ou demonstração do Produtor.</small></article>
+      <article class="amp-summary"><span>Checkout</span><strong>Reutilizado</strong><small>Usa a rota de checkout já existente; não cria motor duplicado.</small></article>
+      <article class="amp-summary"><span>Publicação/domínio</span><strong>Próxima etapa</strong><small>Prévia funciona agora; domínio real exige backend/publicação validada.</small></article>
+    </section>
+
+    <section class="amp-section amp-featured">
+      <div class="amp-section-title"><div><span class="amp-kicker">0 · MODELO PROFISSIONAL</span><h2>Escolha a aparência inicial</h2><p>O site nasce pronto e responsivo. Você pode trocar o estilo sem perder os dados.</p></div></div>
+      <div class="amp-template-grid" id="templateGrid">
+        <button type="button" class="amp-template is-active" data-template="premium"><b>Premium</b><span>Hero forte, prova social e foco em conversão.</span></button>
+        <button type="button" class="amp-template" data-template="boutique"><b>Boutique</b><span>Editorial, elegante e ideal para moda.</span></button>
+        <button type="button" class="amp-template" data-template="minimal"><b>Minimalista</b><span>Limpo, rápido e direto ao produto.</span></button>
+        <button type="button" class="amp-template" data-template="modern"><b>Moderno</b><span>Cards, gradientes e experiência SaaS.</span></button>
+      </div>
+      <details class="amp-drawer" style="margin-top:16px"><summary>🧱 Editor visual de seções <span>abrir gaveta</span></summary><div class="amp-drawer-content">
+        <div class="amp-section-switches">
+          <label><input type="checkbox" id="secBenefits" checked> Benefícios</label>
+          <label><input type="checkbox" id="secProducts" checked> Produtos/planos</label>
+          <label><input type="checkbox" id="secSocialProof" checked> Prova social</label>
+          <label><input type="checkbox" id="secFaq" checked> FAQ</label>
+          <label><input type="checkbox" id="secWhatsapp" checked> WhatsApp</label>
+        </div>
+        <p class="amp-note">V4.1 local: você escolhe as seções e o modelo. Reordenar por arrastar e soltar fica preparado para a próxima evolução do editor.</p>
+      </div></details>
+    </section>
+
+    <section class="amp-section amp-featured">
+      <div class="amp-section-title"><div><span class="amp-kicker">1 · BASE DO SITE</span><h2>Dados principais</h2><p>Edite apenas o que quiser. O restante pode vir do cadastro atual.</p></div></div>
+      <div class="amp-form-grid amp-form-grid-4">
+        <label>Nome / marca<input id="siteName" type="text" placeholder="Nome da loja ou Provador Pro"></label>
+        <label>Frase principal<input id="siteTagline" type="text" placeholder="Ex.: Moda com propósito"></label>
+        <label>WhatsApp<input id="siteWhatsapp" type="text" placeholder="5511999999999"></label>
+        <label>Cor principal<input id="siteColor" type="color" value="#7c3aed"></label>
+      </div>
+      <div class="amp-form-grid amp-form-grid-3" style="margin-top:14px">
+        <label>Logo (URL/caminho)<input id="siteLogo" type="text" placeholder="/assets/logo.png"></label>
+        <label>Domínio desejado<input id="siteDomain" type="text" placeholder="www.minhaloja.com.br"></label>
+        <label>Subdomínio temporário<input id="siteSubdomain" type="text" placeholder="minhaloja.provadorprosystem.com"></label>
+      </div>
+    </section>
+
+    <section class="amp-section">
+      <div class="amp-section-title"><div><span class="amp-kicker">2 · VENDAS</span><h2>Provador, produtos e checkout</h2><p>O construtor reaproveita os sistemas existentes e mantém o contexto correto.</p></div></div>
+      <div class="amp-form-grid amp-form-grid-3">
+        <label>URL do Provador<input id="siteProvadorUrl" type="text" placeholder="/provador/provador.html"></label>
+        <label>URL do Checkout<input id="siteCheckoutUrl" type="text" placeholder="/checkout.html"></label>
+        <label>Texto do botão de compra<input id="siteBuyLabel" type="text" value="Comprar agora"></label>
+      </div>
+      <details class="amp-drawer" style="margin-top:16px">
+        <summary>🛒 Produtos e carrossel <span>abrir gaveta</span></summary>
+        <div class="amp-drawer-content">
+          <p id="productsStatus">Os produtos da loja serão carregados automaticamente quando a API pública estiver disponível para a loja ativa.</p>
+          <textarea id="siteFeatured" rows="4" placeholder="IDs/SKUs ou nomes de produtos destacados, separados por vírgula"></textarea>
+        </div>
+      </details>
+      <details class="amp-drawer">
+        <summary>🔎 SEO, Pixel e Analytics <span>abrir gaveta</span></summary>
+        <div class="amp-drawer-content">
+          <div class="amp-form-grid amp-form-grid-2"><label>Título SEO<input id="seoTitle" type="text"></label><label>Descrição SEO<input id="seoDescription" type="text"></label></div>
+          <p class="amp-note">Pixels/tags só devem ser ativados com consentimento e integração validada. Nesta fase ficam configuráveis, não publicados automaticamente.</p>
+        </div>
+      </details>
+    </section>
+
+    <section class="amp-section amp-featured">
+      <div class="amp-section-title"><div><span class="amp-kicker">3 · WHATSAPP INTELIGENTE</span><h2>Atendimento IA preparado para Produtor e Lojistas</h2><p>Qualifique, responda dúvidas, encaminhe para checkout e transfira para humano com contexto.</p></div></div>
+      <div class="amp-summary-grid amp-wa-status-grid">
+        <article class="amp-summary amp-summary-primary"><span>Módulo</span><strong id="waIaState">Não conectado</strong><small>Preparado para WhatsApp Business Platform/Cloud API ou provedor compatível.</small></article>
+        <article class="amp-summary"><span>Contexto</span><strong id="waContextLabel">Produtor</strong><small>Credenciais, número, funil e histórico separados por Produtor/Loja.</small></article>
+        <article class="amp-summary"><span>IA</span><strong>Preparada</strong><small>Respostas programadas + IA + transferência para humano.</small></article>
+        <article class="amp-summary"><span>Venda</span><strong>Integrada</strong><small>Pode encaminhar para página, Provador ou checkout correto.</small></article>
+      </div>
+      <div class="amp-form-grid amp-form-grid-3" style="margin-top:16px">
+        <label>Mensagem de boas-vindas<input id="waWelcome" type="text" value="Olá! Vou fazer algumas perguntas rápidas para te ajudar melhor."></label>
+        <label>Pergunta principal<input id="waQuestion" type="text" value="O que você está procurando hoje?"></label>
+        <label>Nome do atendimento humano<input id="waSellerName" type="text" placeholder="Vendedor / Comercial"></label>
+      </div>
+      <details class="amp-drawer" style="margin-top:16px"><summary>🤖 Configurar Atendimento IA no WhatsApp <span>abrir gaveta</span></summary><div class="amp-drawer-content">
+        <div class="amp-form-grid amp-form-grid-3">
+          <label>Número comercial<input id="waBusinessNumber" type="text" placeholder="5511999999999"></label>
+          <label>ID da conta/Phone Number ID<input id="waPhoneId" type="text" placeholder="Será informado ao conectar a API"></label>
+          <label>Status<select id="waConnectionState"><option value="not_connected">Não conectado</option><option value="configuring">Em configuração</option><option value="active">Ativo</option><option value="blocked">Bloqueado</option></select></label>
+        </div>
+        <div class="amp-form-grid amp-form-grid-2" style="margin-top:14px">
+          <label>Objetivo da IA<textarea id="waAiGoal" rows="4" placeholder="Ex.: explicar o Provador Pro, qualificar o interesse, indicar plano e encaminhar para checkout ou comercial"></textarea></label>
+          <label>Respostas/regras programadas<textarea id="waProgrammedReplies" rows="4" placeholder="Ex.: preço, planos, horário, troca, tamanho, entrega, demonstração"></textarea></label>
+        </div>
+        <div class="amp-actions" style="margin-top:14px"><button type="button" class="amp-btn amp-btn-secondary" id="waTestBtn">Testar fluxo local</button><button type="button" class="amp-btn amp-btn-disabled" id="waConnectBtn" disabled>Conectar API oficial</button></div>
+        <p class="amp-note">A conexão real exige conta/número elegível, credenciais e autorização da plataforma/provedor. Custos externos não ficam fixados no Provador Pro. O Produtor poderá liberar este módulo por loja via Entitlements.</p>
+      </div></details>
+      <details class="amp-drawer"><summary>💬 Fluxo automático e transferência humana <span>abrir gaveta</span></summary><div class="amp-drawer-content"><ol><li>Cliente chega pelo site, anúncio ou página de vendas.</li><li>A IA identifica intenção e responde dúvidas programadas.</li><li>Registra a etapa no Funil Inteligente.</li><li>Pode encaminhar para Provador, página de vendas ou checkout.</li><li>Se o cliente pedir ajuda humana, transfere para vendedor/comercial com resumo da conversa.</li></ol><p class="amp-note">No contexto Produtor, o fluxo atende venda do Provador Pro, planos, módulos e demonstrações. No contexto Lojista, atende os produtos da própria loja.</p></div></details>
+    </section>
+
+    <section class="amp-section">
+      <div class="amp-section-title"><div><span class="amp-kicker">4 · PRÉVIA</span><h2>Gerar e revisar</h2><p>Salve o rascunho e veja o site antes de qualquer publicação real.</p></div></div>
+      <div class="amp-actions">
+        <button class="amp-btn" id="saveDraftBtn" type="button">Salvar rascunho</button>
+        <button class="amp-btn amp-btn-secondary" id="previewBtn" type="button">Abrir prévia</button>
+        <button class="amp-btn amp-btn-disabled" id="publishBtn" type="button" disabled>Publicar / Conectar domínio</button>
+      </div>
+      <div id="builderMessage" class="amp-result" hidden></div>
+      <iframe id="sitePreviewFrame" title="Prévia do site" style="width:100%;min-height:760px;border:1px solid #3c3356;border-radius:18px;margin-top:18px;background:#fff" hidden></iframe>
+    </section>
+
+    <details class="amp-drawer"><summary>📚 Manual, vídeo e PDF <span>abrir gaveta</span></summary><div class="amp-drawer-content amp-link-grid"><a href="manuals/CONSTRUTOR_DE_SITES_PRO.pdf" target="_blank">PDF do Construtor</a><a href="manuals/WHATSAPP_SITE_ATENDIMENTO.pdf" target="_blank">PDF WhatsApp</a><a href="manuals/CHECKOUT_NO_SITE.pdf" target="_blank">PDF Checkout</a><a href="manuals/TEMPLATES_SITES_PROFISSIONAIS.pdf" target="_blank">PDF Templates</a><a href="manuals/ATENDIMENTO_IA_WHATSAPP.pdf" target="_blank">PDF WhatsApp IA</a><span class="amp-video-pending">Vídeos: Em preparação</span></div></details>
+  </main>
+  <footer class="amp-footer">Construtor de Sites Pro · Fase 4.1 local</footer>
+  <script src="site-builder.js"></script>
+</body>
+</html>

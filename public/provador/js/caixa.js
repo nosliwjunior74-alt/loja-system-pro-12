@@ -71,6 +71,52 @@ async function cleanupLocalTestSaleFromQuery(){
 
 async function load(){const savedStatus=await posGetKV(POS_SYNC_KEY);if(savedStatus&&typeof savedStatus==='object')state.posSync=savedStatus;const pending=await posOutbox();state.posSync.pending=pending.length;setConnection();if(pending.length){await loadPosCached();if(navigator.onLine!==false)await syncPosOutbox();else{await setPosSyncStatus({state:'offline',pending:pending.length});await refreshOfflineLicenseStatus();}return}try{await refreshFromServer();await setPosSyncStatus({state:'synced',pending:0,conflicts:[]});await refreshOfflineLicenseStatus()}catch(e){const cached=await loadPosCached();await setPosSyncStatus({state:'offline',pending:pending.length,lastError:e.message});await refreshOfflineLicenseStatus();if(!cached){$('storeLabel').textContent='Não foi possível carregar a loja ativa.';$('productResults').innerHTML=`<div class="empty-state">${esc(e.message)}</div>`}}}
 function matchesItem(item,q){if(!q)return false;const nq=norm(q),dq=digits(q);const fields=[item?.sku,item?.codigoBarras,item?.ean,item?.nome,item?.categoria,item?.subcategoria,item?.cor,item?.tamanho,item?.marca];return fields.some(v=>norm(v).includes(nq))||(dq&&[digits(item?.sku),digits(item?.codigoBarras),digits(item?.ean)].some(v=>v&&v.includes(dq)));}
+
+function clearIncomingProductQuery(){
+  try{
+    const u=new URL(location.href);
+    ['ppPosAutoAdd','ppPosItemId','ppPosSku','ppPosBarcode','ppPosName'].forEach(k=>u.searchParams.delete(k));
+    history.replaceState({},'',u.pathname+(u.search||'')+(u.hash||''));
+  }catch(_){}
+}
+
+function consumeIncomingProductFromQuery(){
+  if(contextQueryValue('ppPosAutoAdd')!=='1')return false;
+  const itemId=txt(contextQueryValue('ppPosItemId'));
+  const sku=txt(contextQueryValue('ppPosSku'));
+  const barcode=txt(contextQueryValue('ppPosBarcode'));
+  const name=txt(contextQueryValue('ppPosName'));
+
+  let item=null;
+  if(itemId)item=state.items.find(i=>String(i?.id||'')===itemId)||null;
+  if(!item&&sku)item=state.items.find(i=>norm(i?.sku)===norm(sku))||null;
+  if(!item&&barcode)item=state.items.find(i=>digits(i?.codigoBarras||i?.ean)===digits(barcode))||null;
+  if(!item&&name)item=state.items.find(i=>norm(i?.nome)===norm(name))||null;
+
+  const search=sku||barcode||name;
+  if(search&&$('productSearch')){
+    $('productSearch').value=search;
+    renderProducts();
+  }
+
+  if(!item){
+    clearIncomingProductQuery();
+    alert('O produto escolhido no site nao foi localizado automaticamente no Caixa. A busca foi preenchida para conferencia.');
+    return false;
+  }
+
+  const stock=Math.max(0,Number(item.quantidade||0));
+  if(stock<=0){
+    clearIncomingProductQuery();
+    alert(`${item.nome||'Produto'} esta sem estoque disponivel.`);
+    return false;
+  }
+
+  addItem(String(item.id));
+  clearIncomingProductQuery();
+  setTimeout(()=>{$('cartItems')?.scrollIntoView({behavior:'smooth',block:'center'});},80);
+  return true;
+}
 function renderProducts(){const q=txt($('productSearch')?.value);const box=$('productResults');if(!q){box.innerHTML='<div class="empty-state">Digite um SKU, código de barras ou nome para localizar produtos.</div>';return;}const rows=state.items.filter(i=>matchesItem(i,q)).slice(0,30);if(!rows.length){box.innerHTML='<div class="empty-state">Nenhum produto encontrado.</div>';return;}box.innerHTML=rows.map(item=>{const qty=Math.max(0,Number(item.quantidade||0));const price=moneyValue(item.preco);const src=img(item);return `<div class="product-row"><img class="product-thumb" alt="" src="${esc(src)}"><div class="product-main"><strong>${esc(item.nome||'Produto')}</strong><div class="meta"><span>SKU: ${esc(item.sku||'-')}</span>${item.codigoBarras?`<span>Barras: ${esc(item.codigoBarras)}</span>`:''}<span>${esc(item.cor||'-')} / ${esc(item.tamanho||'-')}</span><span class="${qty<=0?'stock-zero':''}">Estoque: ${qty}</span><span>${brl(price)}</span></div></div><button class="add-btn" data-add="${esc(item.id)}" ${qty<=0?'disabled':''}>${qty<=0?'ESGOTADO':'Adicionar'}</button></div>`}).join('');box.querySelectorAll('[data-add]').forEach(b=>b.addEventListener('click',()=>addItem(b.dataset.add)));}
 function invalidateSaleId(){state.pendingSaleId=null;}
 function addItem(id){const item=state.items.find(i=>String(i.id)===String(id));if(!item)return;const stock=Math.max(0,Number(item.quantidade||0));const current=state.cart.get(id)||0;if(current>=stock){alert(`Quantidade indisponível. Estoque atual: ${stock}.`);return;}state.cart.set(id,current+1);invalidateSaleId();renderCart();}
@@ -154,5 +200,8 @@ function renderExchange(){const body=$('exchangeBody');if(!body||!state.exchange
 function renderExchangeSearch(){if(!state.exchange)return;const q=txt($('exchangeSearch')?.value),box=$('exchangeSearchResults');if(!box)return;if(!q){box.innerHTML='';return;}const rows=state.items.filter(i=>matchesItem(i,q)&&Math.max(0,Number(i.quantidade||0))>0&&moneyValue(i.preco)>0).slice(0,15);box.innerHTML=rows.map(i=>`<div class="exchange-product"><span>${esc(i.nome)} • SKU ${esc(i.sku||'-')} • Estoque ${Math.max(0,Number(i.quantidade||0))} • ${brl(moneyValue(i.preco))}</span><button data-xadd="${esc(i.id)}">Adicionar</button></div>`).join('')||'<div class="hint">Nenhum produto disponível.</div>';box.querySelectorAll('[data-xadd]').forEach(b=>b.onclick=()=>{const id=b.dataset.xadd,item=state.items.find(i=>String(i.id)===String(id)),stock=Math.max(0,Number(item?.quantidade||0)),next=(state.exchange.outgoing.get(id)||0)+1;if(next>stock){alert(`Quantidade indisponível. Estoque atual: ${stock}.`);return;}state.exchange.outgoing.set(id,next);renderExchange();});}
 async function confirmExchange(){if(!(await ensureOfflineLicenseForMutation()))return;if(!state.exchange)return;const returns=[...state.exchange.returns].map(([itemId,d])=>({itemId,quantity:Number(d.quantity||0),returnToStock:d.returnToStock!==false})).filter(x=>x.quantity>0),outgoing=[...state.exchange.outgoing].map(([itemId,quantity])=>({itemId,quantity:Number(quantity||0)})).filter(x=>x.quantity>0);if(!returns.length&&!outgoing.length){alert('Informe ao menos um item devolvido ou um novo produto.');return;}const operationId=`exchange-${state.exchange.sale.id}-${Date.now()}-${Math.random().toString(36).slice(2,8)}`,body={saleId:state.exchange.sale.id,operationId,returns,outgoing,paymentMethod:state.payment},op={id:operationId,kind:'exchange',body,createdAt:new Date().toISOString()};try{if(navigator.onLine===false){const diff=posApplyLocalExchange(body);await queuePosOperation(op);closeExchange();renderProducts();renderCart();renderHistory();await persistPosSnapshot();alert(`Troca salva OFFLINE como PENDENTE.${diff>0?`\nDiferença a pagar: ${brl(diff/100)}`:diff<0?`\nCrédito ao cliente: ${brl(Math.abs(diff)/100)}`:'\nSem diferença de valor.'}`);return}try{const data=await posRequest(op);if(Array.isArray(data.estoque))state.items=data.estoque;const diff=Number(data.event?.payload?.differenceCents||0);closeExchange();renderProducts();renderCart();await loadHistory();await persistPosSnapshot();alert(`Troca concluída.${diff>0?`\nDiferença a pagar: ${brl(diff/100)}`:diff<0?`\nCrédito ao cliente: ${brl(Math.abs(diff)/100)}`:'\nSem diferença de valor.'}`)}catch(e){if(e.http)throw e;const diff=posApplyLocalExchange(body);await queuePosOperation(op);closeExchange();renderProducts();renderCart();renderHistory();await persistPosSnapshot();alert(`Servidor indisponível. Troca salva como PENDENTE.${diff>0?`\nDiferença a pagar: ${brl(diff/100)}`:diff<0?`\nCrédito ao cliente: ${brl(Math.abs(diff)/100)}`:'\nSem diferença de valor.'}`)}}catch(e){alert(e.message||'Falha na troca.')}}
 
-$('historySearch')?.addEventListener('input',renderHistory);$('refreshHistoryBtn')?.addEventListener('click',async()=>{if(navigator.onLine!==false)await syncPosOutbox();await loadHistory()});$('closeExchangeBtn')?.addEventListener('click',closeExchange);$('productSearch')?.addEventListener('input',renderProducts);$('customerSearch')?.addEventListener('input',renderCustomers);$('clearCustomerBtn')?.addEventListener('click',()=>{state.customer=null;invalidateSaleId();$('customerSearch').value='';$('selectedCustomer').hidden=true;renderCustomers()});$('clearCartBtn')?.addEventListener('click',()=>{state.cart.clear();invalidateSaleId();renderCart()});document.querySelectorAll('.pay-btn').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('.pay-btn').forEach(x=>x.classList.remove('active'));b.classList.add('active');state.payment=b.dataset.method||'pix';invalidateSaleId()}));$('confirmSaleBtn')?.addEventListener('click',confirmSale);window.addEventListener('online',async()=>{state.offlineLicenseStatus={ok:null,reason:''};setConnection();await syncPosOutbox();renderProducts();renderCart()});window.addEventListener('offline',async()=>{const list=await posOutbox();await setPosSyncStatus({state:'offline',pending:list.length});await refreshOfflineLicenseStatus()});setInterval(async()=>{if(navigator.onLine===false||state.posSyncing)return;const list=await posOutbox();if(list.length)await syncPosOutbox()},5000);load().then(()=>cleanupLocalTestSaleFromQuery()).catch(e=>console.warn('Falha no bootstrap do Caixa',e));
+$('historySearch')?.addEventListener('input',renderHistory);$('refreshHistoryBtn')?.addEventListener('click',async()=>{if(navigator.onLine!==false)await syncPosOutbox();await loadHistory()});$('closeExchangeBtn')?.addEventListener('click',closeExchange);$('productSearch')?.addEventListener('input',renderProducts);$('customerSearch')?.addEventListener('input',renderCustomers);$('clearCustomerBtn')?.addEventListener('click',()=>{state.customer=null;invalidateSaleId();$('customerSearch').value='';$('selectedCustomer').hidden=true;renderCustomers()});$('clearCartBtn')?.addEventListener('click',()=>{state.cart.clear();invalidateSaleId();renderCart()});document.querySelectorAll('.pay-btn').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('.pay-btn').forEach(x=>x.classList.remove('active'));b.classList.add('active');state.payment=b.dataset.method||'pix';invalidateSaleId()}));$('confirmSaleBtn')?.addEventListener('click',confirmSale);window.addEventListener('online',async()=>{state.offlineLicenseStatus={ok:null,reason:''};setConnection();await syncPosOutbox();renderProducts();renderCart()});window.addEventListener('offline',async()=>{const list=await posOutbox();await setPosSyncStatus({state:'offline',pending:list.length});await refreshOfflineLicenseStatus()});setInterval(async()=>{if(navigator.onLine===false||state.posSyncing)return;const list=await posOutbox();if(list.length)await syncPosOutbox()},5000);load().then(async()=>{
+  await cleanupLocalTestSaleFromQuery();
+  consumeIncomingProductFromQuery();
+}).catch(e=>console.warn('Falha no bootstrap do Caixa',e));
 })();

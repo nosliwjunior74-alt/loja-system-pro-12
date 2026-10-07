@@ -38,3 +38,172 @@ button.blue,.blue{background:var(--brand-color)!important}
 
 /* FASE 4.1 - Templates profissionais + WhatsApp IA */
 .amp-template-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-top:18px}.amp-template{border:1px solid #334155;background:#141925;color:#fff;border-radius:16px;padding:18px;text-align:left;cursor:pointer;min-height:110px}.amp-template b{display:block;font-size:18px;margin-bottom:8px}.amp-template span{color:#aeb8ca;line-height:1.4}.amp-template.is-active{border-color:#8b5cf6;box-shadow:0 0 0 2px rgba(139,92,246,.18);background:linear-gradient(145deg,#251540,#141925)}.amp-section-switches{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}.amp-section-switches label{background:#171c27;border:1px solid #30394a;border-radius:12px;padding:12px;display:flex;gap:8px;align-items:center}.amp-wa-status-grid{margin-top:16px}.amp-drawer select{width:100%;padding:12px 13px;border-radius:12px;border:1px solid #3c3356;background:#171522;color:#fff;font:inherit}@media(max-width:900px){.amp-template-grid{grid-template-columns:repeat(2,1fr)}.amp-section-switches{grid-template-columns:1fr 1fr}}@media(max-width:600px){.amp-template-grid,.amp-section-switches{grid-template-columns:1fr}}
+
+/* MOBILE_AI_MARKETING_V1
+   Corrige Safari/iPhone dentro do iframe do Painel Mestre:
+   - bloqueia text autosizing;
+   - evita overflow/min-width invisivel;
+   - empilha cards e cabecalhos com espaco real;
+   - preserva desktop/tablet.
+*/
+html{
+  -webkit-text-size-adjust:100%;
+  text-size-adjust:100%;
+}
+.amp-body{
+  overflow-x:hidden;
+}
+.amp-body *,
+.amp-body *::before,
+.amp-body *::after{
+  min-width:0;
+}
+.amp-body h1,
+.amp-body h2,
+.amp-body h3,
+.amp-body p,
+.amp-body span,
+.amp-body strong,
+.amp-body small,
+.amp-body a,
+.amp-body b,
+.amp-body li,
+.amp-body label,
+.amp-body summary{
+  overflow-wrap:anywhere;
+  word-break:normal;
+}
+@media(max-width:640px){
+  .amp-topbar{
+    padding:20px 16px 18px;
+    gap:14px;
+  }
+  .amp-topbar h1{
+    font-size:clamp(28px,9vw,36px);
+    line-height:1.08;
+  }
+  .amp-topbar p{
+    font-size:16px;
+    line-height:1.45;
+  }
+  .amp-context{
+    align-self:flex-start;
+  }
+  .amp-shell{
+    width:auto;
+    margin:16px 12px 36px;
+  }
+  .amp-summary-grid,
+  .amp-module-grid,
+  .amp-context-grid,
+  .amp-mini-grid{
+    grid-template-columns:1fr;
+  }
+  .amp-summary,
+  .amp-module,
+  .amp-section,
+  .amp-help-card,
+  .amp-drawer{
+    width:100%;
+    min-width:0;
+  }
+  .amp-summary{
+    min-height:0;
+    padding:16px;
+  }
+  .amp-summary strong{
+    font-size:22px;
+    line-height:1.18;
+  }
+  .amp-section{
+    padding:16px;
+    border-radius:18px;
+  }
+  .amp-section-title{
+    gap:14px;
+  }
+  .amp-section-title h2{
+    font-size:24px;
+    line-height:1.15;
+  }
+  .amp-module{
+    min-height:0;
+    padding:16px;
+  }
+  .amp-module-head{
+    align-items:flex-start;
+    flex-wrap:wrap;
+  }
+  .amp-module-head span{
+    flex:1 1 180px;
+    font-size:18px;
+    line-height:1.25;
+  }
+  .amp-module-head b{
+    flex:0 0 auto;
+    margin-left:0;
+  }
+  .amp-module p{
+    font-size:16px;
+    line-height:1.5;
+  }
+  .amp-actions,
+  .amp-link-grid{
+    flex-direction:column;
+    align-items:stretch;
+  }
+  .amp-module a,
+  .amp-actions a,
+  .amp-link-grid a,
+  .amp-btn,
+  .amp-back a{
+    display:block;
+    width:100%;
+    text-align:center;
+    font-size:15px;
+    line-height:1.25;
+    padding:11px 12px;
+  }
+  .amp-mini-grid{
+    gap:8px;
+  }
+  .amp-mini-grid div{
+    font-size:15px;
+    line-height:1.3;
+    text-align:left;
+  }
+  .amp-drawer summary{
+    align-items:flex-start;
+    flex-direction:column;
+    padding:15px 16px;
+  }
+  .amp-drawer summary span{
+    margin-top:4px;
+  }
+  .amp-drawer-content{
+    padding:16px;
+  }
+  .amp-help-head{
+    flex-direction:column;
+    gap:10px;
+  }
+  .amp-help-grid{
+    grid-template-columns:1fr;
+  }
+  .amp-form-grid,
+  .amp-form-grid-4,
+  .amp-form-grid-3,
+  .amp-form-grid-2,
+  .amp-template-grid,
+  .amp-section-switches,
+  .amp-connector-grid{
+    grid-template-columns:1fr!important;
+  }
+  .amp-creative-canvas{
+    padding:18px;
+  }
+  .amp-creative-main h3{
+    font-size:clamp(30px,10vw,42px);
+    line-height:1.08;
+  }
+}

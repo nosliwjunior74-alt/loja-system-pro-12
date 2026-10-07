@@ -7,7 +7,37 @@
 
   <link rel="stylesheet" href="css/dashboard.css">
   <link rel="stylesheet" href="css/chatbot.css">
-</head>
+  <style id="MOBILE_SHELL_AI_MARKETING_V1">
+    /* Reserva espaco para o botao Menu e mantem o iframe com largura real no celular. */
+    html,body{
+      -webkit-text-size-adjust:100%;
+      text-size-adjust:100%;
+    }
+    @media (max-width:760px){
+      .main-area{
+        min-width:0!important;
+        width:100%!important;
+      }
+      .main-area .topbar{
+        box-sizing:border-box;
+        min-width:0!important;
+        padding-top:88px!important;
+      }
+      .main-area .topbar>div:first-child{
+        min-width:0!important;
+      }
+      #currentTitle,
+      #topbarSub{
+        overflow-wrap:anywhere;
+      }
+      #appFrame{
+        display:block;
+        width:100%!important;
+        min-width:0!important;
+        max-width:100%!important;
+      }
+    }
+  </style></head>
 
 <body>
 

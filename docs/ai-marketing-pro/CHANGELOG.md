@@ -49,3 +49,9 @@ Adicionado Construtor de Sites Pro, site-preview, carregamento de dados da loja,
 - Contexto visual do Painel Mestre: ao abrir AI Marketing Pro no contexto PRODUTOR, o shell exibe identidade do Produtor/Loja Mestre em vez da identidade da loja selecionada; ao sair do contexto Produtor, a identidade da loja e restaurada.
 
 - Ajuste V1.1 do contexto visual: o subtitulo do cabecalho deixa de exibir o subtitulo da loja selecionada enquanto o AI Marketing Pro estiver em modo PRODUTOR; ao sair, o texto original da loja e restaurado.
+
+- MOBILE_AI_MARKETING_V1: correcao responsiva para Safari/iPhone no AI Marketing Pro, com bloqueio de text autosizing, empilhamento real dos cards, protecao contra overflow e ajuste do shell/iframe do Painel Mestre. Validacao visual mobile ainda pendente.
+
+- AJUDA_MOBILE_V1: botao flutuante Ajuda compactado no celular para reduzir sobreposicao de cards; janela do chatbot tambem ajustada para largura/altura segura em iPhone.
+
+- AJUDA_MOBILE_V2: no celular, o botao flutuante Ajuda passa a ser circular e exibir somente o icone de conversa, reduzindo a sobreposicao sobre CTAs e cards; desktop permanece com o texto completo.

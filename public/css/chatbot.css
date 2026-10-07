@@ -138,3 +138,66 @@ body.provador-frame-open #chatbotBtn,
 body.provador-frame-open #chatbotBox{
   display:none !important;
 }
+
+/* AJUDA_MOBILE_V1
+   Deixa o botao Ajuda compacto no celular e evita cobrir conteudo.
+*/
+@media (max-width:760px){
+  #chatbotBtn{
+    right:10px;
+    bottom:max(10px, env(safe-area-inset-bottom));
+    padding:10px 14px;
+    min-height:42px;
+    max-width:132px;
+    font-size:14px;
+    line-height:1.1;
+    border-radius:999px;
+    box-shadow:0 6px 18px rgba(0,0,0,.22);
+  }
+
+  #chatbotBox{
+    left:10px;
+    right:10px;
+    bottom:calc(62px + env(safe-area-inset-bottom));
+    width:auto;
+    max-width:none;
+    height:min(70dvh,480px);
+    max-height:calc(100dvh - 90px - env(safe-area-inset-bottom));
+  }
+}
+/* AJUDA_MOBILE_V2
+   No celular, deixa o botao Ajuda redondo e mostra apenas o icone.
+   Desktop permanece inalterado.
+*/
+@media (max-width:760px){
+  #chatbotBtn{
+    width:50px !important;
+    height:50px !important;
+    min-width:50px !important;
+    max-width:50px !important;
+    min-height:50px !important;
+    padding:0 !important;
+    display:flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+    right:10px !important;
+    bottom:max(10px, env(safe-area-inset-bottom)) !important;
+    border-radius:50% !important;
+    font-size:0 !important;
+    line-height:1 !important;
+    overflow:hidden !important;
+  }
+
+  #chatbotBtn::before{
+    content:"💬";
+    display:block;
+    font-size:22px;
+    line-height:1;
+  }
+
+  #chatbotBtn *{
+    font-size:0 !important;
+    margin:0 !important;
+    padding:0 !important;
+  }
+}

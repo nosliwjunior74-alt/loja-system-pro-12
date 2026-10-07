@@ -45,3 +45,16 @@ Persistência contextual, APIs, permissões, serviços de campanhas, CRM, págin
 - Entitlement próprio para venda do módulo aos lojistas.
 - Transferência para humano, funil, checkout, consentimento/LGPD e logs fazem parte da arquitetura.
 - Nenhuma integração externa é marcada como ativa antes de OAuth/API e testes reais.
+
+## Agentes IA V1
+- `public/display_pro/agentes-ia.html` — painel único de agentes por contexto.
+- `public/display_pro/agentes-ia.js` — filtros, favoritos, perfil, Orquestrador local, Jornada, Ideias e Calendário.
+- `public/display_pro/style.css` — estilos da grade e gaveta direita.
+- `public/display_pro/produtor.html` / `loja.html` — entrada única “Agentes IA”.
+
+## Perfil automático dos Agentes
+- `db.js`: `stores.marketing_profile_json`.
+- `server.js`: perfil no checkout + endpoint de edição.
+- `public/lojas_master.html`: perfil no cadastro manual.
+- `public/checkout.html` + `public/js/checkout.js`: perfil na contratação.
+- `public/display_pro/agentes-ia.js`: leitura e persistência por loja.

@@ -57,3 +57,7 @@ Adicionado Construtor de Sites Pro, site-preview, carregamento de dados da loja,
 - AJUDA_MOBILE_V2: no celular, o botao flutuante Ajuda passa a ser circular e exibir somente o icone de conversa, reduzindo a sobreposicao sobre CTAs e cards; desktop permanece com o texto completo.
 
 - SERVICE_WORKER_DISPLAY_PRO_V2: cache do Display Pro alterado para v2; caches antigos display-pro-system-* sao removidos no activate; HTML/CSS/JS usam network-first com fallback offline; app.js solicita update do service worker ao carregar. Objetivo: impedir CSS/JS antigos presos em celulares apos deploy.
+
+- AGENTES_IA_PAINEL_V1: adicionada estrutura de Agentes IA para Produtor e Lojista com filtros, favoritos, busca, Orquestrador local, perfil reconhecido, Jornada Inteligente, Laboratório de Ideias, calendário Manual/Aprovação/Automático e gaveta lateral direita. Execução generativa e publicação automática permanecem explicitamente futuras.
+
+- PERFIL_MARKETING_AUTO_V1: cadastro e checkout alimentam Perfil de Marketing dos Agentes IA; Central Lateral salva no banco por loja; responsividade reforçada em celular, tablet, PC e TV.

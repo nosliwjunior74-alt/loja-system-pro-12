@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>AI Marketing Pro — Agentes IA</title>
+  <link rel="stylesheet" href="style.css">
+  <meta name="theme-color" content="#6d28d9">
+</head>
+<body class="amp-body amp-agents-page">
+  <header class="amp-topbar">
+    <div>
+      <div class="amp-kicker">AI MARKETING PRO</div>
+      <h1>🧠 Agentes IA de Divulgação</h1>
+      <p id="agentsGreeting">Carregando contexto...</p>
+    </div>
+    <div id="agentsContext" class="amp-context">CONTEXTO</div>
+  </header>
+
+  <main class="amp-shell">
+    <div class="amp-back"><a id="agentsBack" href="produtor.html">← Voltar ao AI Marketing Pro</a></div>
+
+    <section class="amp-section amp-featured amp-orchestrator-card">
+      <div class="amp-section-title">
+        <div>
+          <span class="amp-kicker">AGENTE PRINCIPAL</span>
+          <h2>🎯 Orquestrador de Marketing</h2>
+          <p>Diga o que deseja divulgar. Esta primeira versão monta uma prévia local dos agentes mais adequados. A execução por IA externa será ativada na etapa funcional.</p>
+        </div>
+        <span class="amp-agent-status amp-status-ready">PAINEL PRONTO</span>
+      </div>
+      <div class="amp-orchestrator-form">
+        <textarea id="orchestratorIdea" placeholder="Ex.: Quero divulgar uma nova coleção de vestidos no Instagram e WhatsApp para vender mais nesta semana."></textarea>
+        <div class="amp-actions">
+          <button class="amp-btn" id="orchestratorRecommend" type="button">Sugerir agentes</button>
+          <button class="amp-btn amp-btn-secondary" id="openConfigBtn" type="button">⚙ Configurações e Jornada</button>
+        </div>
+        <div id="orchestratorResult" class="amp-orchestrator-result" aria-live="polite"></div>
+      </div>
+    </section>
+
+    <section class="amp-section">
+      <div class="amp-section-title">
+        <div>
+          <span class="amp-kicker">REFERÊNCIAS</span>
+          <h2>Encontre o agente certo</h2>
+          <p>As palavras curtas abaixo são filtros de referência. As caixas grandes são os agentes executores.</p>
+        </div>
+      </div>
+
+      <div class="amp-agent-filters" id="agentFilters">
+        <button data-filter="todos" class="is-active">Todos</button>
+        <button data-filter="favoritos">⭐ Favoritos</button>
+        <button data-filter="novo">Novo</button>
+        <button data-filter="conteudo">Conteúdo</button>
+        <button data-filter="copywriting">Copywriting</button>
+        <button data-filter="imagem">Imagem</button>
+        <button data-filter="marketing">Marketing</button>
+        <button data-filter="produto">Produto</button>
+        <button data-filter="trafego">Tráfego</button>
+        <button data-filter="vendas">Vendas</button>
+        <button data-filter="video">Vídeo</button>
+        <button data-filter="youtube">YouTube</button>
+        <button data-filter="marca">Marca</button>
+        <button data-filter="estrategia">Estratégia</button>
+      </div>
+
+      <div class="amp-agent-search">
+        <input id="agentSearch" type="search" placeholder="Buscar agente pelo nome, função ou palavra-chave...">
+      </div>
+
+      <div id="agentGrid" class="amp-agent-grid"></div>
+    </section>
+
+    <section class="amp-section amp-agent-note">
+      <strong>Estado desta etapa:</strong>
+      <p>O catálogo, filtros, favoritos, reconhecimento de contexto, Jornada, configurações e recomendação local do Orquestrador já ficam montados. Geração por IA, publicação automática e conectores externos permanecem marcados como próxima etapa até validação funcional e OAuth/API.</p>
+    </section>
+  </main>
+
+  <button id="agentsDrawerToggle" class="amp-right-drawer-toggle" type="button" aria-label="Abrir configurações">⚙</button>
+
+  <aside id="agentsDrawer" class="amp-right-drawer" aria-hidden="true">
+    <div class="amp-right-drawer-head">
+      <div><span class="amp-kicker">CENTRAL LATERAL</span><h2 id="drawerTitle">Configurações</h2></div>
+      <button id="agentsDrawerClose" type="button" aria-label="Fechar">×</button>
+    </div>
+
+    <div class="amp-drawer-tabs">
+      <button data-tab="perfil" class="is-active">Perfil</button>
+      <button data-tab="jornada">Jornada</button>
+      <button data-tab="ideias">Ideias</button>
+      <button data-tab="calendario">Calendário</button>
+      <button data-tab="ajuda">Ajuda</button>
+    </div>
+
+    <div class="amp-right-drawer-body">
+      <section class="amp-drawer-panel is-active" data-panel="perfil">
+        <h3>Perfil reconhecido</h3>
+        <p class="amp-note">Dados disponíveis da loja/Produtor são reaproveitados. Complete apenas o que ainda faltar.</p>
+        <p class="amp-note"><strong>Origem:</strong> cadastro/checkout da loja + ajustes feitos aqui. Alterações desta central passam a valer para os agentes desta loja.</p>
+        <div class="amp-profile-preview" id="profilePreview"></div>
+        <label>Nome / marca<input id="profileName"></label>
+        <label>Nicho<input id="profileNiche" placeholder="Ex.: moda feminina social/evangélica"></label>
+        <label>Público principal<textarea id="profileAudience" placeholder="Quem você deseja alcançar?"></textarea></label>
+        <label>Cidade / região<input id="profileRegion" placeholder="Ex.: Sabará e região"></label>
+        <label>Voz da marca<input id="profileVoice" placeholder="Ex.: elegante, acolhedora e objetiva"></label>
+        <label>Objetivo principal<input id="profileGoal" placeholder="Ex.: vender mais, lançar coleção, captar lojistas"></label>
+        <label>Redes prioritárias<input id="profileNetworks" placeholder="Instagram, TikTok, WhatsApp..."></label>
+        <button id="saveProfile" class="amp-btn" type="button">Salvar perfil</button>
+      </section>
+
+      <section class="amp-drawer-panel" data-panel="jornada">
+        <h3>Jornada Inteligente de Divulgação</h3>
+        <p class="amp-note">Estrutura guiada baseada no contexto salvo.</p>
+        <div id="journeySteps" class="amp-journey-steps"></div>
+        <button id="buildJourney" class="amp-btn" type="button">Montar jornada</button>
+      </section>
+
+      <section class="amp-drawer-panel" data-panel="ideias">
+        <h3>Laboratório de Ideias</h3>
+        <label>Minha ideia<textarea id="ideaOriginal" placeholder="Digite sua ideia de divulgação..."></textarea></label>
+        <label>Versão organizada / preparada para IA<textarea id="ideaStructured" readonly></textarea></label>
+        <div class="amp-actions">
+          <button id="structureIdea" class="amp-btn" type="button">Organizar minha ideia</button>
+          <button class="amp-btn amp-btn-secondary" type="button" disabled>✨ Melhorar com IA — próxima etapa</button>
+        </div>
+        <p class="amp-note">A intenção original do lojista/Produtor será preservada quando a melhoria por IA for ativada.</p>
+      </section>
+
+      <section class="amp-drawer-panel" data-panel="calendario">
+        <h3>Calendário e publicação</h3>
+        <label>Frequência
+          <select id="scheduleFrequency">
+            <option value="diario">Todos os dias</option>
+            <option value="semana">Dias específicos da semana</option>
+            <option value="manual">Somente quando eu criar</option>
+          </select>
+        </label>
+        <label>Horário preferido<input id="scheduleTime" type="time" value="19:00"></label>
+        <label>Modo de publicação
+          <select id="publishMode">
+            <option value="manual">Manual</option>
+            <option value="aprovacao">Agendado com aprovação</option>
+            <option value="automatico">Automático — requer APIs oficiais</option>
+          </select>
+        </label>
+        <label>Formatos prioritários<input id="scheduleFormats" placeholder="Reels/Short, Story, Post, Carrossel"></label>
+        <label>Objetivos<input id="scheduleGoals" placeholder="Atração, engajamento, vendas, conexão"></label>
+        <button id="saveSchedule" class="amp-btn" type="button">Salvar configuração</button>
+        <div id="scheduleNotice" class="amp-note"></div>
+      </section>
+
+      <section class="amp-drawer-panel" data-panel="ajuda">
+        <h3>Ajuda, manual e vídeos</h3>
+        <div class="amp-video-placeholder">
+          <h3>🎥 Vídeo explicativo</h3>
+          <strong>Em preparação</strong>
+          <p>Área preservada para o tutorial dos Agentes IA, Jornada, Orquestrador e Calendário.</p>
+        </div>
+        <div class="amp-link-grid">
+          <a id="agentsHelpLink" href="ajuda.html?context=produtor#agentes-ia">Abrir manual contextual</a>
+        </div>
+        <p class="amp-note">PDF específico: em preparação nesta etapa de montagem do painel.</p>
+      </section>
+
+      <section class="amp-drawer-panel" data-panel="agente">
+        <div id="agentDetail"></div>
+      </section>
+    </div>
+  </aside>
+  <div id="agentsDrawerBackdrop" class="amp-right-drawer-backdrop"></div>
+
+  <footer class="amp-footer">AI Marketing Pro · Agentes IA · painel estrutural V1</footer>
+  <script src="agentes-ia.js"></script>
+</body>
+</html>

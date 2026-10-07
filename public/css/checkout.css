@@ -617,3 +617,16 @@ textarea:focus{
     padding:15px;
   }
 }
+
+/* MARKETING_PROFILE_CHECKOUT_RESPONSIVE_V1 */
+.marketing-profile-checkout{margin:20px 0;border:1px solid rgba(125,76,145,.22);border-radius:16px;background:#fffafd;padding:14px 16px}
+.marketing-profile-checkout summary{cursor:pointer;font-weight:800;color:#6f355d}
+.marketing-profile-checkout summary small{font-weight:700;color:#8a6b7b}
+.marketing-profile-checkout>p{color:#6b7280;line-height:1.5}
+.marketing-profile-checkout textarea{width:100%;box-sizing:border-box;resize:vertical}
+@media(max-width:760px){
+  .marketing-profile-checkout{padding:12px}
+  .marketing-profile-checkout .form-grid{grid-template-columns:1fr!important}
+  .marketing-profile-checkout .full{grid-column:1!important}
+}
+@media(min-width:1600px){.checkout-shell{max-width:1500px}}

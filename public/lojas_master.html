@@ -563,6 +563,18 @@ button.small{
   .row-end{grid-column:2}
 }
 </style>
+<style id="MARKETING_PROFILE_RESPONSIVE_V1">
+@media(max-width:760px){
+  .layout,.workspace,.manuals{grid-template-columns:1fr!important}
+  .form-grid{grid-template-columns:1fr!important}
+  .field,.field.full{grid-column:1!important}
+  .actions{flex-wrap:wrap!important}
+  .actions button{width:100%!important}
+}
+@media(min-width:1500px){
+  .layout{max-width:1800px;margin-left:auto;margin-right:auto}
+}
+</style>
 </head>
 
 <body>
@@ -726,6 +738,20 @@ button.small{
 
 </div>
 </details>
+
+<details class="form-section" name="storeFormGroup">
+<summary>Perfil de Marketing / Agentes IA</summary>
+<div class="form-section-body">
+<p class="section-sub" style="margin-top:0;">Estes dados alimentam automaticamente os Agentes IA. O lojista poderá revisar depois na Central Lateral de Perfil e Contexto.</p>
+<div class="form-grid">
+<div class="field full"><label>Nicho da loja</label><input id="storeMarketingNiche" placeholder="Ex.: moda feminina social e evangélica"></div>
+<div class="field full"><label>Público principal</label><textarea id="storeMarketingAudience" rows="3" placeholder="Ex.: mulheres que buscam looks para culto, eventos e ocasiões sociais"></textarea></div>
+<div class="field full"><label>Cidade / região de atuação</label><input id="storeMarketingRegion" placeholder="Ex.: Belo Horizonte e região"></div>
+<div class="field full"><label>Voz da marca</label><input id="storeMarketingVoice" placeholder="Ex.: elegante, acolhedora e objetiva"></div>
+<div class="field full"><label>Objetivo principal de marketing</label><input id="storeMarketingGoal" placeholder="Ex.: vender mais, lançar coleções e atrair clientes locais"></div>
+<div class="field full"><label>Redes prioritárias</label><input id="storeMarketingNetworks" placeholder="Instagram, Facebook, TikTok, YouTube, Google e WhatsApp"></div>
+</div>
+</div>
 
 
 <details class="form-section" name="storeFormGroup">
@@ -1233,6 +1259,31 @@ store?.city||'';
 
 el('storeState').value=
 store?.state||'';
+
+const marketingProfile =
+store?.marketingProfile &&
+typeof store.marketingProfile === 'object'
+? store.marketingProfile
+: {};
+
+el('storeMarketingNiche').value =
+marketingProfile.niche || '';
+
+el('storeMarketingAudience').value =
+marketingProfile.audience || '';
+
+el('storeMarketingRegion').value =
+marketingProfile.region ||
+[store?.city, store?.state].filter(Boolean).join(' / ');
+
+el('storeMarketingVoice').value =
+marketingProfile.voice || '';
+
+el('storeMarketingGoal').value =
+marketingProfile.goal || 'Divulgar produtos e vender mais';
+
+el('storeMarketingNetworks').value =
+marketingProfile.networks || 'Instagram, Facebook, TikTok e WhatsApp';
 
 el('storeContractDate').value=
 store?.contractDate||'';
@@ -2085,6 +2136,18 @@ el('storeCity').value.trim(),
 
 state:
 el('storeState').value.trim().toUpperCase(),
+
+marketingProfile:{
+niche:el('storeMarketingNiche').value.trim(),
+audience:el('storeMarketingAudience').value.trim(),
+region:
+el('storeMarketingRegion').value.trim() ||
+[el('storeCity').value.trim(),el('storeState').value.trim().toUpperCase()]
+.filter(Boolean).join(' / '),
+voice:el('storeMarketingVoice').value.trim(),
+goal:el('storeMarketingGoal').value.trim() || 'Divulgar produtos e vender mais',
+networks:el('storeMarketingNetworks').value.trim() || 'Instagram, Facebook, TikTok e WhatsApp'
+},
 
 contractDate:
 el('storeContractDate').value,

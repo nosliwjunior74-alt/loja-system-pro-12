@@ -409,6 +409,17 @@
     });
   }
 
+  function getMarketingProfileFromForm() {
+    return {
+      niche: String($('storeNiche')?.value || '').trim(),
+      audience: String($('storeAudience')?.value || '').trim(),
+      region: String($('storeRegion')?.value || '').trim(),
+      voice: String($('storeVoice')?.value || '').trim(),
+      goal: String($('storeGoal')?.value || '').trim() || 'Divulgar produtos e vender mais',
+      networks: String($('storeNetworks')?.value || '').trim() || 'Instagram, Facebook, TikTok e WhatsApp'
+    };
+  }
+
   function setSubmitting(value) {
     els.submit.disabled = value;
     els.submit.textContent = value
@@ -521,6 +532,7 @@
             buyerPhone,
             buyerCpfCnpj,
             storeName,
+            marketingProfile:getMarketingProfileFromForm(),
             plan: state.selectedPlan.id,
             billingCycle: state.billingCycle,
             method: 'credit_card',
@@ -658,6 +670,7 @@
             buyerPhone,
             buyerCpfCnpj,
             storeName,
+            marketingProfile:getMarketingProfileFromForm(),
             plan: state.selectedPlan.id,
             billingCycle: state.billingCycle,
             method: 'pix'

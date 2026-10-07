@@ -1371,6 +1371,20 @@ app.post('/api/public/checkout/producer/orders', checkoutLimiter, (req, res) => 
     const buyerPhone = String(body.buyerPhone || '').trim();
     const buyerCpfCnpj = String(body.buyerCpfCnpj || '').trim();
     const storeName = String(body.storeName || '').trim();
+    const rawMarketingProfile =
+      body.marketingProfile &&
+      typeof body.marketingProfile === 'object' &&
+      !Array.isArray(body.marketingProfile)
+        ? body.marketingProfile
+        : {};
+    const marketingProfile = {
+      niche:String(rawMarketingProfile.niche || '').trim().slice(0,160),
+      audience:String(rawMarketingProfile.audience || '').trim().slice(0,500),
+      region:String(rawMarketingProfile.region || '').trim().slice(0,180),
+      voice:String(rawMarketingProfile.voice || '').trim().slice(0,220),
+      goal:String(rawMarketingProfile.goal || '').trim().slice(0,220),
+      networks:String(rawMarketingProfile.networks || '').trim().slice(0,240)
+    };
     const plan = String(body.plan || '').trim().toLowerCase();
     const billingCycle = String(body.billingCycle || 'monthly').trim().toLowerCase();
     const method = String(body.method || 'pix').trim().toLowerCase();
@@ -1454,7 +1468,8 @@ app.post('/api/public/checkout/producer/orders', checkoutLimiter, (req, res) => 
       status:'pending',
       paymentDetails:{
         checkoutMode: CHECKOUT_MODE,
-        serverPriceValidated: true
+        serverPriceValidated: true,
+        marketingProfile
       }
     });
 
@@ -3882,6 +3897,45 @@ if(Array.isArray(req.body?.roupas))
   res.json({ ok:true, store });
 });
 app.get('/api/session/store-config', (req,res)=>{ let store = null; if(req.session?.adminLoggedIn && req.session?.activeStoreId) store = getStoreById(req.session.activeStoreId, baseUrl(req)); if(!store && req.session?.clientStoreId) store = getStoreById(req.session.clientStoreId, baseUrl(req)); if(!store) store = listStores(baseUrl(req))[0] || null; res.json({ store }); });
+app.put('/api/session/store-marketing-profile', (req,res)=>{
+  let storeId = '';
+  if(req.session?.adminLoggedIn && req.session?.activeStoreId){
+    storeId = String(req.session.activeStoreId || '');
+  }
+  if(!storeId && req.session?.clientStoreId){
+    storeId = String(req.session.clientStoreId || '');
+  }
+  if(!storeId){
+    return res.status(401).json({ error:'Sessao da loja nao encontrada.' });
+  }
+
+  const body = req.body || {};
+  const marketingProfile = {
+    niche:String(body.niche || '').trim().slice(0,160),
+    audience:String(body.audience || '').trim().slice(0,500),
+    region:String(body.region || '').trim().slice(0,180),
+    voice:String(body.voice || '').trim().slice(0,220),
+    goal:String(body.goal || '').trim().slice(0,220),
+    networks:String(body.networks || '').trim().slice(0,240)
+  };
+
+  const store = updateStore(
+    storeId,
+    { marketingProfile },
+    baseUrl(req)
+  );
+
+  if(!store){
+    return res.status(404).json({ error:'Loja nao encontrada.' });
+  }
+
+  res.json({
+    ok:true,
+    store,
+    marketingProfile:store.marketingProfile || marketingProfile
+  });
+});
+
 app.use(['/index.html','/lojas_master.html','/configuracoes.html','/configuracao-cobranca.html','/financeiro.html','/seguranca.html'], requireAdmin);
 app.get('/s/:slug', (req, res) => {
   res.redirect(`/login-loja.html?loja=${encodeURIComponent(req.params.slug)}`);

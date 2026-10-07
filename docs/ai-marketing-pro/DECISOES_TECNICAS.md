@@ -55,3 +55,15 @@ Nenhum recurso será considerado finalizado sem manual detalhado, área de víde
 - Nenhuma integração externa é marcada como ativa antes de OAuth/API e testes reais.
 
 - Contexto visual do Painel Mestre: ao abrir AI Marketing Pro no contexto PRODUTOR, o shell exibe identidade do Produtor/Loja Mestre em vez da identidade da loja selecionada; ao sair do contexto Produtor, a identidade da loja e restaurada.
+
+## Decisão — organização dos Agentes IA
+- Usar uma única entrada no painel e catálogo interno com filtros por palavra-chave.
+- Não espalhar dezenas de botões no Hub.
+- Gaveta lateral direita concentra configurações e jornada.
+- Reaproveitar dados existentes da loja antes de pedir novos campos.
+- Preservar área de vídeo/manual/PDF; conteúdos inexistentes devem aparecer como “Em preparação”.
+
+## Decisão — Perfil persistente por loja
+- Usar JSON versionável em `stores.marketing_profile_json`.
+- Checkout guarda perfil em `paymentDetails` até a ativação da loja.
+- Responsividade obrigatória em celular, tablet, PC/notebook, TV horizontal e vertical.

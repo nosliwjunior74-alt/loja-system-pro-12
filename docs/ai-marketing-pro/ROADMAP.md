@@ -44,3 +44,16 @@ Cada fase exige teste, documentação e aprovação antes da próxima.
 - Nenhuma integração externa é marcada como ativa antes de OAuth/API e testes reais.
 
 - [2026-10-05 21:21] Checkout Online da Loja V1: tela publica separada do Caixa interno; customer_order pendente; preco/estoque validados no servidor; pagamento real da loja permanece para OAuth/API futura.
+
+## Próximas etapas — Agentes IA
+1. Validar visual e isolamento Produtor/Lojista.
+2. Validar perfil reconhecido e persistência por loja.
+3. Ligar execução generativa dos agentes após a validação funcional do AI Marketing Pro.
+4. Integrar Creative Studio, Funil, Produtos, WhatsApp e Calendário.
+5. Ativar publicação automática somente após OAuth/APIs oficiais e testes.
+
+## Depois do Perfil automático
+1. Validar criação manual de loja teste com perfil.
+2. Validar checkout somente em ambiente seguro/teste.
+3. Validar celular, tablet, PC, TV horizontal e vertical.
+4. Depois ligar inferência por IA e automações externas.

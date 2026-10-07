@@ -43,3 +43,14 @@ O sistema deve registrar consentimento e respeitar a finalidade dos dados antes 
 - Entitlement próprio para venda do módulo aos lojistas.
 - Transferência para humano, funil, checkout, consentimento/LGPD e logs fazem parte da arquitetura.
 - Nenhuma integração externa é marcada como ativa antes de OAuth/API e testes reais.
+
+## Responsabilidades — Agentes IA
+- Orquestrador: selecionar rota de agentes conforme intenção.
+- Agentes especializados: executar uma competência específica sem duplicar módulos.
+- Jornada: orientar sequência de posicionamento → conteúdo → publicação → acompanhamento.
+- Painel deve sempre distinguir estrutura pronta de função realmente conectada.
+
+## Perfil de Marketing
+- Cadastro/checkout definem contexto inicial.
+- Central Lateral permite revisão sem alterar login, estoque, licença ou caixa.
+- Agentes consomem apenas o perfil da loja ativa.

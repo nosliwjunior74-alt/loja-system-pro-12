@@ -58,3 +58,9 @@ Nenhum módulo é finalizado sem documentação atualizada.
 - Entitlement próprio para venda do módulo aos lojistas.
 - Transferência para humano, funil, checkout, consentimento/LGPD e logs fazem parte da arquitetura.
 - Nenhuma integração externa é marcada como ativa antes de OAuth/API e testes reais.
+
+## Agentes IA de Divulgação
+O AI Marketing Pro terá um catálogo próprio de agentes especializados e um Agente Orquestrador. Produtor e Lojista compartilham a mesma arquitetura, porém com contexto e dados isolados. O Lojista reaproveita dados do cadastro da loja e recebe saudação/prévia de contexto ao entrar. A Jornada Inteligente, Laboratório de Ideias, calendário e modos de publicação fazem parte do núcleo oficial.
+
+## Perfil automático desde a contratação
+Nome, nicho, público, região, voz, objetivo e redes prioritárias podem nascer no cadastro/checkout e ser revisados depois na Central Lateral. O perfil é persistente e isolado por loja.

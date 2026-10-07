@@ -360,6 +360,7 @@ maybeAddColumn('stores','producer_full_access_granted_by','TEXT');
 maybeAddColumn('stores','producer_full_access_reason','TEXT');
 maybeAddColumn('stores','producer_payment_methods',"TEXT DEFAULT '[\"pix\"]'");
 maybeAddColumn('stores','customer_payment_methods',"TEXT DEFAULT '[]'");
+maybeAddColumn('stores','marketing_profile_json',"TEXT DEFAULT '{}'");
 maybeAddColumn('payments','notes','TEXT');
 maybeAddColumn('payments','whatsapp_sent_at','TEXT');
 maybeAddColumn('payments','whatsapp_message_id','TEXT');
@@ -506,6 +507,7 @@ function rowToStore(row, baseUrl=''){
     vitrinePromoBgEnd: synced.vitrine_promo_bg_end || '',
     vitrinePromoActive: Boolean(synced.vitrine_promo_active),
     email: synced.email || '', phone: synced.phone || '', cpf: synced.cpf || '', cnpj: synced.cnpj || '',
+    marketingProfile: safeJsonObject(synced.marketing_profile_json),
     cep: synced.cep || '', address: synced.address || '', addressNumber: synced.address_number || '',
     addressComplement: synced.address_complement || '', neighborhood: synced.neighborhood || '',
     city: synced.city || '', state: synced.state || '',
@@ -660,6 +662,7 @@ contract_value_cents,
 contract_status,
 producer_payment_methods,
 customer_payment_methods,
+marketing_profile_json,
 login,
 password_hash,
 initial_setup_completed,
@@ -682,7 +685,7 @@ updated_at
 @id,@slug,@name,@sub,@color,@logo,@email,@phone,@cpf,@cnpj,
 @cep,@address,@address_number,@address_complement,@neighborhood,@city,@state,
 @contract_date,@license_start_date,@contract_value_cents,@contract_status,
-@producer_payment_methods,@customer_payment_methods,@login,
+@producer_payment_methods,@customer_payment_methods,@marketing_profile_json,@login,
 @password_hash,@initial_setup_completed,@status,@plan,@billing_cycle,@expires_at,@license_key,
 @custom_domain,
 @support_config,
@@ -719,6 +722,13 @@ updated_at
         ? payload.customerPaymentMethods
         : []
     ),
+    marketing_profile_json: JSON.stringify(
+      payload.marketingProfile &&
+      typeof payload.marketingProfile === 'object' &&
+      !Array.isArray(payload.marketingProfile)
+        ? payload.marketingProfile
+        : {}
+    ),
     login: payload.login || 'admin', password_hash: hashPassword(payload.password || crypto.randomBytes(12).toString('base64url')),
     initial_setup_completed: payload.initialSetupCompleted === true ? 1 : 0,
     status: payload.status === 'inativo' ? 'inativo' : (payload.status === 'degustacao' ? 'degustacao' : 'ativo'),
@@ -742,7 +752,7 @@ function updateStore(id, payload, baseUrl=''){
   const expiresAt = payload.expiresAt !== undefined ? payload.expiresAt : (current.expires_at || '');
   const licenseKey = generateLicenseKey(id, slug, expiresAt);
   const passwordHash = payload.password ? hashPassword(payload.password) : current.password_hash;
-  db.prepare(`UPDATE stores SET slug=@slug,name=@name,sub=@sub,color=@color,logo=@logo,vitrine_hero_image=@vitrine_hero_image,vitrine_promo_eyebrow=@vitrine_promo_eyebrow,vitrine_promo_title=@vitrine_promo_title,vitrine_promo_description=@vitrine_promo_description,vitrine_promo_text_color=@vitrine_promo_text_color,vitrine_promo_bg_start=@vitrine_promo_bg_start,vitrine_promo_bg_end=@vitrine_promo_bg_end,vitrine_promo_active=@vitrine_promo_active,email=@email,phone=@phone,cpf=@cpf,cnpj=@cnpj,cep=@cep,address=@address,address_number=@address_number,address_complement=@address_complement,neighborhood=@neighborhood,city=@city,state=@state,contract_date=@contract_date,license_start_date=@license_start_date,contract_value_cents=@contract_value_cents,contract_status=@contract_status,producer_payment_methods=@producer_payment_methods,customer_payment_methods=@customer_payment_methods,login=@login,password_hash=@password_hash,initial_setup_completed=@initial_setup_completed,status=@status,plan=@plan,billing_cycle=@billing_cycle,expires_at=@expires_at,license_key=@license_key,custom_domain=@custom_domain,support_config=@support_config,
+  db.prepare(`UPDATE stores SET slug=@slug,name=@name,sub=@sub,color=@color,logo=@logo,vitrine_hero_image=@vitrine_hero_image,vitrine_promo_eyebrow=@vitrine_promo_eyebrow,vitrine_promo_title=@vitrine_promo_title,vitrine_promo_description=@vitrine_promo_description,vitrine_promo_text_color=@vitrine_promo_text_color,vitrine_promo_bg_start=@vitrine_promo_bg_start,vitrine_promo_bg_end=@vitrine_promo_bg_end,vitrine_promo_active=@vitrine_promo_active,email=@email,phone=@phone,cpf=@cpf,cnpj=@cnpj,cep=@cep,address=@address,address_number=@address_number,address_complement=@address_complement,neighborhood=@neighborhood,city=@city,state=@state,contract_date=@contract_date,license_start_date=@license_start_date,contract_value_cents=@contract_value_cents,contract_status=@contract_status,producer_payment_methods=@producer_payment_methods,customer_payment_methods=@customer_payment_methods,marketing_profile_json=@marketing_profile_json,login=@login,password_hash=@password_hash,initial_setup_completed=@initial_setup_completed,status=@status,plan=@plan,billing_cycle=@billing_cycle,expires_at=@expires_at,license_key=@license_key,custom_domain=@custom_domain,support_config=@support_config,
 estoque=@estoque,
 products=@products,
 looks=@looks,
@@ -794,6 +804,16 @@ updated_at=@updated_at WHERE id=@id`).run({
               : []
           )
         : (current.customer_payment_methods ?? '[]'),
+    marketing_profile_json:
+      payload.marketingProfile !== undefined
+        ? JSON.stringify(
+            payload.marketingProfile &&
+            typeof payload.marketingProfile === 'object' &&
+            !Array.isArray(payload.marketingProfile)
+              ? payload.marketingProfile
+              : {}
+          )
+        : (current.marketing_profile_json ?? '{}'),
     login: payload.login ?? current.login, password_hash: passwordHash,
     initial_setup_completed: payload.initialSetupCompleted !== undefined ? (payload.initialSetupCompleted ? 1 : 0) : (current.initial_setup_completed ?? 1),
     status: payload.status === 'inativo' ? 'inativo' : (payload.status === 'degustacao' ? 'degustacao' : (payload.status ?? current.status)),
@@ -1456,6 +1476,8 @@ function activatePaidProducerCheckoutStore(orderId, baseUrl=''){
           expiresAt,
           amountCents:
             Number(order.amountCents || 0),
+          marketingProfile:
+            order.paymentDetails?.marketingProfile || {},
 
           // O pagamento inicial ja foi confirmado
           // pelo Mercado Pago.

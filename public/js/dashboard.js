@@ -34,9 +34,19 @@ function activateButtonForUrl(url){
         btn.dataset.url
       );
 
+    const isContextualAi =
+      btn?.dataset?.aiMarketingContextual === 'true';
+
+    const aiMatches =
+      isContextualAi &&
+      (
+        target === 'display_pro/produtor.html' ||
+        target === 'display_pro/loja.html'
+      );
+
     btn.classList.toggle(
       'active',
-      btnUrl === target
+      aiMatches || btnUrl === target
     );
 
   });
@@ -53,6 +63,48 @@ function tituloDoBotao(btn){
 
 }
 
+
+function currentFrameUrl(){
+
+  return normalizarUrl(
+    frame?.getAttribute('src') ||
+    frame?.src ||
+    ''
+  );
+
+}
+
+function isStoreWorkspaceUrl(url){
+
+  return [
+    'provador/index.html',
+    'provador/admin.html',
+    'configuracoes.html',
+    'remover_fundo/index.html',
+    'display_pro/loja.html'
+  ].includes(
+    normalizarUrl(url)
+  );
+
+}
+
+function resolverUrlDoBotao(btn){
+
+  if(
+    btn?.dataset?.aiMarketingContextual === 'true'
+  ){
+
+    return isStoreWorkspaceUrl(
+      currentFrameUrl()
+    )
+      ? 'display_pro/loja.html'
+      : 'display_pro/produtor.html';
+
+  }
+
+  return btn?.dataset?.url || '';
+
+}
 
 function abrirTela(url, btn){
 
@@ -89,7 +141,7 @@ buttons.forEach(function(btn){
     function(){
 
       abrirTela(
-        btn.dataset.url,
+        resolverUrlDoBotao(btn),
         btn
       );
 

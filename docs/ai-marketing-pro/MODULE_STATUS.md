@@ -64,3 +64,14 @@
 - [2026-10-05 21:21] Checkout Online da Loja V1: tela publica separada do Caixa interno; customer_order pendente; preco/estoque validados no servidor; pagamento real da loja permanece para OAuth/API futura.
 
 - [2026-10-05 22:30] Provador publico do Lojista: Construtor passa a usar /provador/index.html?loja=<slug>, evitando /s/<slug> e tela de login. Checkout e Caixa preservados.
+
+## Agentes IA / Jornada — status
+- Painel, filtros, favoritos, busca, perfil, Jornada, Laboratório de Ideias e calendário: **BASE V1 MONTADA**.
+- Recomendação do Orquestrador: **LOCAL/ESTRUTURAL**.
+- Geração por IA, melhoria generativa, publicação automática e conectores: **PLANEJADO / DEPENDE DE VALIDAÇÃO E API**.
+
+## Perfil de Marketing automático
+- Cadastro Produtor → perfil: **BASE V1 IMPLEMENTADA**.
+- Checkout → perfil inicial: **BASE V1 IMPLEMENTADA**.
+- Central Lateral → banco por loja: **BASE V1 IMPLEMENTADA**.
+- Inferência avançada do nicho por IA: **PLANEJADO**.

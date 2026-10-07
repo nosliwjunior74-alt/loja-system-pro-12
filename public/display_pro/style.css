@@ -207,3 +207,88 @@ html{
     line-height:1.08;
   }
 }
+
+/* =========================================================
+   AGENTES IA + JORNADA INTELIGENTE V1
+   Painel estrutural para Produtor e Lojista.
+   ========================================================= */
+.amp-agents-entry{position:relative;overflow:hidden}
+.amp-agents-entry:after{content:"";position:absolute;inset:auto -80px -100px auto;width:240px;height:240px;border-radius:50%;background:radial-gradient(circle,rgba(124,58,237,.24),transparent 70%);pointer-events:none}
+.amp-agent-status{display:inline-flex;align-items:center;border-radius:999px;padding:8px 11px;font-size:11px;font-weight:900;letter-spacing:.08em}
+.amp-status-ready{background:#153b2b;color:#86efac;border:1px solid #166534}
+.amp-orchestrator-form textarea{margin-top:16px;min-height:110px}
+.amp-orchestrator-result{margin-top:14px;border:1px solid #332a49;background:#121520;border-radius:16px;padding:14px}
+.amp-orchestrator-result:empty{display:none}.amp-orchestrator-result small{display:block;margin-top:10px;color:#94a3b8}
+.amp-orchestrator-picks{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:10px}
+.amp-orchestrator-picks button{background:#171b27;border:1px solid #353c50;text-align:left}
+.amp-orchestrator-picks b,.amp-orchestrator-picks span{display:block}.amp-orchestrator-picks span{font-size:12px;color:#aeb8ca;margin-top:5px;line-height:1.35}
+
+.amp-agent-filters{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+.amp-agent-filters button{background:#201b30;border:1px solid #3a3150;border-radius:999px;padding:9px 13px;font-size:12px;font-weight:800}
+.amp-agent-filters button.is-active{background:#6d28d9;border-color:#8b5cf6}
+.amp-agent-search{margin:14px 0 18px}.amp-agent-search input{margin:0;max-width:620px}
+.amp-agent-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.amp-agent-card{position:relative;background:#151824;border:1px solid #292f3e;border-radius:18px;padding:20px;min-height:300px;display:flex;flex-direction:column}
+.amp-agent-card h3{font-size:21px;margin:14px 0 9px;line-height:1.05}
+.amp-agent-card p{color:#aeb8ca;line-height:1.5;flex:1}
+.amp-agent-icon{width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#241747;color:#a78bfa;font-size:23px;font-weight:900}
+.amp-agent-favorite{position:absolute;right:12px;top:12px;background:transparent!important;border:none!important;color:#667085!important;font-size:22px;padding:4px!important}
+.amp-agent-favorite.is-favorite{color:#fbbf24!important}
+.amp-agent-tags{display:flex;flex-wrap:wrap;gap:6px}.amp-agent-tags span{font-size:9px;font-weight:900;border-radius:999px;padding:5px 8px;background:#d8d3ea;color:#3b2673}
+.amp-agent-open{margin-top:8px;background:#293248!important}
+.amp-empty-state{padding:28px;border:1px dashed #475569;border-radius:16px;color:#94a3b8}
+.amp-agent-note p{margin-bottom:0;color:#aeb8ca}
+
+.amp-right-drawer-toggle{position:fixed;right:0;top:48%;z-index:2200;width:48px;height:62px;padding:0!important;border-radius:14px 0 0 14px!important;background:#6d28d9!important;font-size:20px!important;box-shadow:0 10px 30px rgba(0,0,0,.35)}
+.amp-right-drawer{position:fixed;z-index:2300;right:0;top:0;height:100dvh;width:min(520px,94vw);background:#0f121a;border-left:1px solid #312a43;box-shadow:-18px 0 50px rgba(0,0,0,.5);transform:translateX(105%);transition:transform .22s ease;display:flex;flex-direction:column}
+.amp-right-drawer.is-open{transform:translateX(0)}
+.amp-right-drawer-backdrop{display:none;position:fixed;z-index:2250;inset:0;background:rgba(0,0,0,.58)}
+.amp-right-drawer-backdrop.is-open{display:block}
+.amp-right-drawer-head{display:flex;justify-content:space-between;align-items:center;padding:18px;border-bottom:1px solid #262b36}
+.amp-right-drawer-head h2{margin:5px 0 0}.amp-right-drawer-head button{background:#252a36!important;border-radius:50%!important;width:40px;height:40px;padding:0!important;font-size:24px}
+.amp-drawer-tabs{display:flex;gap:6px;overflow:auto;padding:12px;border-bottom:1px solid #262b36}
+.amp-drawer-tabs button{flex:0 0 auto;background:#1a1f2b;border:1px solid #303748;border-radius:999px;padding:8px 11px;font-size:11px}
+.amp-drawer-tabs button.is-active{background:#6d28d9}
+.amp-right-drawer-body{padding:18px;overflow:auto;flex:1}
+.amp-drawer-panel{display:none}.amp-drawer-panel.is-active{display:block}
+.amp-drawer-panel h3{margin-top:0;font-size:22px}
+.amp-drawer-panel label{display:block;margin:12px 0;font-weight:800;font-size:13px;color:#d8d8e8}
+.amp-drawer-panel input,.amp-drawer-panel textarea,.amp-drawer-panel select{margin-top:6px}
+
+.amp-profile-preview{display:grid;gap:8px;margin:12px 0 18px}
+.amp-profile-preview div{display:grid;grid-template-columns:100px 1fr;gap:10px;background:#171b25;border:1px solid #292f3e;border-radius:12px;padding:10px}
+.amp-profile-preview span{color:#94a3b8;font-size:12px}.amp-profile-preview strong{font-size:13px}
+.amp-journey-steps{display:grid;gap:10px;margin:14px 0}
+.amp-journey-step{display:flex;gap:12px;align-items:flex-start;background:#161a24;border:1px solid #2d3443;border-radius:14px;padding:12px}
+.amp-journey-step>span{flex:0 0 28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#5b21b6;font-weight:900}
+.amp-journey-step strong{display:block}.amp-journey-step p{margin:4px 0 0;color:#aeb8ca;font-size:12px;line-height:1.4}
+.amp-agent-detail-box{background:#171b25;border:1px solid #30384a;border-radius:14px;padding:12px;margin:14px 0}
+.amp-agent-detail-box p{margin-bottom:0;color:#aeb8ca}
+
+@media(max-width:900px){
+  .amp-agent-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:640px){
+  .amp-agent-grid{grid-template-columns:1fr}
+  .amp-orchestrator-picks{grid-template-columns:1fr}
+  .amp-agent-card{min-height:auto}
+  .amp-right-drawer-toggle{top:auto;bottom:88px;width:46px;height:52px}
+  .amp-right-drawer{width:100vw}
+  .amp-profile-preview div{grid-template-columns:1fr}
+}
+
+/* PERFIL_MARKETING_AUTO_RESPONSIVO_V1 */
+@media(min-width:1700px){
+  .amp-shell{max-width:1800px}
+  .amp-agent-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .amp-right-drawer{width:min(620px,36vw)}
+}
+@media(orientation:portrait) and (min-width:700px) and (max-width:1200px){
+  .amp-agent-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:640px){
+  .amp-agent-filters{overflow-x:auto;flex-wrap:nowrap;padding-bottom:6px}
+  .amp-agent-filters button{white-space:nowrap}
+  .amp-right-drawer-head{padding-top:max(18px,env(safe-area-inset-top))}
+  .amp-right-drawer-body{padding-bottom:max(24px,env(safe-area-inset-bottom))}
+}

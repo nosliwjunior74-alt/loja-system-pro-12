@@ -123,7 +123,9 @@
 
         <button
           class="menu-btn"
+          id="aiMarketingMenuBtn"
           data-url="display_pro/produtor.html"
+          data-ai-marketing-contextual="true"
           type="button">
           <span class="menu-icon">&#128241;</span>
           AI Marketing Pro
@@ -540,10 +542,50 @@ async function(arquivo){
     }
   }
 
+  function currentFrameUrl(){
+    const frame=frameEl();
+    return String(
+      frame?.getAttribute('src') ||
+      frame?.src ||
+      ''
+    )
+      .split('?')[0]
+      .split('#')[0]
+      .replace(/^\.\//,'');
+  }
+
+  function isStoreWorkspaceUrl(url){
+    const normalized=String(url||'')
+      .split('?')[0]
+      .split('#')[0]
+      .replace(/^\.\//,'');
+
+    return [
+      'provador/index.html',
+      'provador/admin.html',
+      'configuracoes.html',
+      'remover_fundo/index.html',
+      'display_pro/loja.html'
+    ].includes(normalized);
+  }
+
+  function resolveContextualMenuUrl(btn,url){
+    if(
+      btn?.dataset?.aiMarketingContextual === 'true' &&
+      isStoreWorkspaceUrl(currentFrameUrl())
+    ){
+      return 'display_pro/loja.html';
+    }
+    return url;
+  }
+
   document.addEventListener('click',function(ev){
     const btn=ev.target.closest?.('[data-url]');
     if(!btn) return;
-    const url=btn.getAttribute('data-url') || '';
+
+    const rawUrl=btn.getAttribute('data-url') || '';
+    const url=resolveContextualMenuUrl(btn,rawUrl);
+
     if(isProducerUrl(url)){
       readStoreVisual();
       setTimeout(applyProducerVisual,0);

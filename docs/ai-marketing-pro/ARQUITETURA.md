@@ -61,3 +61,18 @@ Módulo vendável e integrado. Contextos `produtor` e `loja` compartilham o mesm
 - [2026-10-05 21:21] Checkout Online da Loja V1: tela publica separada do Caixa interno; customer_order pendente; preco/estoque validados no servidor; pagamento real da loja permanece para OAuth/API futura.
 
 - [2026-10-05 22:30] Provador publico do Lojista: Construtor passa a usar /provador/index.html?loja=<slug>, evitando /s/<slug> e tela de login. Checkout e Caixa preservados.
+
+## Agentes IA + Jornada Inteligente V1 (07/10/2026)
+- Um único acesso `Agentes IA` por contexto evita poluição visual.
+- A tela compartilhada recebe `?context=produtor|loja`.
+- Palavras-chave são filtros; cards grandes são agentes executores.
+- Orquestrador recomenda agentes; nesta V1 a recomendação é local/estrutural, sem fingir IA externa.
+- Configurações, Jornada, Ideias, Calendário e Ajuda ficam em gaveta lateral direita.
+- Perfil do Lojista reaproveita a sessão da loja e complementa nicho/público/região em armazenamento isolado por loja.
+- Produtor usa contexto próprio do Provador Pro.
+
+## Perfil de Marketing automático V1
+- Cadastro manual do Produtor e checkout alimentam `marketingProfile` da loja.
+- Perfil persistido no banco por loja e entregue por `/api/session/store-config`.
+- Central Lateral permanece editável e salva via `/api/session/store-marketing-profile`.
+- Isolamento por loja e reutilização entre dispositivos.

@@ -55,3 +55,5 @@ Adicionado Construtor de Sites Pro, site-preview, carregamento de dados da loja,
 - AJUDA_MOBILE_V1: botao flutuante Ajuda compactado no celular para reduzir sobreposicao de cards; janela do chatbot tambem ajustada para largura/altura segura em iPhone.
 
 - AJUDA_MOBILE_V2: no celular, o botao flutuante Ajuda passa a ser circular e exibir somente o icone de conversa, reduzindo a sobreposicao sobre CTAs e cards; desktop permanece com o texto completo.
+
+- SERVICE_WORKER_DISPLAY_PRO_V2: cache do Display Pro alterado para v2; caches antigos display-pro-system-* sao removidos no activate; HTML/CSS/JS usam network-first com fallback offline; app.js solicita update do service worker ao carregar. Objetivo: impedir CSS/JS antigos presos em celulares apos deploy.

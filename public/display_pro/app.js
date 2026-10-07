@@ -31,3 +31,15 @@ function launchCampaign(c){if(!c)return; const text=campaignText(c); try{navigat
 
 function schedulerTick(){if(!DPS.schedulerEnabled()) return; const store=DPS.activeStore(); if(!store) return; let arr=DPS.campaigns(store); let changed=false; const now=Date.now(); arr=arr.map(c=>{if(!c.schedule||c.status==='pausada'||c.status==='disparada') return c; const when=new Date(c.schedule).getTime(); if(isNaN(when)) return c; if(when-now<=15*60*1000 && when>now && c.status==='agendada'){changed=true; return {...c,status:'pronta'};} if(when<=now && (c.status==='agendada'||c.status==='pronta')){launchCampaign(c); if('Notification' in window && Notification.permission==='granted'){new Notification('Campanha pronta para disparo',{body:(c.name||'Campanha')+' aberta nas redes.'})} changed=true; return {...c,status:'disparada',lastTriggeredAt:new Date().toISOString()};} return c;}); if(changed) DPS.setCampaigns(store,arr)}
 setInterval(schedulerTick,30000);
+
+/* SERVICE_WORKER_DISPLAY_PRO_V2
+   Forca o navegador a buscar atualizacao do service worker ao carregar.
+*/
+if('serviceWorker' in navigator){
+  window.addEventListener('load',async()=>{
+    try{
+      const reg=await navigator.serviceWorker.getRegistration('./');
+      if(reg) await reg.update();
+    }catch(_){}
+  });
+}

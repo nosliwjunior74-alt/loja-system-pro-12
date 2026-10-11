@@ -1,4 +1,4 @@
-:root{--pink-1:#fff7fb;--pink-2:#fbe7f1;--pink-3:#f3c2d9;--pink-4:#e33d8f;--pink-5:#8a2558;--ink:#3f2332;--muted:#7c6671;--line:#ecd8e3;--card:#fff}
+﻿:root{--pink-1:#fff7fb;--pink-2:#fbe7f1;--pink-3:#f3c2d9;--pink-4:#e33d8f;--pink-5:#8a2558;--ink:#3f2332;--muted:#7c6671;--line:#ecd8e3;--card:#fff}
 *{box-sizing:border-box}
 html,body{height:100%}
 body{margin:0;font-family:Inter,"Segoe UI",Arial,sans-serif;background:#f8f6f8;color:var(--ink)}
@@ -377,5 +377,425 @@ body{
   .sidebar .menu-btn.active .menu-icon{
     color:#ffffff !important;
     background:rgba(255,255,255,.18) !important;
+  }
+}
+
+/* === SHELL PREMIUM / SPLASH / IDENTIDADE V1 === */
+.pp-shell-splash{position:fixed;inset:0;z-index:5000;display:grid;place-items:center;background:radial-gradient(circle at 20% 15%,rgba(227,61,143,.16),transparent 26%),radial-gradient(circle at 85% 78%,rgba(227,61,143,.12),transparent 28%),linear-gradient(150deg,#fff 0%,#fff8fc 55%,#ffeaf4 100%);transition:opacity .35s ease,visibility .35s ease}
+.pp-shell-splash.pp-hide{opacity:0;visibility:hidden;pointer-events:none}
+.pp-shell-splash-card{text-align:center;color:var(--pink-5);padding:28px}
+.pp-splash-hanger{width:118px;height:74px;color:var(--pink-4);display:block;margin:0 auto 8px}
+.pp-splash-custom-logo{display:block;max-width:180px;max-height:110px;object-fit:contain;margin:0 auto 12px}
+.pp-shell-splash-card strong{display:block;font-size:34px;letter-spacing:-.03em}
+.pp-shell-splash-card span{display:block;margin-top:7px;color:#7e6572;font-size:13px;letter-spacing:.16em;text-transform:uppercase}
+.pp-splash-loader{width:170px;height:5px;border-radius:999px;background:#f2dce8;overflow:hidden;margin:28px auto 0}
+.pp-splash-loader i{display:block;width:42%;height:100%;border-radius:inherit;background:linear-gradient(90deg,var(--pink-4),#9f255f);animation:ppSplashMove 1.1s ease-in-out infinite alternate}
+@keyframes ppSplashMove{from{transform:translateX(-15%)}to{transform:translateX(145%)}}
+.pp-shell-top-actions{display:flex;align-items:center;gap:8px;margin-left:auto}
+.pp-shell-icon-btn{width:42px;height:42px;border-radius:14px;border:1px solid var(--line);background:#fff;color:var(--pink-5);font-weight:900;font-size:17px;cursor:pointer;box-shadow:0 8px 22px rgba(89,46,67,.06)}
+.pp-shell-icon-btn:hover{background:#fff5fa;border-color:#e8b8d1}
+.pp-identity-overlay{position:fixed;inset:0;z-index:2100;background:rgba(40,20,31,.48)}
+.pp-identity-panel{position:fixed;z-index:2200;right:18px;top:18px;bottom:18px;width:min(520px,calc(100vw - 36px));overflow:auto;border:1px solid var(--line);border-radius:22px;background:#fff;box-shadow:0 28px 80px rgba(44,22,34,.25);padding:18px}
+.pp-identity-head{display:flex;justify-content:space-between;gap:14px;align-items:flex-start;margin-bottom:16px}
+.pp-identity-head strong{display:block;color:var(--pink-5);font-size:20px}.pp-identity-head span{display:block;color:var(--muted);font-size:12px;margin-top:4px;line-height:1.4}
+.pp-identity-head button{width:38px;height:38px;border:1px solid var(--line);border-radius:12px;background:#fff;color:var(--pink-5);font-size:24px;cursor:pointer}
+.pp-identity-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.pp-identity-grid label{display:grid;gap:6px}
+.pp-identity-grid label>span{font-size:12px;font-weight:800;color:#684858}.pp-identity-grid input[type="text"]{width:100%;min-width:0;border:1px solid var(--line);border-radius:12px;padding:11px 12px;font:inherit;color:#4d3541;background:#fff}
+.pp-identity-wide{grid-column:1/-1}.pp-identity-check{display:flex!important;grid-template-columns:auto 1fr!important;align-items:center;background:#fff8fb;border:1px solid var(--line);border-radius:12px;padding:11px}
+.pp-identity-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:18px}.pp-identity-actions button{border-radius:12px;padding:11px 16px;font-weight:900;cursor:pointer}
+.pp-secondary{background:#fff;border:1px solid var(--line);color:var(--pink-5)}.pp-primary{background:linear-gradient(135deg,var(--pink-4),#b52b6d);border:1px solid transparent;color:#fff}
+@media(min-width:761px){
+  .mobile-menu-toggle{display:flex!important;top:14px;left:14px;position:fixed;z-index:1300}
+  .shell{transition:grid-template-columns .22s ease}
+  body.pp-sidebar-collapsed .shell{grid-template-columns:84px minmax(0,1fr)}
+  body.pp-sidebar-collapsed .sidebar{padding-left:10px;padding-right:10px}
+  body.pp-sidebar-collapsed .brand{padding:10px;justify-content:center}
+  body.pp-sidebar-collapsed .brand-logo{width:48px;height:48px;flex-basis:48px}
+  body.pp-sidebar-collapsed .brand-copy,body.pp-sidebar-collapsed .menu-label{display:none}
+  body.pp-sidebar-collapsed .menu-btn{justify-content:center;padding:10px 6px;font-size:0}
+  body.pp-sidebar-collapsed .menu-icon{margin:0;width:26px;height:26px;font-size:16px}
+  body.pp-sidebar-collapsed .sidebar-tools,body.pp-sidebar-collapsed .actions{display:none}
+}
+@media(max-width:760px){
+  .mobile-menu-toggle{border-radius:16px!important;height:46px!important;padding:0 16px!important;box-shadow:0 12px 30px rgba(63,35,50,.16)!important}
+  .sidebar{width:min(88vw,330px)!important}.brand{margin-top:48px}
+  .pp-identity-panel{right:8px;top:8px;bottom:8px;width:calc(100vw - 16px);padding:14px;border-radius:18px}
+  .pp-identity-grid{grid-template-columns:1fr}.pp-identity-wide{grid-column:auto}.pp-identity-actions{flex-direction:column-reverse}.pp-identity-actions button{width:100%}
+}
+
+
+/* === MENU PROFISSIONAL V1.8 === */
+.pp-pro-sidebar{
+  gap:12px;
+  background:
+    radial-gradient(circle at 10% 0%, color-mix(in srgb,var(--brand-color,#e33d8f) 12%,transparent), transparent 28%),
+    linear-gradient(180deg,#fffafd 0%,#fff 100%);
+}
+.pp-sidebar-mobile-head{
+  display:none;
+}
+.pp-sidebar-profile{
+  position:relative;
+  overflow:hidden;
+}
+.pp-sidebar-profile::after{
+  content:"";
+  position:absolute;
+  inset:auto -30px -35px auto;
+  width:100px;height:100px;border-radius:50%;
+  background:color-mix(in srgb,var(--brand-color,#e33d8f) 8%,transparent);
+  pointer-events:none;
+}
+.pp-pro-menu{display:grid;gap:12px}
+.pp-pro-menu .menu-group{
+  display:grid;
+  gap:6px;
+  padding:10px;
+  border:1px solid color-mix(in srgb,var(--line) 86%,transparent);
+  border-radius:16px;
+  background:rgba(255,255,255,.72);
+}
+.pp-pro-menu .menu-label{
+  padding:0 4px 3px;
+  font-size:9px;
+  letter-spacing:.13em;
+  font-weight:900;
+}
+.pp-pro-menu .menu-btn{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  min-height:43px;
+  border-radius:12px;
+  padding:9px 10px;
+}
+.pp-pro-menu .menu-icon{
+  width:30px;height:30px;flex:0 0 30px;
+  display:grid;place-items:center;
+  border-radius:10px;
+  background:color-mix(in srgb,var(--brand-color,#e33d8f) 9%,#fff);
+  font-size:15px;
+}
+.pp-pro-menu .menu-btn.active .menu-icon{
+  background:rgba(255,255,255,.18);
+}
+.pp-menu-text{
+  min-width:0;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.pp-sidebar-tools-premium{
+  border:1px solid var(--line);
+  background:#fff;
+  padding:10px;
+  border-radius:16px;
+}
+.pp-sidebar-tools-premium .utility-btn{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  min-height:40px;
+}
+.pp-sidebar-footer{
+  margin-top:auto;
+  padding-top:12px;
+  border-top:1px solid var(--line);
+  display:grid;
+  gap:10px;
+}
+.pp-sidebar-user{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:10px;
+  background:#fff;
+  border:1px solid var(--line);
+  border-radius:14px;
+}
+.pp-sidebar-avatar{
+  width:38px;height:38px;flex:0 0 38px;
+  border-radius:50%;
+  display:grid;place-items:center;
+  background:linear-gradient(145deg,#fff1f8,#ffdceb);
+  color:var(--pink-5);
+  font-weight:950;
+}
+.pp-sidebar-user strong{display:block;color:var(--pink-5);font-size:12px}
+.pp-sidebar-user span{display:block;color:var(--muted);font-size:10px;margin-top:2px}
+.pp-sidebar-footer-actions{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.pp-footer-mini-btn{
+  min-height:40px;
+  border:1px solid var(--line);
+  border-radius:12px;
+  background:#fff;
+  color:#624353;
+  font-weight:800;
+  font-size:11px;
+  cursor:pointer;
+  display:flex;
+  gap:6px;
+  align-items:center;
+  justify-content:center;
+}
+.pp-footer-mini-btn:hover{background:#fff5fa;border-color:#e8b8d1}
+.pp-logout-mini{color:#9f255f}
+.pp-sidebar-close{
+  width:38px;height:38px;
+  border:1px solid var(--line);
+  border-radius:12px;
+  background:#fff;
+  color:var(--pink-5);
+  font-size:24px;
+  cursor:pointer;
+}
+.pp-sidebar-mobile-brand{
+  display:flex;
+  align-items:center;
+  gap:9px;
+  color:var(--pink-5);
+}
+.pp-sidebar-mobile-brand svg{width:46px;height:30px;color:var(--brand-color,var(--pink-4))}
+.pp-sidebar-mobile-brand strong{display:block;font-size:14px;line-height:1.1}
+.pp-sidebar-mobile-brand span{display:block;color:var(--muted);font-size:10px;margin-top:2px}
+
+/* sidebar recolhida em PC/TV */
+@media(min-width:761px){
+  body.pp-sidebar-collapsed .pp-sidebar-profile{
+    padding:8px;
+  }
+  body.pp-sidebar-collapsed .pp-pro-menu .menu-group{
+    padding:6px;
+  }
+  body.pp-sidebar-collapsed .pp-pro-menu .menu-label,
+  body.pp-sidebar-collapsed .pp-menu-text,
+  body.pp-sidebar-collapsed .pp-sidebar-user>div:not(.pp-sidebar-avatar),
+  body.pp-sidebar-collapsed .pp-sidebar-footer-actions span:last-child{
+    display:none;
+  }
+  body.pp-sidebar-collapsed .pp-pro-menu .menu-btn,
+  body.pp-sidebar-collapsed .pp-sidebar-tools-premium .utility-btn{
+    justify-content:center;
+    padding:7px;
+  }
+  body.pp-sidebar-collapsed .pp-pro-menu .menu-icon{
+    width:34px;height:34px;flex-basis:34px;
+  }
+  body.pp-sidebar-collapsed .pp-sidebar-tools-premium{
+    padding:6px;
+  }
+  body.pp-sidebar-collapsed .pp-sidebar-user{
+    justify-content:center;padding:7px;
+  }
+  body.pp-sidebar-collapsed .pp-sidebar-footer-actions{
+    grid-template-columns:1fr;
+  }
+  body.pp-sidebar-collapsed .pp-footer-mini-btn{
+    padding:7px;
+  }
+}
+
+/* gaveta premium em celular */
+@media(max-width:760px){
+  .pp-pro-sidebar{
+    position:fixed!important;
+    top:0!important;
+    bottom:0!important;
+    left:0!important;
+    height:100dvh!important;
+    width:min(88vw,340px)!important;
+    padding:12px!important;
+    border-right:1px solid var(--line)!important;
+    border-bottom:0!important;
+    border-radius:0 24px 24px 0;
+    box-shadow:24px 0 70px rgba(52,27,40,.24);
+    overflow-y:auto;
+  }
+  .pp-sidebar-mobile-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    padding:4px 4px 8px;
+    position:sticky;
+    top:0;
+    z-index:4;
+    background:linear-gradient(180deg,#fffafd 85%,rgba(255,250,253,0));
+  }
+  .pp-sidebar-profile{margin-top:0!important}
+  .pp-pro-menu{
+    grid-template-columns:1fr!important;
+    gap:10px!important;
+  }
+  .pp-pro-menu .menu-group{
+    min-width:0!important;
+  }
+  .pp-sidebar-footer{
+    padding-bottom:10px;
+  }
+}
+
+
+/* === AJUSTE MENU / LOGO V1.8.2 === */
+:root{--pp-sidebar-width:292px}
+
+@media(max-width:980px) and (min-width:761px){
+  :root{--pp-sidebar-width:240px}
+}
+
+/* PC/TV: somente o Painel Mestre usa o botão de recolher. */
+@media(min-width:761px){
+  body:not(.pp-master-shell) .mobile-menu-toggle{
+    display:none!important;
+  }
+
+  body.pp-master-shell .mobile-menu-toggle{
+    display:flex!important;
+    align-items:center;
+    justify-content:center;
+    position:fixed;
+    top:18px;
+    left:calc(var(--pp-sidebar-width) - 50px);
+    z-index:1350;
+    width:40px;
+    height:40px;
+    padding:0!important;
+    border-radius:12px!important;
+    background:#fff!important;
+    border:1px solid var(--line)!important;
+    box-shadow:0 8px 22px rgba(63,35,50,.10)!important;
+    transition:left .22s ease,transform .18s ease,background .18s ease;
+  }
+
+  body.pp-master-shell .mobile-menu-toggle > span:last-child{
+    display:none;
+  }
+
+  body.pp-master-shell .mobile-menu-toggle .mobile-menu-icon{
+    margin:0;
+    font-size:20px;
+  }
+
+  body.pp-master-shell .pp-sidebar-profile{
+    padding-right:56px;
+  }
+
+  body.pp-sidebar-collapsed{
+    --pp-sidebar-width:84px;
+  }
+
+  body.pp-sidebar-collapsed .mobile-menu-toggle{
+    left:22px;
+  }
+
+  body.pp-sidebar-collapsed .pp-sidebar-profile{
+    padding-right:8px;
+  }
+}
+
+/* CELULAR: reserva espaço real para o botão Menu sem cobrir logo/nome. */
+@media(max-width:760px){
+  .pp-pro-sidebar .pp-sidebar-mobile-head{
+    min-height:56px;
+    padding-left:112px!important;
+  }
+
+  .pp-pro-sidebar .pp-sidebar-mobile-brand{
+    min-width:0;
+  }
+
+  .pp-pro-sidebar .pp-sidebar-mobile-brand > div{
+    min-width:0;
+  }
+
+  .pp-pro-sidebar .pp-sidebar-mobile-brand strong,
+  .pp-pro-sidebar .pp-sidebar-mobile-brand span{
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+  }
+
+  /* Painel da Loja usa o mesmo CSS: garante que o botão não cubra a logo da loja. */
+  .sidebar:not(.pp-pro-sidebar) .brand{
+    margin-top:52px!important;
+  }
+}
+
+
+/* === RETORNOS PADRONIZADOS V1.9 === */
+.pp-context-back{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-height:38px;
+  padding:8px 12px;
+  border:1px solid var(--line);
+  border-radius:12px;
+  background:#fff;
+  color:var(--pink-5);
+  font:inherit;
+  font-size:12px;
+  font-weight:900;
+  cursor:pointer;
+  box-shadow:0 8px 20px rgba(63,35,50,.06);
+  white-space:nowrap;
+}
+.pp-context-back:hover{background:#fff5fa;border-color:#e8b8d1}
+.pp-context-back[hidden]{display:none!important}
+@media(max-width:760px){
+  .pp-context-back{width:100%;min-height:42px;margin-top:8px}
+  .topbar .pp-context-back{grid-column:1/-1}
+}
+
+
+/* === CABECALHO SIDEBAR FIXO V1.9.1 === */
+/* Mantem logo/nome totalmente visiveis quando a barra lateral e rolada. */
+@media(min-width:761px){
+  .sidebar > .brand{
+    position:sticky!important;
+    top:0!important;
+    z-index:1200!important;
+    flex:0 0 auto;
+    background:#fff!important;
+    box-shadow:0 10px 24px rgba(63,35,50,.08);
+  }
+
+  body.pp-master-shell .pp-sidebar-profile{
+    min-height:88px;
+    padding-right:58px!important;
+  }
+
+  body.pp-master-shell .mobile-menu-toggle{
+    top:24px!important;
+    left:calc(var(--pp-sidebar-width) - 50px)!important;
+    z-index:1400!important;
+  }
+
+  body.pp-sidebar-collapsed .mobile-menu-toggle{
+    left:22px!important;
+  }
+
+  body.pp-sidebar-collapsed .pp-sidebar-profile{
+    min-height:auto;
+    padding-right:8px!important;
+  }
+
+  /* Painel da Loja: a marca tambem permanece inteira ao rolar a sidebar. */
+  body:not(.pp-master-shell) .sidebar > .brand{
+    padding-right:14px!important;
+  }
+}
+
+/* Celular: cabecalho premium e marca nao disputam o mesmo espaco. */
+@media(max-width:760px){
+  .pp-pro-sidebar .pp-sidebar-mobile-head{
+    padding-left:108px!important;
+    min-height:58px!important;
+  }
+
+  .pp-pro-sidebar .pp-sidebar-profile{
+    position:relative!important;
+    top:auto!important;
+    overflow:visible!important;
   }
 }

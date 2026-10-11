@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-br">
 <head>
   <meta charset="UTF-8">
@@ -39,7 +39,21 @@
     }
   </style></head>
 
-<body>
+<body class="pp-master-shell">
+
+<div class="pp-shell-splash" id="ppShellSplash" aria-hidden="true">
+  <div class="pp-shell-splash-card">
+    <img id="ppSplashLogoImg" class="pp-splash-custom-logo" alt="Logo do Provador Pro" hidden style="display:none">
+    <svg id="ppSplashHanger" class="pp-splash-hanger" viewBox="0 0 120 72" aria-hidden="true">
+      <path d="M58 27c0-9 4-15 11-15 7 0 12 5 12 12 0 7-5 11-12 14l-2 1 39 22H14l43-24"
+        fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <strong id="ppSplashName">Provador Pro</strong>
+    <span id="ppSplashMessage">Moda que vende mais</span>
+    <div class="pp-splash-loader"><i></i></div>
+  </div>
+</div>
+
 
 <button
   class="mobile-menu-toggle"
@@ -58,16 +72,31 @@
 
 <div class="shell">
 
-  <aside class="sidebar">
+  <aside class="sidebar pp-pro-sidebar">
 
-    <div class="brand">
+    <div class="pp-sidebar-mobile-head">
+      <div class="pp-sidebar-mobile-brand">
+        <svg viewBox="0 0 120 72" aria-hidden="true">
+          <path d="M58 27c0-9 4-15 11-15 7 0 12 5 12 12 0 7-5 11-12 14l-2 1 39 22H14l43-24"
+            fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <div>
+          <strong>Provador Pro</strong>
+          <span>Painel Mestre</span>
+        </div>
+      </div>
+      <button class="pp-sidebar-close" type="button"
+        aria-label="Fechar menu"
+        onclick="document.getElementById('mobileMenuBtn')?.click()">×</button>
+    </div>
+
+    <div class="brand pp-sidebar-profile">
       <img
         src="assets/default-logo.svg"
         alt="Logo da loja"
         class="brand-logo"
         id="brandLogo"
       >
-
       <div class="brand-copy">
         <span class="brand-kicker" id="brandKicker">PAINEL MESTRE &bull; PRODUTOR</span>
         <h1 id="brandName">Loja Mestre</h1>
@@ -75,154 +104,109 @@
       </div>
     </div>
 
-
-    <nav class="menu" aria-label="Menu principal">
+    <nav class="menu pp-pro-menu" aria-label="Menu principal">
 
       <div class="menu-group">
-
-        <span class="menu-label">Operação da loja</span>
-
-        <button
-          class="menu-btn"
-          data-url="provador/index.html"
-          type="button">
-          <span class="menu-icon">&#128087;</span>
-          Vitrine / Provador
+        <span class="menu-label">Principal</span>
+        <button class="menu-btn active" data-url="lojas_master.html" type="button">
+          <span class="menu-icon">🏢</span>
+          <span class="pp-menu-text">Painel Mestre</span>
         </button>
-
-        <button
-          class="menu-btn"
-          data-url="provador/admin.html"
-          type="button">
-          <span class="menu-icon">&#128230;</span>
-          Painel da Loja
-        </button>
-
-        <button
-          class="menu-btn"
-          data-url="configuracoes.html"
-          type="button">
-          <span class="menu-icon">&#127912;</span>
-          Personalizar Loja
-        </button>
-
       </div>
 
+      <div class="menu-group">
+        <span class="menu-label">Gestão</span>
+        <button class="menu-btn" data-url="provador/admin.html" type="button">
+          <span class="menu-icon">📦</span>
+          <span class="pp-menu-text">Painel da Loja</span>
+        </button>
+        <button class="menu-btn" data-url="configuracoes.html" type="button">
+          <span class="menu-icon">🎨</span>
+          <span class="pp-menu-text">Personalizar Loja</span>
+        </button>
+        <button class="menu-btn" data-url="provador/index.html" type="button">
+          <span class="menu-icon">👗</span>
+          <span class="pp-menu-text">Vitrine / Provador</span>
+        </button>
+      </div>
 
       <div class="menu-group">
-
-        <span class="menu-label">Conteúdo e exibição</span>
-
-        <button
-          class="menu-btn"
-          data-url="remover_fundo/index.html"
-          type="button">
-          <span class="menu-icon">&#128444;</span>
-          PNG sem Fundo
-        </button>
-
-        <button
-          class="menu-btn"
-          id="aiMarketingMenuBtn"
+        <span class="menu-label">Aplicativos</span>
+        <button class="menu-btn" id="aiMarketingMenuBtn"
           data-url="display_pro/produtor.html"
-          data-ai-marketing-contextual="true"
-          type="button">
-          <span class="menu-icon">&#128241;</span>
-          AI Marketing Pro
+          data-ai-marketing-contextual="true" type="button">
+          <span class="menu-icon">📣</span>
+          <span class="pp-menu-text">AI Marketing Pro</span>
         </button>
-
+        <button class="menu-btn" data-url="remover_fundo/index.html" type="button">
+          <span class="menu-icon">🖼️</span>
+          <span class="pp-menu-text">PNG sem Fundo</span>
+        </button>
       </div>
 
-
       <div class="menu-group">
-
-        <span class="menu-label">Administração</span>
-
-        <button
-          class="menu-btn active"
-          data-url="lojas_master.html"
-          type="button">
-          <span class="menu-icon">&#127970;</span>
-          Painel Mestre das Lojas
+        <span class="menu-label">Financeiro</span>
+        <button class="menu-btn" data-url="configuracao-cobranca.html" type="button">
+          <span class="menu-icon">💳</span>
+          <span class="pp-menu-text">Cobrança</span>
         </button>
-
-        <button
-          class="menu-btn"
-          data-url="configuracao-cobranca.html"
-          type="button">
-          <span class="menu-icon">&#128179;</span>
-          Cobrança
+        <button class="menu-btn" data-url="financeiro.html" type="button">
+          <span class="menu-icon">📊</span>
+          <span class="pp-menu-text">Financeiro</span>
         </button>
-
-        <button
-          class="menu-btn"
-          data-url="financeiro.html"
-          type="button">
-          <span class="menu-icon">&#128202;</span>
-          Financeiro
-        </button>
-
-        <button
-          class="menu-btn"
-          data-url="seguranca.html"
-          type="button">
-          <span class="menu-icon">&#128274;</span>
-          Segurança
-        </button>
-
       </div>
 
+      <div class="menu-group">
+        <span class="menu-label">Configurações</span>
+        <button class="menu-btn" id="ppIdentityBtnSidebar" type="button">
+          <span class="menu-icon">⚙️</span>
+          <span class="pp-menu-text">Identidade do Painel</span>
+        </button>
+        <button class="menu-btn" data-url="seguranca.html" type="button">
+          <span class="menu-icon">🛡️</span>
+          <span class="pp-menu-text">Segurança</span>
+        </button>
+      </div>
 
       <div class="menu-group">
-
-        <span class="menu-label">Suporte</span>
-
-        <button
-          class="menu-btn"
-          data-url="manual/manual.html"
-          type="button">
-          <span class="menu-icon">&#128214;</span>
-          Manual
+        <span class="menu-label">Ajuda</span>
+        <button class="menu-btn" data-url="manual/manual.html" type="button">
+          <span class="menu-icon">📘</span>
+          <span class="pp-menu-text">Manuais e Ajuda</span>
         </button>
-
       </div>
 
     </nav>
 
-
-    <div class="sidebar-tools">
-
-      <button
-        class="utility-btn"
-        type="button"
-        onclick="fazerBackup()">
-        <span class="menu-icon">&#128190;</span>
-        Backup agora
+    <div class="sidebar-tools pp-sidebar-tools-premium">
+      <span class="menu-label">Backups</span>
+      <button class="utility-btn" type="button" onclick="fazerBackup()">
+        <span class="menu-icon">💾</span>
+        <span class="pp-menu-text">Backup agora</span>
       </button>
-
-      <button
-        class="utility-btn"
-        type="button"
-        onclick="listarBackups()">
-        <span class="menu-icon">&#128194;</span>
-        Ver backups
+      <button class="utility-btn" type="button" onclick="listarBackups()">
+        <span class="menu-icon">📁</span>
+        <span class="pp-menu-text">Ver backups</span>
       </button>
-
       <div id="listaBackups" class="backup-list"></div>
-
     </div>
 
-
-    <div class="actions">
-
-      <button
-        class="action-btn"
-        id="logoutAdminBtn"
-        type="button">
-        <span class="menu-icon">&#10140;</span>
-        Sair
-      </button>
-
+    <div class="pp-sidebar-footer">
+      <div class="pp-sidebar-user">
+        <div class="pp-sidebar-avatar">P</div>
+        <div>
+          <strong>Produtor</strong>
+          <span>Painel Mestre</span>
+        </div>
+      </div>
+      <div class="pp-sidebar-footer-actions">
+        <button class="pp-footer-mini-btn" type="button" data-url="seguranca.html">
+          <span>🛡️</span><span>Segurança</span>
+        </button>
+        <button class="pp-footer-mini-btn pp-logout-mini" id="logoutAdminBtn" type="button">
+          <span>↪</span><span>Sair</span>
+        </button>
+      </div>
     </div>
 
   </aside>
@@ -239,6 +223,14 @@
           PAINEL MESTRE &bull; PRODUTOR
         </span>
       </div>
+
+      <div class="pp-shell-top-actions">
+        <button id="ppIdentityBtn" class="pp-shell-icon-btn" type="button" title="Identidade do painel" aria-label="Identidade do painel">⚙</button>
+      </div>
+      <button id="ppBackMasterBtn" class="pp-context-back" type="button" hidden>
+        ← Voltar ao Painel Mestre
+      </button>
+
 
 
       <div
@@ -267,6 +259,31 @@
 
 </div>
 
+
+
+<div class="pp-identity-overlay" id="ppIdentityOverlay" hidden></div>
+<section class="pp-identity-panel" id="ppIdentityPanel" hidden aria-label="Identidade do painel">
+  <div class="pp-identity-head">
+    <div>
+      <strong>Identidade do Painel</strong>
+      <span>Personalize logos e mensagens sem alterar as funções do sistema.</span>
+    </div>
+    <button id="ppIdentityClose" type="button" aria-label="Fechar">×</button>
+  </div>
+  <div class="pp-identity-grid">
+    <label><span>Nome no topo</span><input id="ppIdentityTopName" type="text" maxlength="60" placeholder="Provador Pro"></label>
+    <label><span>Mensagem do topo</span><input id="ppIdentityTopMessage" type="text" maxlength="100" placeholder="Moda que vende mais"></label>
+    <label class="pp-identity-wide"><span>Logo do topo (URL ou caminho)</span><input id="ppIdentityTopLogo" type="text" placeholder="assets/minha-logo.png"></label>
+    <label class="pp-identity-check pp-identity-wide"><input id="ppIdentitySameLogo" type="checkbox" checked><span>Usar a mesma logo no final da tela</span></label>
+    <label class="pp-identity-wide"><span>Logo do final (URL ou caminho)</span><input id="ppIdentityBottomLogo" type="text" placeholder="assets/minha-logo-rodape.png"></label>
+    <label><span>Nome no final</span><input id="ppIdentityBottomName" type="text" maxlength="60" placeholder="Provador Pro"></label>
+    <label><span>Mensagem do final</span><input id="ppIdentityBottomMessage" type="text" maxlength="100" placeholder="Moda que vende mais"></label>
+  </div>
+  <div class="pp-identity-actions">
+    <button id="ppIdentityReset" class="pp-secondary" type="button">Restaurar padrão</button>
+    <button id="ppIdentitySave" class="pp-primary" type="button">Salvar identidade</button>
+  </div>
+</section>
 
 <script src="js/local-store.js"></script>
 <script src="js/dashboard.js"></script>
@@ -606,5 +623,44 @@ async function(arquivo){
   });
 })();
 </script>
+
+<script id="PP_CONTEXT_BACK_MASTER_V1_9">
+(function(){
+  const frame=document.getElementById('appFrame');
+  const btn=document.getElementById('ppBackMasterBtn');
+  const title=document.getElementById('currentTitle');
+
+  function normalize(url){
+    try{return new URL(url,location.href).pathname.replace(/^\/+/,'');}
+    catch(e){return String(url||'').split('?')[0].split('#')[0].replace(/^\/+/,'');}
+  }
+
+  function currentFrame(){
+    try{return normalize(frame?.contentWindow?.location?.href || frame?.getAttribute('src') || '');}
+    catch(e){return normalize(frame?.getAttribute('src') || '');}
+  }
+
+  function refresh(){
+    if(!btn || !frame) return;
+    const current=currentFrame();
+    btn.hidden=(current.endsWith('lojas_master.html') || current==='lojas_master.html');
+  }
+
+  btn?.addEventListener('click',function(){
+    if(!frame)return;
+    frame.src='lojas_master.html';
+    if(title) title.textContent='Painel Mestre das Lojas';
+    document.querySelectorAll('.sidebar .menu-btn').forEach(function(b){
+      const u=normalize(b.getAttribute('data-url')||'');
+      b.classList.toggle('active',u==='lojas_master.html');
+    });
+    refresh();
+  });
+
+  frame?.addEventListener('load',refresh);
+  window.addEventListener('load',refresh);
+})();
+</script>
+
 </body>
 </html>

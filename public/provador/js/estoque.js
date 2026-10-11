@@ -1,4 +1,4 @@
-
+﻿
 window.Estoque={
   safeParse(valor, padrao = []) {
   try {
@@ -254,10 +254,49 @@ async byId(id){
       return {ok:false,offline:true,pending:pending.length};
     }
     try{
+      const sessionResponse=await fetch('/api/public/session-store',{
+        method:'GET',
+        credentials:'include',
+        cache:'no-store'
+      });
+
+      if(sessionResponse.status===401){
+        await this.setCustomerSyncStatus({
+          state:'pending',
+          pending:pending.length,
+          lastError:'Sessao da loja ainda nao disponivel para sincronizacao.'
+        });
+        return {
+          ok:false,
+          waitingSession:true,
+          pending:pending.length,
+          acknowledged:[],
+          conflicts:[]
+        };
+      }
+
+      if(!sessionResponse.ok) throw new Error('HTTP session '+sessionResponse.status);
+
       const response=await fetch('/api/public/customer-operations/sync',{
         method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},
         body:JSON.stringify({operations:pending})
       });
+
+      if(response.status===401){
+        await this.setCustomerSyncStatus({
+          state:'pending',
+          pending:pending.length,
+          lastError:'Sessao da loja expirou antes da sincronizacao.'
+        });
+        return {
+          ok:false,
+          waitingSession:true,
+          pending:pending.length,
+          acknowledged:[],
+          conflicts:[]
+        };
+      }
+
       if(!response.ok) throw new Error('HTTP '+response.status);
       const data=await response.json();
       const acknowledged=new Set(Array.isArray(data?.acknowledged)?data.acknowledged.map(String):[]);

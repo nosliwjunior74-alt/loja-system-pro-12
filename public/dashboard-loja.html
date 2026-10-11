@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang='pt-br'>
 <head>
   <meta charset='UTF-8'>
@@ -152,6 +152,9 @@
           <strong id='currentTitle'>Vitrine / Provador</strong>
           <span id='topbarSub'>Painel da loja</span>
         </div>
+        <button id='ppBackStoreBtn' class='pp-context-back' type='button' hidden>
+          ← Voltar ao Painel da Loja
+        </button>
       </header>
      <div style="position:relative;width:100%;height:100%;">
 
@@ -700,5 +703,66 @@ document.addEventListener('keydown',function(e){if(e.key==='Escape'){closeMobile
 window.addEventListener('resize',function(){if(!isMobile()){closeMobileMenu();}});
 })();
 </script>
+
+<script id="PP_CONTEXT_BACK_STORE_V1_9_2">
+(function(){
+  const frame=document.getElementById('appFrame');
+  const btn=document.getElementById('ppBackStoreBtn');
+
+  function overviewButton(){
+    return document.getElementById('adminOverviewBtn');
+  }
+
+  function isOverview(){
+    const ov=overviewButton();
+    return !!(ov && ov.classList.contains('active'));
+  }
+
+  function refresh(){
+    if(!btn)return;
+    btn.hidden=isOverview();
+  }
+
+  btn?.addEventListener('click',function(e){
+    e.preventDefault();
+    e.stopPropagation();
+
+    const ov=overviewButton();
+    if(ov){
+      ov.click();
+      setTimeout(refresh,0);
+      return;
+    }
+
+    // Fallback seguro: permanece no Painel da Loja, nunca envia ao Painel Mestre.
+    const q=location.search || '';
+    location.href='dashboard-loja.html'+q;
+  });
+
+  frame?.addEventListener('load',function(){
+    setTimeout(refresh,0);
+  });
+
+  document.addEventListener('click',function(e){
+    if(e.target.closest('.menu-btn')){
+      setTimeout(refresh,0);
+    }
+  });
+
+  window.addEventListener('load',function(){
+    setTimeout(refresh,80);
+  });
+
+  // O botão "Visão Geral" é criado dinamicamente pelo painel da loja.
+  // Observa a sidebar para manter o retorno coerente mesmo após essa criação.
+  const side=document.querySelector('.sidebar');
+  if(side && window.MutationObserver){
+    new MutationObserver(function(){
+      refresh();
+    }).observe(side,{childList:true,subtree:true,attributes:true,attributeFilter:['class']});
+  }
+})();
+</script>
+
 </body>
 </html>

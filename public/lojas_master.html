@@ -575,13 +575,177 @@ button.small{
   .layout{max-width:1800px;margin-left:auto;margin-right:auto}
 }
 </style>
+
+<style id="PROVADOR_PRO_MASTER_REDESIGN_V1">
+.pp-master-top{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:16px;align-items:center;padding:4px 2px 0}
+.pp-master-user{display:flex;align-items:center;gap:12px;min-width:0}
+.pp-master-brand{
+  min-width:118px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:1px;
+  color:var(--accent-dark);
+  flex:0 0 auto;
+}
+.pp-master-brand-hanger{
+  width:58px;height:34px;display:block;color:var(--accent);
+}
+.pp-master-brand-text{
+  font-size:12px;font-weight:950;line-height:1;letter-spacing:-.02em;white-space:nowrap;
+}
+
+.pp-master-avatar{width:54px;height:54px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(145deg,#fff,#ffe9f4);border:1px solid var(--line);color:var(--accent-dark);font-size:24px;font-weight:900;box-shadow:0 10px 26px rgba(105,38,73,.08);flex:0 0 auto}
+.pp-master-kicker{font-size:12px;color:var(--muted);margin-bottom:2px}
+.pp-master-title{margin:0;color:var(--accent-dark);font-size:24px;line-height:1.1}
+.pp-master-sub{margin:4px 0 0;color:var(--muted);font-size:13px}
+.pp-master-actions{display:flex;align-items:center;gap:10px}
+.pp-icon-btn{width:46px;height:46px;padding:0;border-radius:15px;display:grid;place-items:center;background:#fff;color:var(--accent-dark);border:1px solid var(--line);font-size:20px;position:relative;box-shadow:0 10px 24px rgba(105,38,73,.06)}
+.pp-icon-btn:hover{background:var(--soft)}
+.pp-notify-dot{position:absolute;right:8px;top:8px;width:9px;height:9px;border-radius:50%;background:var(--accent);border:2px solid #fff}
+.pp-popover-wrap{position:relative}
+.pp-popover{display:none;position:absolute;right:0;top:56px;z-index:90;width:min(340px,86vw);background:#fff;border:1px solid var(--line);border-radius:18px;box-shadow:0 22px 55px rgba(73,30,53,.18);padding:14px}
+.pp-popover.open{display:block}
+.pp-popover h3{margin:0 0 4px;color:var(--accent-dark);font-size:16px}
+.pp-popover p{margin:0;color:var(--muted);font-size:12px;line-height:1.5}
+.pp-popover-links{display:grid;gap:8px;margin-top:12px}
+.pp-popover-links a{text-decoration:none;color:var(--ink);background:#fffafd;border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-weight:800;font-size:13px}
+.pp-popover-links a:hover{border-color:#dca7c4;background:#fff5fa}
+.pp-master-hero{position:relative;overflow:hidden;background:radial-gradient(circle at 88% 22%,rgba(227,61,143,.22),transparent 24%),linear-gradient(135deg,#fff 0%,#fff7fb 60%,#ffe9f4 100%)}
+.pp-master-hero::after{content:"";position:absolute;right:-40px;bottom:-70px;width:220px;height:220px;border-radius:50%;background:rgba(227,61,143,.06);pointer-events:none}
+.pp-master-hero .summary-chip{position:relative;z-index:2}
+.pp-hub{background:#fff;border:1px solid var(--line);border-radius:22px;padding:20px;box-shadow:0 12px 28px rgba(105,38,73,.07)}
+.pp-hub-head{display:flex;justify-content:space-between;gap:14px;align-items:end;flex-wrap:wrap;margin-bottom:14px}
+.pp-hub-head h2{margin:0;color:var(--accent-dark);font-size:19px}
+.pp-hub-head p{margin:4px 0 0;color:var(--muted);font-size:13px}
+.pp-hub-more{background:#fff;color:var(--accent-dark);border:1px solid var(--line);white-space:nowrap}
+.pp-app-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.pp-app-card{border:1px solid var(--line);border-radius:17px;background:#fff;min-height:118px;padding:14px;text-align:left;color:var(--ink);display:grid;grid-template-columns:44px minmax(0,1fr) 18px;align-items:start;gap:10px;box-shadow:0 8px 22px rgba(105,38,73,.035)}
+.pp-app-card:hover{transform:translateY(-2px);border-color:#dca7c4;box-shadow:0 14px 28px rgba(105,38,73,.09)}
+.pp-app-icon{width:44px;height:44px;border-radius:13px;display:grid;place-items:center;background:linear-gradient(145deg,#fff3f9,#ffe2f0);color:var(--accent-dark);font-size:21px;font-weight:900}
+.pp-app-card strong{display:block;color:var(--accent-dark);font-size:14px;margin:2px 0 5px}
+.pp-app-card small{display:block;color:var(--muted);font-size:11px;line-height:1.4;font-weight:600}
+.pp-app-arrow{font-size:20px;color:var(--accent);align-self:center}
+.pp-app-card.pp-featured{background:linear-gradient(145deg,#fff,var(--soft));border-color:color-mix(in srgb,var(--accent) 35%,var(--line))}
+.pp-app-card,.pp-icon-btn,.pp-hub{transition:border-color .18s ease,box-shadow .18s ease,transform .18s ease,background .18s ease}
+.pp-app-icon{box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--accent) 10%,transparent)}
+.pp-app-extra{display:none;margin-top:12px}
+.pp-app-extra.open{display:grid}
+.pp-section-anchor{scroll-margin-top:18px}
+@media(min-width:1600px){.wrap{max-width:1560px}.pp-app-grid{grid-template-columns:repeat(4,minmax(0,1fr))}.pp-app-card{min-height:112px}}
+@media(max-width:1180px){.pp-app-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:760px){.pp-app-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:640px){body{padding:12px}.wrap{gap:12px}.pp-master-top{grid-template-columns:minmax(0,1fr) auto;gap:8px;padding:0 2px}.pp-master-user{gap:8px}.pp-master-brand{min-width:88px}.pp-master-brand-hanger{width:46px;height:28px}.pp-master-brand-text{font-size:10px}.pp-master-avatar{width:38px;height:38px;font-size:16px}.pp-master-kicker{font-size:10px;margin-bottom:1px}.pp-master-title{font-size:16px;line-height:1.12}.pp-master-sub{font-size:10px;line-height:1.25;margin-top:3px}.pp-master-actions{gap:5px}.pp-icon-btn{width:36px;height:36px;border-radius:11px;font-size:15px}.pp-notify-dot{right:6px;top:6px;width:8px;height:8px}.pp-master-hero{padding:16px 16px}.pp-master-hero h1{font-size:22px}.pp-master-hero p{font-size:12px;line-height:1.45}.pp-hub{padding:12px;border-radius:17px}.pp-hub-head{align-items:stretch;gap:8px;margin-bottom:10px}.pp-hub-head h2{font-size:16px}.pp-hub-head p{font-size:10.5px;line-height:1.35}.pp-hub-more{width:100%;min-height:38px;padding:8px 10px;font-size:12px;border-radius:11px}.pp-app-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.pp-app-card{display:grid;grid-template-columns:34px minmax(0,1fr) 12px;min-height:98px;padding:10px 9px;gap:7px;border-radius:14px;align-items:start}.pp-app-icon{width:34px;height:34px;border-radius:10px;font-size:16px}.pp-app-card strong{font-size:11.5px;line-height:1.12;margin:1px 0 4px}.pp-app-card small{font-size:9.5px;line-height:1.28;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}.pp-app-arrow{font-size:15px;align-self:center}.pp-popover{top:46px;width:min(310px,90vw)}}
+@media(max-width:350px){.pp-app-grid{grid-template-columns:1fr}.pp-app-card{min-height:84px}.pp-master-title{font-size:15px}.pp-master-sub{display:none}}
+
+.pp-module-back{
+  display:none;
+  width:max-content;
+  margin:0 0 14px;
+  padding:10px 14px;
+  border:1px solid var(--line);
+  border-radius:13px;
+  background:#fff;
+  color:var(--accent-dark);
+  font-weight:900;
+  box-shadow:0 8px 20px rgba(105,38,73,.06);
+}
+.pp-module-back:hover{background:var(--soft);border-color:color-mix(in srgb,var(--accent) 28%,var(--line))}
+.pp-module-screen{animation:ppModuleIn .18s ease}
+.pp-module-hidden{display:none!important}
+.pp-landing-hidden{display:none!important}
+@keyframes ppModuleIn{from{opacity:.35;transform:translateY(8px)}to{opacity:1;transform:none}}
+@media(max-width:640px){
+  .pp-module-back{width:100%;min-height:42px;margin-bottom:10px}
+}
+
+.pp-brand-home{
+  width:min(100%,760px);
+  margin:22px auto 6px;
+  border:0;
+  background:transparent;
+  color:var(--accent-dark);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:5px;
+  cursor:pointer;
+  padding:18px 14px;
+  border-radius:20px;
+  opacity:.9;
+}
+.pp-brand-home:hover{
+  background:color-mix(in srgb,var(--soft) 72%,transparent);
+  transform:translateY(-1px);
+}
+.pp-brand-hanger{
+  width:66px;height:42px;display:block;
+  color:var(--accent);
+}
+.pp-brand-name{
+  font-size:20px;
+  line-height:1;
+  font-weight:950;
+  letter-spacing:-.02em;
+}
+.pp-brand-tagline{
+  font-size:10px;
+  color:var(--muted);
+  letter-spacing:.16em;
+  text-transform:uppercase;
+  font-weight:800;
+}
+@media(max-width:640px){
+  .pp-brand-home{margin-top:14px;padding:14px 10px}
+  .pp-brand-hanger{width:58px;height:36px}
+  .pp-brand-name{font-size:18px}
+  .pp-brand-tagline{font-size:9px}
+}
+
+.pp-master-custom-logo{display:block;max-width:92px;max-height:52px;object-fit:contain}.pp-master-custom-logo[hidden]{display:none!important}.pp-master-bottom-custom-logo{max-width:120px;max-height:70px;margin-bottom:4px}@media(max-width:640px){.pp-master-custom-logo{max-width:72px;max-height:42px}.pp-master-bottom-custom-logo{max-width:100px;max-height:58px}}
+</style>
+
 </head>
 
 <body>
 
 <div class="wrap">
 
-<section class="hero">
+
+<div class="pp-master-top" aria-label="Cabeçalho do Painel Mestre">
+  <div class="pp-master-user">
+    <div class="pp-master-brand" aria-label="Provador Pro">
+  <img id="ppMasterTopLogoImg" class="pp-master-custom-logo" alt="Logo do painel" hidden style="display:none">
+  <svg id="ppMasterTopHanger" class="pp-master-brand-hanger" viewBox="0 0 120 72" aria-hidden="true">
+    <path d="M58 27c0-9 4-15 11-15 7 0 12 5 12 12 0 7-5 11-12 14l-2 1 39 22H14l43-24"
+      fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>
+  <span class="pp-master-brand-text" id="ppMasterTopName">Provador Pro</span>
+</div>
+    <div>
+      <div class="pp-master-kicker">Olá, Produtor</div>
+      <h2 class="pp-master-title">Painel Mestre das Lojas</h2>
+      <p class="pp-master-sub">Central de administração do Provador Pro</p>
+    </div>
+  </div>
+  <div class="pp-master-actions">
+    <div class="pp-popover-wrap">
+      <button class="pp-icon-btn" id="ppNotificationsBtn" type="button" aria-label="Notificações" aria-expanded="false">🔔<span class="pp-notify-dot" aria-hidden="true"></span></button>
+      <div class="pp-popover" id="ppNotificationsPopover"><h3>Notificações</h3><p>Alertas de cobrança, licença, pagamentos e operações que precisam de atenção podem aparecer aqui sem poluir a tela principal.</p></div>
+    </div>
+    <div class="pp-popover-wrap">
+      <button class="pp-icon-btn" id="ppProfileBtn" type="button" aria-label="Perfil e segurança" aria-expanded="false">👤</button>
+      <div class="pp-popover" id="ppProfilePopover">
+        <h3>Perfil do Produtor</h3><p>Atalhos de conta, segurança e preferências.</p>
+        <div class="pp-popover-links"><a href="configuracoes.html">Dados e configurações</a><a href="seguranca.html">Segurança e senha</a></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<section class="hero pp-master-hero">
   <div>
     <h1>Painel Mestre das Lojas</h1>
     <p>Gerencie uma loja por vez com seleção clara, busca rápida e isolamento entre cadastros.</p>
@@ -589,6 +753,29 @@ button.small{
 
   <div class="summary-chip" id="storeSummary">
     0 lojas cadastradas
+  </div>
+</section>
+
+
+<section class="pp-hub" id="ppProducerHub">
+  <div class="pp-hub-head">
+    <div><h2>Funções principais</h2><p>Escolha uma função. A tela correspondente abre somente quando você clicar.</p></div>
+    <button class="pp-hub-more" id="ppToggleMoreApps" type="button" aria-expanded="false">Ver mais aplicativos</button>
+  </div>
+  <div class="pp-app-grid">
+    <button class="pp-app-card pp-featured" type="button" data-pp-target="storeManagementArea"><span class="pp-app-icon">🏬</span><span><strong>Cadastro de Lojas</strong><small>Gerencie lojas, dados, acessos e configurações.</small></span><span class="pp-app-arrow">›</span></button>
+    <button class="pp-app-card" type="button" data-pp-target="producerPlansPanel" data-pp-open="details"><span class="pp-app-icon">🏷️</span><span><strong>Planos e Preços</strong><small>Configure planos, recursos e valores.</small></span><span class="pp-app-arrow">›</span></button>
+    <button class="pp-app-card" type="button" data-pp-target="globalAppCatalogPanel" data-pp-open="details"><span class="pp-app-icon">▦</span><span><strong>Catálogo de Aplicativos</strong><small>Preços, upgrades, testes e condições gerais.</small></span><span class="pp-app-arrow">›</span></button>
+    <button class="pp-app-card pp-featured" type="button" data-pp-url="display_pro/produtor.html"><span class="pp-app-icon">📣</span><span><strong>AI Marketing Pro</strong><small>Agentes IA, campanhas, ideias, conteúdo e vendas.</small></span><span class="pp-app-arrow">›</span></button>
+    <button class="pp-app-card" type="button" data-pp-url="configuracao-cobranca.html"><span class="pp-app-icon">💳</span><span><strong>Cobrança</strong><small>Pagamentos, assinaturas e recuperação do checkout.</small></span><span class="pp-app-arrow">›</span></button>
+    <button class="pp-app-card" type="button" data-pp-url="financeiro.html"><span class="pp-app-icon">📊</span><span><strong>Financeiro</strong><small>Acompanhe receitas, pagamentos e relatórios.</small></span><span class="pp-app-arrow">›</span></button>
+    <button class="pp-app-card" type="button" data-pp-url="seguranca.html"><span class="pp-app-icon">🛡️</span><span><strong>Segurança</strong><small>Acessos, senha, proteção e registros.</small></span><span class="pp-app-arrow">›</span></button>
+    <button class="pp-app-card" type="button" data-pp-target="activeStoreCard"><span class="pp-app-icon">☁️</span><span><strong>Backups</strong><small>Acesse os backups da loja selecionada.</small></span><span class="pp-app-arrow">›</span></button>
+    <button class="pp-app-card" type="button" data-pp-target="manualsHub"><span class="pp-app-icon">📘</span><span><strong>Manuais e Ajuda</strong><small>Documentação, tutoriais, PDFs e orientações do sistema.</small></span><span class="pp-app-arrow">›</span></button>
+  </div>
+  <div class="pp-app-grid pp-app-extra" id="ppMoreApps">
+    <button class="pp-app-card" type="button" data-pp-target="globalAppCatalogPanel" data-pp-open="details"><span class="pp-app-icon">＋</span><span><strong>Mais aplicativos</strong><small>Área preparada para novos módulos do ecossistema.</small></span><span class="pp-app-arrow">›</span></button>
+    <button class="pp-app-card" type="button" data-pp-url="configuracoes.html"><span class="pp-app-icon">⚙️</span><span><strong>Configurações</strong><small>Preferências e ajustes administrativos.</small></span><span class="pp-app-arrow">›</span></button>
   </div>
 </section>
 
@@ -627,7 +814,7 @@ button.small{
   <p class="status-message" id="globalAppCatalogStatus"></p>
 </details>
 
-<div class="layout">
+<div class="layout" id="storeManagementArea">
 
 <section class="card">
 
@@ -1033,7 +1220,7 @@ Abrir Provador
 </div>
 
 
-<div class="manuals">
+<div class="manuals" id="manualsHub">
 
 <details class="card manual-card" id="producerSalesManual" style="grid-column:1/-1;">
 <summary style="cursor:pointer;font-weight:800;color:#9f2d68;font-size:17px;">📘 Manual do Produtor — Venda, Cadastro e Entrega da Loja</summary>
@@ -1124,6 +1311,18 @@ Abrir manual do cliente
 </div>
 
 </div>
+
+
+
+<button class="pp-brand-home" id="ppBrandHome" type="button" aria-label="Voltar ao início do Painel Mestre">
+  <img id="ppMasterBottomLogoImg" class="pp-master-custom-logo pp-master-bottom-custom-logo" alt="Logo do painel" hidden style="display:none">
+  <svg id="ppMasterBottomHanger" class="pp-brand-hanger" viewBox="0 0 120 72" aria-hidden="true">
+    <path d="M58 27c0-9 4-15 11-15 7 0 12 5 12 12 0 7-5 11-12 14l-2 1 39 22H14l43-24"
+      fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>
+  <span class="pp-brand-name" id="ppMasterBottomName">Provador Pro</span>
+  <span class="pp-brand-tagline" id="ppMasterBottomMessage">Moda que vende mais</span>
+</button>
 
 
 <script src="js/local-store.js"></script>
@@ -3823,6 +4022,151 @@ loadStores().then(function(){return loadCheckoutRecovery();}).catch(function(e){
 loadProducerPlans();
 loadGlobalAppCatalog();
 
+</script>
+
+
+<script id="PROVADOR_PRO_MASTER_REDESIGN_V1_JS">
+(function(){
+  var landingHero=null, landingHub=null, backBtn=null;
+
+  function closePopovers(except){
+    ['ppNotificationsPopover','ppProfilePopover'].forEach(function(id){
+      var el=document.getElementById(id);
+      if(el&&el!==except) el.classList.remove('open');
+    });
+  }
+
+  function bindPopover(buttonId,popoverId){
+    var btn=document.getElementById(buttonId),pop=document.getElementById(popoverId);
+    if(!btn||!pop)return;
+    btn.addEventListener('click',function(ev){
+      ev.stopPropagation();
+      var willOpen=!pop.classList.contains('open');
+      closePopovers(pop);
+      pop.classList.toggle('open',willOpen);
+      btn.setAttribute('aria-expanded',willOpen?'true':'false');
+    });
+    pop.addEventListener('click',function(ev){ev.stopPropagation();});
+  }
+
+  function moduleRootFor(target){
+    if(!target) return null;
+    if(target.id==='producerPlansPanel'||target.closest('#producerPlansPanel')) return document.getElementById('producerPlansPanel');
+    if(target.id==='globalAppCatalogPanel'||target.closest('#globalAppCatalogPanel')) return document.getElementById('globalAppCatalogPanel');
+    if(target.id==='storeManagementArea'||target.closest('#storeManagementArea')) return document.getElementById('storeManagementArea');
+    if(target.id==='manualsHub'||target.closest('#manualsHub')) return document.getElementById('manualsHub');
+    return target;
+  }
+
+  function allModuleRoots(){
+    return ['producerPlansPanel','globalAppCatalogPanel','storeManagementArea','manualsHub']
+      .map(function(id){return document.getElementById(id);})
+      .filter(Boolean);
+  }
+
+  function ensureBackButton(){
+    if(backBtn) return backBtn;
+    backBtn=document.createElement('button');
+    backBtn.type='button';
+    backBtn.className='pp-module-back';
+    backBtn.innerHTML='← Voltar ao Painel Mestre';
+    backBtn.addEventListener('click',showLanding);
+    return backBtn;
+  }
+
+  function hideModules(){
+    allModuleRoots().forEach(function(el){
+      el.classList.add('pp-module-hidden');
+      el.classList.remove('pp-module-screen');
+    });
+  }
+
+  function showLanding(){
+    hideModules();
+    if(backBtn) backBtn.style.display='none';
+    if(landingHero) landingHero.classList.remove('pp-landing-hidden');
+    if(landingHub) landingHub.classList.remove('pp-landing-hidden');
+    window.scrollTo({top:0,behavior:'smooth'});
+  }
+
+  function openModule(target, openDetails){
+    var root=moduleRootFor(target);
+    if(!root)return;
+
+    hideModules();
+    if(landingHero) landingHero.classList.add('pp-landing-hidden');
+    if(landingHub) landingHub.classList.add('pp-landing-hidden');
+
+    root.classList.remove('pp-module-hidden');
+    root.classList.add('pp-module-screen');
+
+    if(openDetails && target && target.tagName==='DETAILS') target.open=true;
+
+    var btn=ensureBackButton();
+    btn.style.display='block';
+    if(root.parentNode && btn.parentNode!==root.parentNode){
+      root.parentNode.insertBefore(btn,root);
+    }else if(root.parentNode){
+      root.parentNode.insertBefore(btn,root);
+    }
+
+    root.scrollIntoView({behavior:'smooth',block:'start'});
+  }
+
+  bindPopover('ppNotificationsBtn','ppNotificationsPopover');
+  bindPopover('ppProfileBtn','ppProfilePopover');
+  document.addEventListener('click',function(){closePopovers();});
+
+  landingHero=document.querySelector('.pp-master-hero');
+  landingHub=document.getElementById('ppProducerHub');
+
+  hideModules();
+
+  document.querySelectorAll('[data-pp-target]').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      var id=btn.getAttribute('data-pp-target');
+      var target=document.getElementById(id);
+      if(!target)return;
+      openModule(target,btn.getAttribute('data-pp-open')==='details');
+    });
+  });
+
+  document.querySelectorAll('[data-pp-url]').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      var url=btn.getAttribute('data-pp-url');
+      if(url) location.href=url;
+    });
+  });
+
+  var brandHome=document.getElementById('ppBrandHome');
+  if(brandHome){
+    brandHome.addEventListener('click',function(){showLanding();});
+  }
+
+  var moreBtn=document.getElementById('ppToggleMoreApps'),more=document.getElementById('ppMoreApps');
+  if(moreBtn&&more){
+    moreBtn.addEventListener('click',function(){
+      var open=more.classList.toggle('open');
+      moreBtn.setAttribute('aria-expanded',open?'true':'false');
+      moreBtn.textContent=open?'Mostrar menos':'Ver mais aplicativos';
+    });
+  }
+
+  function applyShellIdentity(cfg){
+    cfg=cfg||{};
+    const ti=document.getElementById('ppMasterTopLogoImg'),th=document.getElementById('ppMasterTopHanger'),tn=document.getElementById('ppMasterTopName');
+    const bi=document.getElementById('ppMasterBottomLogoImg'),bh=document.getElementById('ppMasterBottomHanger'),bn=document.getElementById('ppMasterBottomName'),bm=document.getElementById('ppMasterBottomMessage');
+    if(tn)tn.textContent=cfg.topName||'Provador Pro';
+    if(bn)bn.textContent=cfg.bottomName||'Provador Pro';
+    if(bm)bm.textContent=cfg.bottomMessage||'Moda que vende mais';
+    if(ti&&th){if(cfg.topLogo){ti.src=cfg.topLogo;ti.hidden=false;ti.style.display='block';th.style.display='none';}else{ti.removeAttribute('src');ti.hidden=true;ti.style.display='none';th.style.display='block';}}
+    const bottomLogo=cfg.sameLogo!==false?cfg.topLogo:cfg.bottomLogo;
+    if(bi&&bh){if(bottomLogo){bi.src=bottomLogo;bi.hidden=false;bi.style.display='block';bh.style.display='none';}else{bi.removeAttribute('src');bi.hidden=true;bi.style.display='none';bh.style.display='block';}}
+  }
+  window.addEventListener('message',function(ev){if(ev.origin!==location.origin)return;if(ev.data&&ev.data.type==='shell-identity')applyShellIdentity(ev.data.config||{});});
+  try{applyShellIdentity(JSON.parse(localStorage.getItem('provador_shell_identity_v1')||'{}'));}catch(e){applyShellIdentity({});}
+
+})();
 </script>
 
 </body>

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Sua Loja - Painel da Loja</title><link rel="stylesheet" href="css/estilo.css"><style>
 /* PROVADOR PRO ESTOQUE GAVETAS PESQUISA V1A */
@@ -1424,6 +1424,114 @@ window.removeCustomer = async (id)=>{
   await Estoque.removeCustomer(id);
   await renderCustomers();
 };
+
+let restObjectUrls = [];
+
+function limparRestObjectUrls(){
+  restObjectUrls.forEach(url=>{
+    try{ URL.revokeObjectURL(url); }catch(e){}
+  });
+  restObjectUrls = [];
+}
+
+function criarRestUrl(file){
+  const url = URL.createObjectURL(file);
+  restObjectUrls.push(url);
+  return url;
+}
+
+function restUid(){
+  return 'midia-' +
+    Date.now() +
+    '-' +
+    Math.random().toString(36).slice(2,9);
+}
+
+async function getRestPlaylist(){
+  const lista = await DB.getKV('rest_playlist');
+  return Array.isArray(lista) ? lista : [];
+}
+
+async function saveRestPlaylist(lista){
+  await DB.setKV(
+    'rest_playlist',
+    Array.isArray(lista) ? lista : []
+  );
+}
+
+async function getRestSettings(){
+  const salvo = await DB.getKV('rest_settings');
+
+  return {
+    imageSeconds:
+      Number(salvo && salvo.imageSeconds) || 6,
+
+    fitMode:
+      salvo && salvo.fitMode === 'contain'
+        ? 'contain'
+        : 'cover'
+  };
+}
+
+async function saveRestSettings(){
+  await DB.setKV('rest_settings',{
+    imageSeconds:
+      Number(restImageSeconds.value) || 6,
+
+    fitMode:
+      restFitMode.value === 'contain'
+        ? 'contain'
+        : 'cover'
+  });
+}
+
+restFile.onchange = async ()=>{
+  const arquivos =
+    Array.from(restFile.files || []);
+
+  if(!arquivos.length) return;
+
+  const validos = arquivos.filter(file=>
+    file.type.startsWith('image/') ||
+    file.type.startsWith('video/')
+  );
+
+  if(!validos.length){
+    alert('Escolha fotos ou videos validos.');
+    restFile.value = '';
+    return;
+  }
+
+  const lista = await getRestPlaylist();
+
+  validos.forEach(file=>{
+    lista.push({
+      id:restUid(),
+      name:file.name,
+      type:file.type.startsWith('video/')
+        ? 'video'
+        : 'image',
+      file
+    });
+  });
+
+  await saveRestPlaylist(lista);
+
+  await DB.setKV('rest_meta',{
+    mode:'playlist',
+    type:'mixed',
+    name:
+      lista.length +
+      (lista.length === 1
+        ? ' midia'
+        : ' midias')
+  });
+
+  restFile.value = '';
+
+  await renderRestPreview();
+};
+
 
 restImageSeconds.onchange = async ()=>{
   await saveRestSettings();

@@ -799,3 +799,45 @@ body{
     overflow:visible!important;
   }
 }
+
+
+/* === TROCAR LOJA V1.11 === */
+.pp-store-switch-wrap{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  min-width:0;
+}
+.pp-switch-store-top{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:7px;
+  min-height:38px;
+  padding:8px 11px;
+  border:1px solid var(--line);
+  border-radius:999px;
+  background:#fff;
+  color:var(--pink-5);
+  font:inherit;
+  font-size:12px;
+  font-weight:900;
+  cursor:pointer;
+  white-space:nowrap;
+}
+.pp-switch-store-top:hover,
+.pp-switch-store-menu:hover{
+  background:#fff5fa;
+  border-color:#e8b8d1;
+}
+.pp-switch-store-menu{
+  border-style:dashed;
+}
+@media(max-width:980px){
+  .pp-switch-store-top span:last-child{display:none}
+  .pp-switch-store-top{width:38px;padding:0;border-radius:12px}
+}
+@media(max-width:760px){
+  .pp-store-switch-wrap{display:none}
+  .pp-switch-store-menu{display:flex!important}
+}

@@ -112,6 +112,10 @@
           <span class="menu-icon">🏢</span>
           <span class="pp-menu-text">Painel Mestre</span>
         </button>
+        <button class="menu-btn pp-switch-store-menu" id="ppSwitchStoreMenuBtn" type="button">
+          <span class="menu-icon">🔄</span>
+          <span class="pp-menu-text">Trocar loja</span>
+        </button>
       </div>
 
       <div class="menu-group">
@@ -230,6 +234,12 @@
       <button id="ppBackMasterBtn" class="pp-context-back" type="button" hidden>
         ← Voltar ao Painel Mestre
       </button>
+      <div class="pp-store-switch-wrap">
+        <button id="ppSwitchStoreTopBtn" class="pp-switch-store-top" type="button" title="Selecionar outra loja">
+          <span aria-hidden="true">🔄</span>
+          <span>Trocar loja</span>
+        </button>
+
 
 
 
@@ -243,6 +253,7 @@
           Loja Mestre
         </span>
 
+      </div>
       </div>
 
     </header>
@@ -620,6 +631,87 @@ async function(arquivo){
       new MutationObserver(syncFromFrame).observe(frame,{attributes:true,attributeFilter:['src']});
     }
     syncFromFrame();
+  });
+})();
+</script>
+
+
+<script id="PP_SWITCH_STORE_V1_11_2">
+(function(){
+  const frame=document.getElementById('appFrame');
+  const title=document.getElementById('currentTitle');
+  const buttons=[
+    document.getElementById('ppSwitchStoreMenuBtn'),
+    document.getElementById('ppSwitchStoreTopBtn')
+  ].filter(Boolean);
+
+  function normalize(url){
+    try{return new URL(url,location.href).pathname.replace(/^\/+/,'');}
+    catch(e){return String(url||'').split('?')[0].split('#')[0].replace(/^\/+/,'');}
+  }
+
+  function openSelectorInsideMaster(){
+    if(!frame) return;
+
+    try{
+      const doc=frame.contentDocument || frame.contentWindow.document;
+      if(!doc) return;
+
+      const card=doc.querySelector('[data-pp-target="storeManagementArea"]');
+      if(card) card.click();
+
+      window.setTimeout(function(){
+        try{
+          const d=frame.contentDocument || frame.contentWindow.document;
+          const details=d.querySelector('.store-selector-details');
+          const summary=d.getElementById('storeSelectorSummary');
+          const search=d.getElementById('storeSearch');
+
+          if(details) details.open=true;
+
+          const target=details || summary;
+          if(target) target.scrollIntoView({behavior:'smooth',block:'start'});
+
+          if(search){
+            try{search.focus({preventScroll:true});}catch(e){search.focus();}
+            if(typeof search.select==='function') search.select();
+          }
+        }catch(e){}
+      },180);
+    }catch(e){}
+  }
+
+  function openStoreSwitcher(){
+    if(!frame) return;
+
+    const current=normalize(frame.getAttribute('src') || '');
+    const alreadyMaster=current==='lojas_master.html' || current.endsWith('/lojas_master.html');
+
+    if(title) title.textContent='Painel Mestre das Lojas';
+
+    document.querySelectorAll('.sidebar .menu-btn').forEach(function(b){
+      const u=normalize(b.getAttribute('data-url')||'');
+      b.classList.toggle('active',u==='lojas_master.html');
+    });
+
+    if(alreadyMaster){
+      openSelectorInsideMaster();
+    }else{
+      const once=function(){
+        frame.removeEventListener('load',once);
+        window.setTimeout(openSelectorInsideMaster,80);
+      };
+      frame.addEventListener('load',once);
+      frame.src='lojas_master.html';
+    }
+
+    if(document.body.classList.contains('mobile-menu-open')){
+      document.getElementById('mobileMenuBtn')?.click();
+    }
+  }
+
+  buttons.forEach(function(btn){
+    btn.addEventListener('click',openStoreSwitcher);
   });
 })();
 </script>

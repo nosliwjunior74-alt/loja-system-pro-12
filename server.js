@@ -805,6 +805,39 @@ app.get('/api/admin/session', (req,res)=>{
 
   res.json({ ok:true, username:ADMIN_USER, activeStore: active });
 });
+
+// === CENTRAL DE COMUNICADOS E OFERTAS V1.15 (isolada, sem alterar banco SQLite) ===
+const PP_V115_CAMPAIGN_FILE=path.join(DATA_DIR,'producer-store-banners-v115.json');
+function ppV115Read(){try{const v=JSON.parse(fs.readFileSync(PP_V115_CAMPAIGN_FILE,'utf8'));return Array.isArray(v)?v:[]}catch(e){return []}}
+function ppV115Write(items){fs.mkdirSync(DATA_DIR,{recursive:true});const tmp=PP_V115_CAMPAIGN_FILE+'.tmp';fs.writeFileSync(tmp,JSON.stringify(items,null,2),'utf8');fs.renameSync(tmp,PP_V115_CAMPAIGN_FILE)}
+function ppV115AllowedUrl(value){const v=String(value||'').trim();if(!v)return '';if(v.startsWith('/')&&!v.startsWith('//')&&!/[\\]/.test(v))return v;if(/^https:\/\/[^\s]+$/i.test(v))return v;throw Error('Link deve ser caminho local iniciado por / ou https://')}
+function ppV115Clean(v){
+ const str=(key,max)=>String(v[key]??'').trim().slice(0,max);
+ const title=str('title',95),description=str('description',210);if(!title||!description)throw Error('Título e descrição são obrigatórios');
+ const startsAt=str('startsAt',32),endsAt=str('endsAt',32);
+ const asTime=(x)=>{if(!x)return '';const d=new Date(x);if(!Number.isFinite(+d))throw Error('Data inválida');return d.toISOString()};
+ const start=asTime(startsAt),end=asTime(endsAt);if(start&&end&&start>end)throw Error('Fim deve ser posterior ao início');
+ const category=str('category',20)|| (str('target',12)==='stores'?'specific':'all');
+ const allowedCategories=['all','specific','plan','free','trial'];
+ if(!allowedCategories.includes(category))throw Error('Categoria inválida');
+ if(category==='plan'||category==='free'||category==='trial')throw Error('Categoria em preparação: requer integração validada com licenças e planos antes de ativar campanhas');
+ const target=category==='specific'?'stores':'all';
+ const knownIds=new Set(listStores('').map(s=>String(s.id)));
+ const ids=[...new Set((Array.isArray(v.storeIds)?v.storeIds:String(v.storeIds||'').split(',')).map(String).map(x=>x.trim()).filter(Boolean))];
+ if(target==='stores'&&(!ids.length||ids.some(x=>!knownIds.has(x))))throw Error('Selecione IDs válidos de lojas cadastradas');
+ return {category,title,description,tag:str('tag',36),buttonText:str('buttonText',32),url:ppV115AllowedUrl(v.url),icon:str('icon',8)||'✨',target,storeIds:target==='stores'?ids:[],startsAt:start,endsAt:end,order:Math.max(0,Math.min(9999,Number(v.order)||0)),active:v.active===true};
+}
+app.get('/api/admin/store-banners-v115',requireAdminApi,(_req,res)=>res.json({items:ppV115Read()}));
+app.post('/api/admin/store-banners-v115',requireAdminApi,(req,res)=>{try{const item={...ppV115Clean(req.body||{}),id:crypto.randomUUID(),createdAt:new Date().toISOString()};const all=ppV115Read();all.push(item);ppV115Write(all);res.status(201).json({item})}catch(e){res.status(400).json({error:e.message})}});
+app.put('/api/admin/store-banners-v115/:id',requireAdminApi,(req,res)=>{try{const all=ppV115Read(),ix=all.findIndex(x=>x.id===req.params.id);if(ix<0)return res.status(404).json({error:'Campanha não encontrada'});all[ix]={...all[ix],...ppV115Clean(req.body||{}),updatedAt:new Date().toISOString()};ppV115Write(all);res.json({item:all[ix]})}catch(e){res.status(400).json({error:e.message})}});
+app.delete('/api/admin/store-banners-v115/:id',requireAdminApi,(req,res)=>{const all=ppV115Read(),next=all.filter(x=>x.id!==req.params.id);if(next.length===all.length)return res.status(404).json({error:'Campanha não encontrada'});ppV115Write(next);res.json({ok:true})});
+app.get('/api/public/store-banners-v115', (req,res)=>{
+ const slug=String(req.query.loja||'').trim();if(!slug)return res.status(400).json({error:'Loja necessária'});
+ const store=getStoreBySlug(slug,baseUrl(req));if(!store)return res.status(404).json({error:'Loja não encontrada'});
+ const now=Date.now();const items=ppV115Read().filter(x=>x.active&&(!x.startsAt||Date.parse(x.startsAt)<=now)&&(!x.endsAt||Date.parse(x.endsAt)>=now)&&(x.target==='all'||x.storeIds.includes(String(store.id)))).sort((a,b)=>(a.order||0)-(b.order||0));
+ res.json({items:items.map(({id,title,description,tag,buttonText,url,icon})=>({id,title,description,tag,buttonText,url,icon}))});
+});
+
 app.get('/api/admin/stores', requireAdminApi, (req,res)=> res.json({ stores:listStores(baseUrl(req)), activeStoreId:req.session.activeStoreId || '' }));
 app.post('/api/admin/stores', requireAdminApi, async (req,res)=>{
   const body = req.body || {};
@@ -4810,4 +4843,11 @@ app.delete('/api/stores/:id', (req, res) => {
   );
 
 });
+// PROVADOR PRO - CAMPANHA UNIFICADA V1.15.2D BASE - SEM DISPAROS EXTERNOS
+require('./modules/campanha-unificada').createCore({
+  dataDir:DATA_DIR,
+  producerAuthenticated:req=>Boolean(req.session?.adminLoggedIn),
+  clientStoreId:req=>req.session?.clientStoreId||'',
+  getStoreById:id=>getStoreById(id)
+}).setup(app);
 app.listen(PORT, '0.0.0.0', ()=> console.log(`Servidor em http://0.0.0.0:${PORT}`));

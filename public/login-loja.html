@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-br">
 <head>
   <meta charset="UTF-8">
@@ -408,6 +408,7 @@
     id:data.store.id,
     slug:data.store.slug
   }));
+    sessionStorage.setItem('provador_store_splash_force_v1','1');
 
   location.href =
     (data.store.initialSetupCompleted ? 'dashboard-loja.html' : 'configuracao-inicial-loja.html') +
@@ -474,7 +475,9 @@ async function trocarSenhaObrigatoria(){
       })
     );
 
-    location.href =
+        sessionStorage.setItem('provador_store_splash_force_v1','1');
+
+location.href =
       (data.store.initialSetupCompleted ? 'dashboard-loja.html' : 'configuracao-inicial-loja.html') +
       '?loja=' +
       encodeURIComponent(data.store.slug);

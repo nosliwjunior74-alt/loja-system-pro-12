@@ -1,4 +1,4 @@
-﻿﻿<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-br">
 <head>
 <meta charset="UTF-8">
@@ -757,6 +757,38 @@ button.small{
 </section>
 
 
+
+<section class="pp-v115-producer" id="ppV115ProducerCampaigns">
+<details><summary>📣 Central de Comunicados e Ofertas — Carrossel dos Lojistas</summary>
+<div class="pp-v115-producer-body">
+<p>Campanhas criadas aqui aparecem na Home das lojas selecionadas. Se nenhuma campanha estiver ativa, o lojista vê banners institucionais permanentes.</p>
+<div class="pp-v115-category-tabs" id="ppV115CategoryTabs" role="tablist" aria-label="Categoria da campanha">
+<button type="button" data-category="all">📢 Todas as lojas</button><button type="button" data-category="specific">🏬 Lojas específicas</button><button type="button" data-category="plan">💎 Por plano</button><button type="button" data-category="free">🎁 Plano Grátis</button><button type="button" data-category="trial">⏳ Teste 15 dias</button></div>
+<p id="ppV115CategoryHelp" role="status"></p>
+<form id="ppV115CampaignForm"><input type="hidden" name="category" value="all">
+<input type="hidden" name="id" id="ppV115Id">
+<div class="pp-v115-form-grid">
+<label>Título* <input name="title" maxlength="95" required placeholder="Novos aplicativos disponíveis"></label>
+<label>Etiqueta <input name="tag" maxlength="36" placeholder="Novidade"></label>
+<label>Descrição* <input name="description" maxlength="210" required placeholder="Veja as novidades"></label>
+<label>Texto do botão <input name="buttonText" maxlength="32" placeholder="Saiba mais"></label>
+<label>Link do botão (caminho local ou https) <input name="url" maxlength="500" placeholder="/provador/index.html"></label>
+<label>Ícone (emoji) <input name="icon" maxlength="8" placeholder="✨"></label>
+<input type="hidden" name="target" value="all"><input type="hidden" name="storeIds" value="">
+<div id="ppV115StorePicker" class="pp-v115-store-picker" hidden><details><summary>🏬 Escolher lojas pelo nome (gaveta)</summary><div id="ppV115StoreOptions">Carregando lojas...</div></details></div>
+<label>Início <input name="startsAt" type="datetime-local"></label>
+<label>Fim <input name="endsAt" type="datetime-local"></label>
+<label>Ordem <input name="order" type="number" min="0" max="9999" value="100"></label>
+<label><input name="active" type="checkbox" checked> Campanha ativa</label>
+</div>
+<div class="pp-v115-buttons"><button type="submit">Salvar campanha</button><button type="button" id="ppV115Reset">Limpar formulário</button><button type="button" id="ppV115Refresh">Atualizar lista</button></div>
+</form><p id="ppV115Status" role="status"></p><div id="ppV115CampaignList"></div>
+</div></details></section>
+<style>
+.pp-v115-category-tabs{display:flex;flex-wrap:wrap;gap:7px;margin:12px 0}.pp-v115-category-tabs button{border:1px solid #e4bfd1;background:#fff;border-radius:10px;padding:10px;color:#89265b;cursor:pointer}.pp-v115-category-tabs button[aria-selected="true"]{background:#b92d78;color:white}.pp-v115-store-picker{grid-column:1/-1}.pp-v115-store-picker summary{cursor:pointer;color:#87215d}.pp-v115-store-picker label{display:flex;flex-direction:row;align-items:center;padding:7px}.pp-v115-producer{margin:16px 0;background:#fff;border:1px solid #ead1df;border-radius:17px;padding:14px}.pp-v115-producer summary{font-weight:850;color:#98225f;cursor:pointer;font-size:17px}.pp-v115-producer-body{padding:12px}.pp-v115-form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.pp-v115-form-grid label{display:flex;flex-direction:column;gap:5px;font-size:12px;color:#794b62}.pp-v115-form-grid input,.pp-v115-form-grid select{width:100%;padding:9px;border:1px solid #e5cbd7;border-radius:9px}.pp-v115-form-grid input[type=checkbox]{width:auto}.pp-v115-buttons{display:flex;gap:9px;flex-wrap:wrap;margin:12px 0}.pp-v115-buttons button,.pp-v115-item button{padding:8px 12px;border:1px solid #e5cbd7;border-radius:9px;background:#fff3f8;color:#882057;cursor:pointer}.pp-v115-item{border-top:1px solid #eedce6;padding:12px 0}.pp-v115-item strong{color:#95255d}.pp-v115-item p{margin:4px 0}.pp-v115-item small{display:block;color:#795768;margin:5px 0}@media(max-width:700px){.pp-v115-form-grid{grid-template-columns:1fr}}
+</style>
+<script defer src="js/pp-producer-banners-v115.js"></script>
+
 <section class="pp-hub" id="ppProducerHub">
   <div class="pp-hub-head">
     <div><h2>Funções principais</h2><p>Escolha uma função. A tela correspondente abre somente quando você clicar.</p></div>
@@ -767,6 +799,8 @@ button.small{
     <button class="pp-app-card" type="button" data-pp-target="producerPlansPanel" data-pp-open="details"><span class="pp-app-icon">🏷️</span><span><strong>Planos e Preços</strong><small>Configure planos, recursos e valores.</small></span><span class="pp-app-arrow">›</span></button>
     <button class="pp-app-card" type="button" data-pp-target="globalAppCatalogPanel" data-pp-open="details"><span class="pp-app-icon">▦</span><span><strong>Catálogo de Aplicativos</strong><small>Preços, upgrades, testes e condições gerais.</small></span><span class="pp-app-arrow">›</span></button>
     <button class="pp-app-card pp-featured" type="button" data-pp-url="display_pro/produtor.html"><span class="pp-app-icon">📣</span><span><strong>AI Marketing Pro</strong><small>Agentes IA, campanhas, ideias, conteúdo e vendas.</small></span><span class="pp-app-arrow">›</span></button>
+    <!-- CAMPANHA_INTELIGENTE_V1152C -->
+    <button class="pp-app-card" type="button" data-pp-url="display_pro/campanha-inteligente.html?context=produtor"><span class="pp-app-icon">✨</span><span><strong>CAMPANHA INTELIGENTE</strong><small>Rascunhos e prévias para revisão, sem publicação automática.</small></span><span class="pp-app-arrow">›</span></button>
     <button class="pp-app-card" type="button" data-pp-url="configuracao-cobranca.html"><span class="pp-app-icon">💳</span><span><strong>Cobrança</strong><small>Pagamentos, assinaturas e recuperação do checkout.</small></span><span class="pp-app-arrow">›</span></button>
     <button class="pp-app-card" type="button" data-pp-url="financeiro.html"><span class="pp-app-icon">📊</span><span><strong>Financeiro</strong><small>Acompanhe receitas, pagamentos e relatórios.</small></span><span class="pp-app-arrow">›</span></button>
     <button class="pp-app-card" type="button" data-pp-url="seguranca.html"><span class="pp-app-icon">🛡️</span><span><strong>Segurança</strong><small>Acessos, senha, proteção e registros.</small></span><span class="pp-app-arrow">›</span></button>
@@ -939,6 +973,7 @@ button.small{
 <div class="field full"><label>Redes prioritárias</label><input id="storeMarketingNetworks" placeholder="Instagram, Facebook, TikTok, YouTube, Google e WhatsApp"></div>
 </div>
 </div>
+</details>
 
 
 <details class="form-section" name="storeFormGroup">

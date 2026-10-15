@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang='pt-br'>
 <head>
   <meta charset='UTF-8'>
@@ -32,7 +32,64 @@
     }
   </style>
 </head>
-<body>
+<body class='pp-store-shell'>
+<style id="PP_D7_SESSION_GUARD_CSS">
+.pp-d7-session-mask{position:fixed;inset:0;z-index:2147483647;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(37,13,29,.88);overflow:auto}
+.pp-d7-session-mask>section{width:min(520px,100%);padding:24px;background:#fff;border:2px solid #d492ad;border-radius:18px;box-shadow:0 20px 60px #0004;color:#4f2940;font:16px/1.5 system-ui,Arial,sans-serif}
+.pp-d7-session-mask h2{font-size:22px;margin:0 0 10px;color:#9a205b}
+.pp-d7-session-mask a{display:inline-block;margin-top:15px;padding:12px 16px;border-radius:10px;background:#a51d68;color:#fff;text-decoration:none;font-weight:750}
+</style>
+<script id="PP_D7_SESSION_GUARD_V1">
+(function(){
+ 'use strict';
+ const expected=new URLSearchParams(location.search).get('loja')||'';
+ let blocked=false;
+ function block(actual){
+  if(blocked)return;
+  blocked=true;
+  const frame=document.getElementById('appFrame');if(frame)frame.src='about:blank';
+  const shell=document.querySelector('.shell');if(shell)shell.inert=true;
+  const modal=document.createElement('div');modal.className='pp-d7-session-mask';modal.setAttribute('role','alertdialog');modal.setAttribute('aria-modal','true');
+  const content=document.createElement('section');const title=document.createElement('h2');title.textContent='Sessão de outra loja detectada';
+  const details=document.createElement('p');details.textContent='Esta aba pertence à loja '+expected+', mas o navegador está autenticado como '+(actual||'outra sessão')+'. Por segurança, as operações desta aba foram bloqueadas.';
+  const tip=document.createElement('p');tip.textContent='Entre novamente na loja correta. Para trabalhar com duas lojas ao mesmo tempo, use perfis diferentes do navegador.';
+  const link=document.createElement('a');link.textContent='Entrar na loja correta';link.href='/login-loja.html?loja='+encodeURIComponent(expected);
+  content.append(title,details,tip,link);modal.append(content);document.body.append(modal);link.focus();
+ }
+ function match(store,slug){
+  const target=String(slug||expected||'');
+  if(!target||blocked)return !blocked;
+  if(!store||String(store.slug||'')!==target){block(store?.name||store?.slug||'não identificada');return false}
+  return true;
+ }
+ async function check(){
+  if(!expected||blocked)return;
+  try{
+   const res=await fetch('/api/public/session-store',{credentials:'same-origin',cache:'no-store'});
+   if(res.status===401){block('sessão não autenticada');return}
+   if(!res.ok)return;
+   const data=await res.json();match(data.store,expected);
+  }catch(e){console.warn('Não foi possível conferir a sessão da loja.',e)}
+ }
+ window.ppD7StoreSessionGuard={match,isBlocked:()=>blocked,check};
+ window.addEventListener('focus',check);
+ document.addEventListener('visibilitychange',()=>{if(!document.hidden)check()});
+})();
+</script>
+
+
+<div class="pp-shell-splash" id="ppStoreSplash" aria-hidden="true">
+  <div class="pp-shell-splash-card">
+    <svg class="pp-splash-hanger" viewBox="0 0 120 72" aria-hidden="true">
+      <path d="M58 27c0-9 4-15 11-15 7 0 12 5 12 12 0 7-5 11-12 14l-2 1 39 22H14l43-24"
+        fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <strong>Provador Pro</strong>
+    <span>Moda que vende mais</span>
+    <div class="pp-splash-loader"><i></i></div>
+  </div>
+</div>
+
 
 <button class='mobile-menu-toggle' id='mobileMenuBtn' type='button' aria-label='Abrir menu' aria-expanded='false'>
   <span class='mobile-menu-icon'>&#9776;</span>
@@ -58,6 +115,12 @@
         </div>
       </div>
 
+      <div class='pp-store-home-nav'>
+        <button class='pp-store-home-nav-btn active' id='ppStoreHomeNavBtn' type='button'>
+          <span class='menu-icon'>▦</span><span>Aplicativos da Loja</span>
+        </button>
+      </div>
+
       <nav class='menu'>
         <div class='menu-group'>
           <div class='menu-label'>Experiencia da Loja</div>
@@ -72,6 +135,8 @@
           <button class='menu-btn' data-url='provador/admin.html'><span class='menu-icon'>📦</span>Administracao da Loja</button>
           <button class='menu-btn' data-url='remover_fundo/index.html'><span class='menu-icon'>🖼️</span>PNG sem Fundo</button>
           <button class='menu-btn' data-url='display_pro/loja.html'><span class='menu-icon'>📲</span>AI Marketing Pro</button>
+          <!-- CAMPANHA_INTELIGENTE_V1152C -->
+          <button class='menu-btn' data-url='display_pro/campanha-inteligente.html?context=loja'><span class='menu-icon'>✨</span>CAMPANHA INTELIGENTE</button>
         </div>
 
         <div class='menu-group'>
@@ -148,26 +213,81 @@
 
     <main class='main-area'>
       <header class='topbar'>
-        <div>
-          <strong id='currentTitle'>Vitrine / Provador</strong>
+        <div class='pp-store-page-title'>
+          <span class='pp-v115-brand' aria-label='Provador Pro'><svg class="pp-v115-hanger" viewBox="0 0 120 72" aria-hidden="true"><path d="M58 27c0-9 4-15 11-15 7 0 12 5 12 12 0 7-5 11-12 14l-2 1 39 22H14l43-24" fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Provador Pro</span></span><strong id='currentTitle'>Vitrine / Provador</strong>
           <span id='topbarSub'>Painel da loja</span>
         </div>
+
+        <div class='pp-store-mobile-brand' aria-label='Identidade da loja'>
+          <img id='mobileStoreLogo' src='assets/default-logo.svg' alt='Logo da loja'>
+          <div>
+            <strong id='mobileStoreName'>Sua Loja</strong>
+            <span>Painel da loja</span>
+          </div>
+        </div>
+
+        <div class='pp-store-top-actions'><div class='pp-store-popover-wrap'><button class='pp-store-icon-btn' id='ppStoreNotificationsBtn' type='button' aria-label='Notificações' aria-expanded='false'>🔔<span class='pp-store-notify-dot'></span></button><div class='pp-store-popover' id='ppStoreNotificationsPopover'><h3>Notificações</h3><p>Alertas da loja, licença, pagamentos e operações que precisam da sua atenção aparecerão aqui.</p></div></div><div class='pp-store-popover-wrap'><button class='pp-store-icon-btn' id='ppStoreProfileBtn' type='button' aria-label='Perfil e segurança' aria-expanded='false'>👤</button><div class='pp-store-popover' id='ppStoreProfilePopover'><h3>Perfil da Loja</h3><p>Acesso à conta e segurança da loja.</p><div class='pp-store-popover-links'><a href='seguranca.html'>Segurança e trocar senha</a></div></div></div></div>
+
+<button id='ppHubBackBtn' class='pp-context-back pp-hub-back' type='button' hidden>
+          ← Aplicativos da Loja
+        </button>
         <button id='ppBackStoreBtn' class='pp-context-back' type='button' hidden>
           ← Voltar ao Painel da Loja
         </button>
       </header>
-     <div style="position:relative;width:100%;height:100%;">
+     <section class="pp-store-hub" id="ppStoreHub">
+        <div class="pp-store-hub-hero">
+          <div class="pp-store-hub-ident">
+            <img id="ppStoreHubLogo" src="assets/default-logo.svg" alt="Logo da loja">
+            <div><span class="pp-store-hub-kicker">PAINEL DA LOJA</span><h1>Aplicativos da Loja</h1>
+            <p id="ppStoreHubSubtitle">Potencialize sua loja com ferramentas inteligentes.</p></div>
+          </div>
+          <div class="pp-store-hub-plan"><span id="ppStoreHubStoreName">Sua Loja</span><strong id="ppStoreHubPlan">Plano</strong></div>
+        </div>
 
-<iframe
-id="appFrame"
-src=""
-title="Aplicativo"
-style="width:100%;height:100%;border:none;">
-</iframe>
 
+        <!-- HOME CARROSSEL V1.15: conteúdo público filtrado pelo servidor por loja -->
+        <section class="pp-v115-carousel" aria-label="Novidades e ofertas do Provador Pro">
+          <div class="pp-v115-slide" id="ppV115Slide" aria-live="polite"></div>
+          <button class="pp-v115-prev" type="button" id="ppV115Prev" aria-label="Banner anterior">‹</button>
+          <button class="pp-v115-next" type="button" id="ppV115Next" aria-label="Próximo banner">›</button>
+          <div class="pp-v115-dots" id="ppV115Dots" aria-label="Selecionar banner"></div>
+        </section>
 
+        <div class="pp-store-hub-section">
+          <div class="pp-store-hub-head"><div><h2>Funções principais</h2><p>Escolha uma função para abrir.</p></div></div>
+          <div class="pp-store-hub-grid">
+            <button class="pp-store-app-card" type="button" data-pp-action="overview"><span class="pp-store-app-icon">📊</span><span class="pp-store-app-copy"><strong>Visão Geral</strong><small>Acompanhe os principais dados da loja.</small></span><span class="pp-store-app-arrow">›</span></button>
+            <button class="pp-store-app-card" type="button" data-pp-url="provador/admin.html" data-pp-title="Cadastro de Roupas"><span class="pp-store-app-icon">👚</span><span class="pp-store-app-copy"><strong>Cadastro de Roupas</strong><small>Gerencie roupas, estoque e categorias.</small></span><span class="pp-store-app-arrow">›</span></button>
+            <button class="pp-store-app-card" type="button" data-pp-url="provador/admin.html" data-pp-title="Clientes"><span class="pp-store-app-icon">👥</span><span class="pp-store-app-copy"><strong>Clientes</strong><small>Cadastre e consulte clientes da loja.</small></span><span class="pp-store-app-arrow">›</span></button>
+            <button class="pp-store-app-card" type="button" data-pp-url="provador/catalogo.html" data-pp-title="Catálogo"><span class="pp-store-app-icon">📖</span><span class="pp-store-app-copy"><strong>Catálogo</strong><small>Organize e exiba seus produtos.</small></span><span class="pp-store-app-arrow">›</span></button>
+            <button class="pp-store-app-card" type="button" data-pp-url="provador/provador.html" data-pp-title="Provador"><span class="pp-store-app-icon">👗</span><span class="pp-store-app-copy"><strong>Provador</strong><small>Abra o provador virtual da loja.</small></span><span class="pp-store-app-arrow">›</span></button>
+            <button class="pp-store-app-card" type="button" data-pp-url="provador/caixa.html" data-pp-title="Caixa"><span class="pp-store-app-icon">💳</span><span class="pp-store-app-copy"><strong>Caixa</strong><small>Vendas, carrinho e operações do caixa.</small></span><span class="pp-store-app-arrow">›</span></button>
+            <button class="pp-store-app-card" type="button" data-pp-action="apps"><span class="pp-store-app-icon">▦</span><span class="pp-store-app-copy"><strong>Meus Aplicativos</strong><small>Veja módulos liberados e bloqueados.</small></span><span class="pp-store-app-arrow">›</span></button>
+            <button class="pp-store-app-card" type="button" data-pp-action="security"><span class="pp-store-app-icon">🛡️</span><span class="pp-store-app-copy"><strong>Segurança</strong><small>Acesso e proteção da conta da loja.</small></span><span class="pp-store-app-arrow">›</span></button>
+          </div>
+        </div>
 
-</div>
+        <div class="pp-store-hub-section" id="ppStoreAppsSection">
+          <div class="pp-store-hub-head">
+            <div><h2>Meus Aplicativos</h2><p>Aplicativos extras disponíveis para sua loja.</p></div>
+            <span class="pp-store-hub-help">🔒 Liberação controlada pelo Produtor</span>
+          </div>
+          <div class="pp-store-extra-grid">
+            <button class="pp-store-extra-card" type="button" data-pp-url="display_pro/loja.html" data-pp-title="AI Marketing Pro"><span class="pp-store-extra-top"><span class="pp-store-extra-icon">📣</span><span class="pp-store-status pp-store-status-on">● Liberado</span></span><strong>AI Marketing Pro</strong><small>Campanhas, divulgação e conteúdo inteligente.</small><span class="pp-store-extra-actions">Abrir aplicativo</span></button>
+            <button class="pp-store-extra-card" type="button" data-pp-url="display_pro/campanha-inteligente.html?context=loja" data-pp-title="Campanha Inteligente"><span class="pp-store-extra-top"><span class="pp-store-extra-icon">✨</span><span class="pp-store-status">Rascunhos</span></span><strong>Campanha Inteligente</strong><small>Prepare campanhas da sua loja e revise as prévias, sem postagem automática.</small><span class="pp-store-extra-actions">Abrir aplicativo</span></button>
+            <button class="pp-store-extra-card" type="button" data-pp-url="remover_fundo/index.html" data-pp-title="PNG sem Fundo"><span class="pp-store-extra-top"><span class="pp-store-extra-icon">🖼️</span><span class="pp-store-status pp-store-status-on">● Liberado</span></span><strong>PNG sem Fundo</strong><small>Remova o fundo das imagens dos produtos.</small><span class="pp-store-extra-actions">Abrir aplicativo</span></button>
+            <button class="pp-store-extra-card locked" type="button" data-pp-locked="Controle Celular"><span class="pp-store-extra-top"><span class="pp-store-extra-icon">📱</span><span class="pp-store-status pp-store-status-lock">🔒 Bloqueado</span></span><strong>Controle Celular</strong><small>Use o celular como controle do Provador Pro.</small><span class="pp-store-extra-actions">Solicitar liberação</span></button>
+            <button class="pp-store-extra-card locked" type="button" data-pp-locked="Display Pro"><span class="pp-store-extra-top"><span class="pp-store-extra-icon">🖥️</span><span class="pp-store-status pp-store-status-lock">🔒 Bloqueado</span></span><strong>Display Pro</strong><small>Telas, campanhas e conteúdo para a loja física.</small><span class="pp-store-extra-actions">Solicitar liberação</span></button>
+          </div>
+          <div class="pp-store-entitlement-note"><strong>Etapa visual segura:</strong> os módulos que já funcionam continuam liberados. Os cadeados ficam preparados para a próxima ligação com planos e Entitlements, sem bloquear funções atuais antes da validação.</div>
+        </div>
+        <footer class="pp-v115-footer" id="ppV115Footer"><span class="pp-v115-brand"><svg class="pp-v115-hanger" viewBox="0 0 120 72" aria-hidden="true"><path d="M58 27c0-9 4-15 11-15 7 0 12 5 12 12 0 7-5 11-12 14l-2 1 39 22H14l43-24" fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Provador Pro</span></span><small>Moda que vende mais · Novidades gerenciadas pelo Painel Mestre</small></footer>
+      </section>
+
+      <div id="ppStoreFrameWrap" style="position:relative;width:100%;height:100%;" hidden>
+        <iframe id="appFrame" src="" title="Aplicativo" style="width:100%;height:100%;border:none;"></iframe>
+      </div>
       <div class="card">
   <h2>🔗 Link público da loja</h2>
   <p>Use este link para enviar ao cliente comprador pelo WhatsApp, Instagram ou QR Code.</p>
@@ -255,7 +375,7 @@ console.log('LocalStorageManager=', window.LocalStorageManager);
      const lojaSlug = new URLSearchParams(location.search).get('loja') || '';
 
 if (lojaSlug) {
-    frame.src = btn.dataset.url + '?loja=' + lojaSlug;
+    frame.src = btn.dataset.url + (btn.dataset.url.includes('?') ? '&' : '?') + 'loja=' + encodeURIComponent(lojaSlug);
 } else {
     frame.src = btn.dataset.url;
 }
@@ -326,17 +446,24 @@ if(!store.initialSetupCompleted){
   return;
 }
 
+if(!window.ppD7StoreSessionGuard.match(store,slug))return;
 applyStore(store, false);
     }
 
     function applyStore(store, online){
+      if(window.ppD7StoreSessionGuard.isBlocked())return;
       currentStore = store;
       frame.src = 'provador/index.html?loja=' + encodeURIComponent(store.slug);
+      if(window.ppStoreHubApplyStore){ window.ppStoreHubApplyStore(store); }
       currentOnline = !!online;
       document.getElementById('brandName').textContent = store.name || 'Sua Loja';
       document.getElementById('brandSub').textContent = store.sub || 'Painel administrativo da loja';
       document.getElementById('topbarSub').textContent = store.sub || 'Painel da sua loja';
       document.getElementById('brandLogo').src = store.logo || 'assets/default-logo.svg';
+      const mobileStoreLogo = document.getElementById('mobileStoreLogo');
+      const mobileStoreName = document.getElementById('mobileStoreName');
+      if(mobileStoreLogo) mobileStoreLogo.src = store.logo || 'assets/default-logo.svg';
+      if(mobileStoreName) mobileStoreName.textContent = store.name || 'Sua Loja';
       document.documentElement.style.setProperty('--pink-4', store.color || '#e33d8f');
       document.documentElement.style.setProperty('--brand-color', store.color || '#e33d8f');
       clientColorInput.value = store.color || '#e33d8f';
@@ -590,6 +717,7 @@ setInterval(async () => {
     }
 
     const store = data.store;
+    if(!window.ppD7StoreSessionGuard.match(store,slug))return;
 
     if(
       store.status !== 'ativo' &&
@@ -634,6 +762,7 @@ window.addEventListener("load", montarLinkPublicoLoja);
     }
 
     const store = data.store;
+    if(!window.ppD7StoreSessionGuard.match(store,slug))return;
 
     if(
       store.status !== 'ativo' &&
@@ -641,7 +770,7 @@ window.addEventListener("load", montarLinkPublicoLoja);
     ){
       alert('Licença desativada.');
 
-      sessionStorage.clear();
+      sessionStorage.removeItem('dashboardStoreSessionLocal');
       localStorage.removeItem('STORE_SESSION');
 
       location.href =
@@ -704,6 +833,58 @@ window.addEventListener('resize',function(){if(!isMobile()){closeMobileMenu();}}
 })();
 </script>
 
+<script id="PP_STORE_APPS_HUB_V1_14">
+(function(){
+  const hub=document.getElementById('ppStoreHub'),frame=document.getElementById('appFrame'),
+        wrap=document.getElementById('ppStoreFrameWrap'),home=document.getElementById('ppStoreHomeNavBtn'),
+        back=document.getElementById('ppHubBackBtn'),oldBack=document.getElementById('ppBackStoreBtn'),
+        title=document.getElementById('currentTitle');
+
+  function slug(){return new URLSearchParams(location.search).get('loja')||''}
+  function urlWithSlug(url){
+    const s=slug(); if(!s)return url;
+    try{const u=new URL(url,location.href);if(!u.searchParams.get('loja'))u.searchParams.set('loja',s);return u.pathname.replace(/^\/+/,'')+u.search+u.hash}
+    catch(e){return url+(url.includes('?')?'&':'?')+'loja='+encodeURIComponent(s)}
+  }
+  function closeMobile(){document.body.classList.remove('mobile-menu-open');document.getElementById('mobileMenuBtn')?.setAttribute('aria-expanded','false')}
+  function clearActive(){document.querySelectorAll('.sidebar .menu-btn').forEach(b=>b.classList.remove('active'))} function hideLegacy(){const h=document.getElementById('adminProHome');if(h)h.style.display='none';const c=document.querySelector('.main-area > .card');if(c)c.style.display='none';}
+  function showHub(){
+    hub.hidden=false;wrap.hidden=true;wrap.style.display='none';hideLegacy();document.body.classList.add('pp-store-hub-open');
+    clearActive();home?.classList.add('active');if(back)back.hidden=true;if(oldBack)oldBack.hidden=true;
+    if(title)title.textContent='Aplicativos da Loja'; document.querySelectorAll('.sidebar .menu .menu-btn').forEach(x=>x.classList.remove('active'));closeMobile();window.scrollTo({top:0,behavior:'smooth'});
+  }
+  function showFrame(t){
+    hub.hidden=true;wrap.hidden=false;wrap.style.display='block';hideLegacy();document.body.classList.remove('pp-store-hub-open');
+    home?.classList.remove('active');if(back)back.hidden=false;if(oldBack)oldBack.hidden=true;
+    if(t&&title)title.textContent=t;closeMobile();
+  }
+  function openUrl(url,t){showFrame(t||'Aplicativo');frame.src=urlWithSlug(url)}
+  function overview(){showFrame('Visão Geral');const b=document.getElementById('adminOverviewBtn');if(b)b.click();else openUrl('provador/admin.html','Visão Geral')}
+  function locked(n){alert('🔒 '+n+'\n\nEste módulo está preparado para liberação pelo Produtor/Plano. Nesta etapa os cadeados são visuais e não alteram permissões reais.')}
+  function security(){location.href='seguranca.html'}
+
+  window.ppStoreHubApplyStore=function(store){
+    const logo=document.getElementById('ppStoreHubLogo'),name=document.getElementById('ppStoreHubStoreName'),
+          plan=document.getElementById('ppStoreHubPlan'),sub=document.getElementById('ppStoreHubSubtitle');
+    if(logo)logo.src=store?.logo||'assets/default-logo.svg';
+    if(name)name.textContent=store?.name||'Sua Loja';
+    if(plan){const p=String(store?.plan||'atual');plan.textContent='Plano '+p.charAt(0).toUpperCase()+p.slice(1)}
+    if(sub)sub.textContent=store?.sub||'Potencialize sua loja com ferramentas inteligentes.';
+    showHub();
+  };
+  home?.addEventListener('click',showHub);back?.addEventListener('click',showHub);
+  hub?.addEventListener('click',e=>{
+    const c=e.target.closest('[data-pp-action],[data-pp-url],[data-pp-locked]');if(!c)return;
+    if(c.dataset.ppAction==='overview')return overview();
+    if(c.dataset.ppAction==='apps')return document.getElementById('ppStoreAppsSection')?.scrollIntoView({behavior:'smooth',block:'start'});
+    if(c.dataset.ppAction==='security')return security();
+    if(c.dataset.ppLocked)return locked(c.dataset.ppLocked);
+    if(c.dataset.ppUrl)return openUrl(c.dataset.ppUrl,c.dataset.ppTitle||'Aplicativo');
+  });
+  document.addEventListener('click',e=>{const b=e.target.closest('.sidebar .menu .menu-btn');if(b)showFrame(b.textContent.trim())},true);
+})();
+</script>
+
 <script id="PP_CONTEXT_BACK_STORE_V1_9_2">
 (function(){
   const frame=document.getElementById('appFrame');
@@ -720,6 +901,9 @@ window.addEventListener('resize',function(){if(!isMobile()){closeMobileMenu();}}
 
   function refresh(){
     if(!btn)return;
+    if(document.body.classList.contains('pp-store-hub-open')){btn.hidden=true;return;}
+    const hb=document.getElementById('ppHubBackBtn');
+    if(hb && !hb.hidden){btn.hidden=true;return;}
     btn.hidden=isOverview();
   }
 
@@ -764,5 +948,62 @@ window.addEventListener('resize',function(){if(!isMobile()){closeMobileMenu();}}
 })();
 </script>
 
+
+<script id="PP_STORE_SPLASH_V1_12">
+(function(){
+  const splash=document.getElementById('ppStoreSplash');
+  if(!splash) return;
+
+  function hideSplash(){
+    splash.classList.add('pp-hide');
+    window.setTimeout(function(){ try{splash.remove();}catch(e){} },450);
+  }
+
+  let force=false;
+  try{
+    force=sessionStorage.getItem('provador_store_splash_force_v1')==='1';
+    sessionStorage.removeItem('provador_store_splash_force_v1');
+  }catch(e){}
+
+  let seen=false;
+  try{ seen=sessionStorage.getItem('provador_store_splash_seen_v1')==='1'; }catch(e){}
+
+  if(force || !seen){
+    try{sessionStorage.setItem('provador_store_splash_seen_v1','1');}catch(e){}
+    window.setTimeout(hideSplash,1050);
+  }else{
+    window.setTimeout(hideSplash,150);
+  }
+})();
+</script>
+
+<script id="PP_STORE_TOP_ACTIONS_V1_14_2">
+(function(){
+  function close(except){
+    ['ppStoreNotificationsPopover','ppStoreProfilePopover'].forEach(function(id){
+      var el=document.getElementById(id);
+      if(el&&el!==except) el.classList.remove('open');
+    });
+  }
+  function bind(btnId,popId){
+    var btn=document.getElementById(btnId),pop=document.getElementById(popId);
+    if(!btn||!pop)return;
+    btn.addEventListener('click',function(ev){
+      ev.stopPropagation();
+      var willOpen=!pop.classList.contains('open');
+      close(pop);
+      pop.classList.toggle('open',willOpen);
+      btn.setAttribute('aria-expanded',willOpen?'true':'false');
+    });
+    pop.addEventListener('click',function(ev){ev.stopPropagation();});
+  }
+  bind('ppStoreNotificationsBtn','ppStoreNotificationsPopover');
+  bind('ppStoreProfileBtn','ppStoreProfilePopover');
+  document.addEventListener('click',function(){close();});
+})();
+</script>
+
+<script defer src="js/pp-store-banners-v115.js"></script>
 </body>
 </html>
+

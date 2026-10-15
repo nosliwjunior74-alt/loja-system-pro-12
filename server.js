@@ -4844,10 +4844,13 @@ app.delete('/api/stores/:id', (req, res) => {
 
 });
 // PROVADOR PRO - CAMPANHA UNIFICADA V1.15.2D BASE - SEM DISPAROS EXTERNOS
-require('./modules/campanha-unificada').createCore({
+const ppCampaignCoreD7 = require('./modules/campanha-unificada').createCore({
   dataDir:DATA_DIR,
   producerAuthenticated:req=>Boolean(req.session?.adminLoggedIn),
   clientStoreId:req=>req.session?.clientStoreId||'',
   getStoreById:id=>getStoreById(id)
-}).setup(app);
+});
+ppCampaignCoreD7.setup(app);
+// D7.1 - biblioteca privada isolada; IA e publicacao continuam desativadas.
+require('./modules/campanha-midias-d7').createMediaCore({dataDir:DATA_DIR,campaignCore:ppCampaignCoreD7}).setup(app);
 app.listen(PORT, '0.0.0.0', ()=> console.log(`Servidor em http://0.0.0.0:${PORT}`));

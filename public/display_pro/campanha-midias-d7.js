@@ -8,7 +8,7 @@ const isStore=params.get('context')==='loja';
 const expectedStoreSlug=isStore?(params.get('loja')||''):'';
 function withStore(url){if(!isStore)return url;const u=new URL(url,location.origin);u.searchParams.set('loja',expectedStoreSlug);return u.pathname+u.search;}
 let context=isStore?'vendas_lojista':params.get('app')==='central_produtor'?'central_produtor':'vendas_produtor';
-let busy=false,records=[],campaigns=[],pendingType='';
+let busy=false,records=[],trash=[],campaigns=[],pendingType='';
 const base=()=>`/api/campanha-midias-d7/v1/${context}`;
 const formatBytes=n=>n>=1048576?`${(n/1048576).toFixed(1)} MB`:`${Math.ceil(n/1024)} KB`;
 function msg(t,error=false){$('ppD7Status').textContent=t;$('ppD7Status').style.color=error?'#8e2b37':'#61415a'}
@@ -55,12 +55,37 @@ function cardFor(r){
  });card.append(select);
  const actions=node('div','pp-d7-actions');
  const download=node('a','pp-d7-download','Baixar');download.href=mediaUrl(r.id,true);download.download=r.name;actions.append(download);
- const del=node('button','pp-d7-remove','Excluir');del.type='button';del.addEventListener('click',async()=>{
-  if(!confirm(`Excluir definitivamente a mídia “${r.name}” da biblioteca D7?`))return;
+ const del=node('button','pp-d7-remove','Mover para Lixeira');del.type='button';del.addEventListener('click',async()=>{
+  if(!confirm(`Mover “${r.name}” para a Lixeira? Você poderá restaurar depois.`))return;
   del.disabled=true;
-  try{await json(base()+'/'+encodeURIComponent(r.id),{method:'DELETE',headers:{'X-PP-D7-Action':'1'}});msg('Mídia excluída.');await refresh(false)}
+  try{await json(base()+'/'+encodeURIComponent(r.id),{method:'DELETE',headers:{'X-PP-D7-Action':'1'}});msg('Mídia movida para a Lixeira.');await refresh(false)}
   catch(e){msg('Erro ao excluir: '+e.message,true)}finally{del.disabled=false}
  });actions.append(del);card.append(actions);return card;
+}
+function trashCard(r){
+ const card=node('article','pp-d7-item pp-d72-trash-item');
+ const icon=node('div','pp-d72-trash-icon',r.kind==='video'?'🎬':'🖼️');icon.setAttribute('aria-hidden','true');card.append(icon);
+ card.append(node('strong','pp-d7-filename',r.name));
+ card.append(node('div','muted',`${r.kind==='video'?'Vídeo':'Imagem'} · ${formatBytes(r.bytes)} · Movido para Lixeira`));
+ const actions=node('div','pp-d7-actions');
+ const restore=node('button','pp-d7-remove pp-d72-restore','Restaurar');restore.type='button';
+ restore.addEventListener('click',async()=>{
+  restore.disabled=true;purge.disabled=true;
+  try{await json(base()+'/'+encodeURIComponent(r.id)+'/restaurar',{method:'POST',headers:{'X-PP-D7-Action':'1'}});msg('Mídia restaurada na biblioteca.');await refresh(false)}
+  catch(e){msg('Erro ao restaurar: '+e.message,true)}finally{restore.disabled=false;purge.disabled=false}
+ });actions.append(restore);
+ const purge=node('button','pp-d7-remove pp-d72-purge','Excluir definitivamente');purge.type='button';
+ purge.addEventListener('click',async()=>{
+  if(!confirm(`Excluir DEFINITIVAMENTE “${r.name}”? Esta ação não poderá ser desfeita.`))return;
+  restore.disabled=true;purge.disabled=true;
+  try{await json(base()+'/'+encodeURIComponent(r.id)+'/definitivo',{method:'DELETE',headers:{'X-PP-D7-Action':'1'}});msg('Mídia excluída definitivamente.');await refresh(false)}
+  catch(e){msg('Erro na exclusão definitiva: '+e.message,true)}finally{restore.disabled=false;purge.disabled=false}
+ });actions.append(purge);card.append(actions);return card;
+}
+function draw(id,rows,make,empty){
+ const list=$(id);list.replaceChildren();
+ if(!rows.length){list.append(node('div','empty',empty));return}
+ for(const r of rows)list.append(make(r));
 }
 async function checkStoreSession(){
  if(!isStore)return;
@@ -73,13 +98,15 @@ async function checkStoreSession(){
 async function refresh(withCampaigns=true){
  await checkStoreSession();
  if(withCampaigns)await loadCampaigns();
- const data=await json(base());records=data.items||[];
- const list=$('ppD7List');list.replaceChildren();
- $('ppD7Usage').textContent=`${records.length} de ${data.quota.maxFiles} arquivos · ${formatBytes(data.quota.usedBytes)} de ${formatBytes(data.quota.maxBytes)}`;
- const filter=$('ppD7Filter').value;
- const shown=filter==='todos'?records:records.filter(r=>r.kind===filter);
- if(!shown.length){list.append(node('div','empty','Nenhuma mídia nesta categoria.'));return}
- for(const item of shown)list.append(cardFor(item));
+ const data=await json(base());records=data.items||[];trash=data.trash||[];
+ const imgs=records.filter(r=>r.kind==='imagem'),videos=records.filter(r=>r.kind==='video');
+ $('ppD7Usage').textContent=`${data.quota.usedFiles??(records.length+trash.length)} de ${data.quota.maxFiles} arquivos (incluindo Lixeira) · ${formatBytes(data.quota.usedBytes)} de ${formatBytes(data.quota.maxBytes)}`;
+ $('ppD72ImagesCount').textContent=String(imgs.length);
+ $('ppD72VideosCount').textContent=String(videos.length);
+ $('ppD72TrashCount').textContent=String(trash.length);
+ draw('ppD72ImagesList',imgs,cardFor,'Nenhuma imagem nesta gaveta.');
+ draw('ppD72VideosList',videos,cardFor,'Nenhum vídeo nesta gaveta.');
+ draw('ppD72TrashList',trash,trashCard,'Lixeira vazia.');
 }
 async function upload(){
  if(busy)return;
@@ -101,13 +128,12 @@ async function switchType(t){
  if(isStore)t='vendas_lojista';
  if(!['central_produtor','vendas_produtor','vendas_lojista'].includes(t))return;
  if(busy){pendingType=t;return;}
- context=t;records=[];campaigns=[];$('ppD7List').replaceChildren();msg('Carregando a biblioteca privada…');
+ context=t;records=[];trash=[];campaigns=[];for(const id of ['ppD72ImagesList','ppD72VideosList','ppD72TrashList'])$(id).replaceChildren();msg('Carregando a biblioteca privada…');
  setBusy(true);try{await refresh();msg('Biblioteca pronta. Apenas mídias deste aplicativo são exibidas.')}
  catch(e){msg('Não foi possível carregar: '+e.message,true)}finally{setBusy(false);if(pendingType&&pendingType!==context){const next=pendingType;pendingType='';switchType(next)}else pendingType=''}
 }
 $('ppD7Upload').addEventListener('click',upload);
 $('ppD7Refresh').addEventListener('click',()=>{if(!busy)switchType(activeType())});
-$('ppD7Filter').addEventListener('change',()=>{if(!busy)refresh(false).catch(e=>msg(e.message,true))});
 if(!isStore){
  // Observa a troca realmente aceita pelo D5; clique cancelado nao troca a biblioteca.
  const tabs=$('tabs');

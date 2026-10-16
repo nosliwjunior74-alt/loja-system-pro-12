@@ -994,3 +994,24 @@ body.pp-store-hub-open .sidebar .menu .menu-btn[data-url='provador/index.html']{
   body.pp-store-shell .pp-store-icon-btn{width:32px;height:34px}
   body.pp-store-shell .pp-store-top-actions{gap:3px}
 }
+
+/* D7.2: somente layout do envelope da Campanha Inteligente nos paineis.
+   Sem alterar CSS interno do AI Marketing Pro. */
+@media (min-width:761px) and (max-width:1250px){
+  body.pp-master-shell:has(#appFrame[src*="campanha-inteligente.html"]) .main-area>.topbar,
+  body.pp-store-shell:not(.pp-store-hub-open):has(#appFrame[src*="campanha-inteligente.html"]) .main-area>.topbar{flex-wrap:wrap;align-content:center;gap:8px 12px;min-width:0}
+  body.pp-master-shell:has(#appFrame[src*="campanha-inteligente.html"]) .main-area>.topbar>div:first-child,
+  body.pp-store-shell:not(.pp-store-hub-open):has(#appFrame[src*="campanha-inteligente.html"]) .main-area>.topbar>div:first-child{min-width:0;flex:1 1 215px}
+  body.pp-master-shell:has(#appFrame[src*="campanha-inteligente.html"]) .main-area>.topbar .active-store-chip,
+  body.pp-store-shell:not(.pp-store-hub-open):has(#appFrame[src*="campanha-inteligente.html"]) .main-area>.topbar .active-store-chip{max-width:min(100%,230px);min-width:0}
+  body.pp-master-shell:has(#appFrame[src*="campanha-inteligente.html"]) .main-area>.topbar #currentTitle,
+  body.pp-store-shell:not(.pp-store-hub-open):has(#appFrame[src*="campanha-inteligente.html"]) .main-area>.topbar #currentTitle{overflow-wrap:normal;word-break:normal;line-height:1.25}
+}
+@media(max-width:760px){
+  body.pp-master-shell:has(#appFrame[src*="campanha-inteligente.html"]) .main-area>.topbar,
+  body.pp-store-shell:not(.pp-store-hub-open):has(#appFrame[src*="campanha-inteligente.html"]) .main-area>.topbar{display:flex;flex-direction:column;align-items:stretch;justify-content:flex-start;gap:9px;min-width:0}
+  body.pp-master-shell:has(#appFrame[src*="campanha-inteligente.html"]) .main-area>.topbar>div:first-child,
+  body.pp-store-shell:not(.pp-store-hub-open):has(#appFrame[src*="campanha-inteligente.html"]) .main-area>.topbar>div:first-child{width:100%;min-width:0;flex:none}
+  body.pp-master-shell:has(#appFrame[src*="campanha-inteligente.html"]) .main-area>.topbar #currentTitle,
+  body.pp-store-shell:not(.pp-store-hub-open):has(#appFrame[src*="campanha-inteligente.html"]) .main-area>.topbar #currentTitle{overflow-wrap:normal;word-break:normal;font-size:clamp(15px,4.8vw,19px);line-height:1.3}
+}

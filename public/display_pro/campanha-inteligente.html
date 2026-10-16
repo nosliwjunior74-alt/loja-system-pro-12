@@ -132,6 +132,22 @@
     .pp-d7-notice{border:1px solid #e8d8a5;background:#fff9e8;border-radius:10px;padding:10px;margin-top:9px;font-size:12px;color:#644b25}
     @media(max-width:990px){.pp-d7-list{grid-template-columns:repeat(2,minmax(0,1fr))}}
     @media(max-width:620px){.pp-d7-controls,.pp-d7-list{grid-template-columns:1fr}.pp-d7-body{padding:0 14px 16px}.pp-d7-media-preview{height:220px}}
+    /* D7.2: gavetas fechadas inicialmente, boas areas de toque, sem alterar AI Marketing Pro. */
+    .pp-d72-drawers{display:grid;gap:11px;margin:15px 0}
+    .pp-d72-drawer{border:1px solid #ecd5e1;border-radius:14px;background:#fffafd;min-width:0;overflow:hidden}
+    .pp-d72-drawer>summary{cursor:pointer;padding:15px 16px;font-size:16px;font-weight:800;color:var(--deep);display:flex;align-items:center;gap:11px;min-height:52px}
+    .pp-d72-drawer>summary::marker{color:var(--pink)}
+    .pp-d72-drawer>summary .counter{margin-left:auto}
+    .pp-d72-drawer>.pp-d7-list,.pp-d72-drawer>p{margin:0 13px 15px}
+    .pp-d72-drawer>.pp-d7-list{padding-top:3px}
+    .pp-d72-trash-item{background:#f9f6f8}
+    .pp-d72-trash-icon{font-size:38px;text-align:center;padding:25px;background:#f5edf2;border-radius:10px}
+    .pp-d7-actions>*{min-height:44px;flex:1 1 95px}
+    .pp-d72-restore{background:#edf8ef;color:#245b37;border-color:#b9dec3}
+    .pp-d72-purge{background:#fff2f1;color:#9a2639;border-color:#ecc5c5}
+    @media(max-width:700px){.top{gap:8px}.top>.brand{min-width:0;flex:1 1 170px;overflow-wrap:normal}.top>.back{flex:0 1 auto}.pp-d7-buttons>*{min-height:44px}}
+    @media(max-width:420px){.top>.back{width:100%;text-align:center}.pp-d7-box>summary{font-size:15px;padding:14px}.pp-d72-drawer>summary{font-size:15px}}
+
   </style>
 </head>
 <body>
@@ -219,10 +235,10 @@
     </div>
   </details>
   <details class="pp-d7-box" id="ppD7Media">
-    <summary>🖼️ 🎬 Central de Mídias — D7.1 (fotos e vídeos próprios)</summary>
+    <summary>🖼️ 🎬 Central de Mídias — D7.2 (imagens, vídeos e lixeira)</summary>
     <div class="pp-d7-body">
       <p class="muted">Biblioteca privada por Produtor / loja e aplicativo. Escolha fotos ou vídeos seus, faça o upload, associe-os a uma campanha, visualize e baixe quando precisar.</p>
-      <p class="pp-d7-notice"><strong>Fase D7.1:</strong> geração de imagem/vídeo com IA e criação de páginas de vendas serão integradas em etapas posteriores. Não há envio às redes, anúncio ativo nem gasto automático.</p>
+      <p class="pp-d7-notice"><strong>Fase D7.2:</strong> geração de imagem/vídeo com IA e criação de páginas de vendas serão integradas em etapas posteriores. Não há envio às redes, anúncio ativo nem gasto automático.</p>
       <div class="pp-d7-controls">
         <label for="ppD7File">Escolher arquivo (JPG, PNG, WEBP, GIF, MP4, WEBM ou MOV)
           <input id="ppD7File" type="file" accept=".jpg,.jpeg,.png,.webp,.gif,.mp4,.webm,.mov,image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm,video/quicktime" />
@@ -235,18 +251,27 @@
         <button id="ppD7Upload" class="primary" type="button">📤 Adicionar mídia própria</button>
         <button id="ppD7Refresh" class="secondary" type="button">Atualizar biblioteca</button>
       </div>
-      <p class="muted">Limites iniciais: imagem 10 MB, vídeo 60 MB; até 100 arquivos e 250 MB por contexto. O servidor verifica o formato real do arquivo. Não compartilhe material sem direito de uso.</p>
+      <p class="muted">Limites iniciais: imagem 10 MB, vídeo 60 MB; até 100 arquivos e 250 MB por contexto. <strong>Arquivos na Lixeira continuam ocupando a cota</strong> até a exclusão definitiva. Sem exclusão automática. Não compartilhe material sem direito de uso.</p>
       <div class="minirow">
         <strong>Minha biblioteca privada</strong>
         <span id="ppD7Usage" class="counter">Carregando…</span>
       </div>
-      <div class="pp-d7-controls">
-        <label for="ppD7Filter">Filtrar biblioteca
-          <select id="ppD7Filter"><option value="todos">Todas as mídias</option><option value="imagem">Imagens</option><option value="video">Vídeos</option></select>
-        </label>
-      </div>
       <p id="ppD7Status" class="muted" role="status" aria-live="polite">Carregando biblioteca…</p>
-      <div id="ppD7List" class="pp-d7-list"><div class="empty">Aguardando consulta…</div></div>
+      <div class="pp-d72-drawers" aria-label="Gavetas da biblioteca privada">
+        <details class="pp-d72-drawer" id="ppD72Images">
+          <summary>🖼️ Imagens <span id="ppD72ImagesCount" class="counter">0</span></summary>
+          <div id="ppD72ImagesList" class="pp-d7-list"><div class="empty">Aguardando consulta…</div></div>
+        </details>
+        <details class="pp-d72-drawer" id="ppD72Videos">
+          <summary>🎬 Vídeos <span id="ppD72VideosCount" class="counter">0</span></summary>
+          <div id="ppD72VideosList" class="pp-d7-list"><div class="empty">Aguardando consulta…</div></div>
+        </details>
+        <details class="pp-d72-drawer" id="ppD72Trash">
+          <summary>🗑️ Lixeira <span id="ppD72TrashCount" class="counter">0</span></summary>
+          <p class="muted">Arquivos aqui não aparecem nas campanhas, não podem ser baixados e continuam ocupando espaço. Você pode restaurá-los ou excluí-los definitivamente. Não existe limpeza automática.</p>
+          <div id="ppD72TrashList" class="pp-d7-list"><div class="empty">Lixeira vazia.</div></div>
+        </details>
+      </div>
     </div>
   </details>
 </main>

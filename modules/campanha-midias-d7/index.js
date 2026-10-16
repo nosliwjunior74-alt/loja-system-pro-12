@@ -69,15 +69,18 @@ function createMediaCore({dataDir,campaignCore}={}){
        url.protocol!==`${req.protocol}:`)throw error(403,'Origem diferente do sistema');
   }
   const itemsOf=(rows,c)=>rows.filter(r=>r.type===c.type&&r.owner===c.owner);
-  const publicRecord=r=>({id:r.id,name:r.name,mime:r.mime,kind:r.kind,bytes:r.bytes,campaignId:r.campaignId||'',createdAt:r.createdAt,source:'propria'});
+  // Arquivos na lixeira seguem ocupando a cota ate exclusao definitiva.
+  const activeOf=rows=>rows.filter(r=>!r.deletedAt);
+  const trashOf=rows=>rows.filter(r=>Boolean(r.deletedAt));
+  const publicRecord=r=>({id:r.id,name:r.name,mime:r.mime,kind:r.kind,bytes:r.bytes,campaignId:r.campaignId||'',createdAt:r.createdAt,deletedAt:r.deletedAt||null,source:'propria'});
   function verifyCampaign(c,id){if(!id)return;const rows=campaignCore.read();if(!rows.some(x=>x.id===id&&x.type===c.type&&x.owner===c.owner))throw error(404,'Campanha nao encontrada neste aplicativo')}
-  function record(req,c){const id=String(req.params.id||'');if(!/^[a-f0-9-]{36}$/i.test(id))throw error(404,'Midia nao encontrada');const r=read().find(x=>x.id===id&&x.type===c.type&&x.owner===c.owner);if(!r)throw error(404,'Midia nao encontrada');return r}
+  function record(req,c,{allowDeleted=false,requireDeleted=false}={}){const id=String(req.params.id||'');if(!/^[a-f0-9-]{36}$/i.test(id))throw error(404,'Midia nao encontrada');const r=read().find(x=>x.id===id&&x.type===c.type&&x.owner===c.owner);if(!r||(r.deletedAt&&!allowDeleted)||(requireDeleted&&!r.deletedAt))throw error(404,'Midia nao encontrada');return r}
   function fileFor(r,c){return path.join(dirFor(c),r.id+EXT[r.mime])}
   function fail(res,e){if(res.headersSent)return;res.status(e.httpStatus||500).json({ok:false,error:e.httpStatus?e.message:'Erro interno na biblioteca de midias'})}
   function setup(app){
     app.get('/api/campanha-midias-d7/v1/:type', (req,res)=>{
       const c=context(req,res);if(!c)return;
-      try{const list=itemsOf(read(),c);res.json({ok:true,items:list.map(publicRecord).reverse(),quota:{maxFiles:MAX_OWNER_ITEMS,maxBytes:MAX_OWNER_BYTES,usedBytes:list.reduce((n,r)=>n+r.bytes,0)},aiGenerationEnabled:false,externalPublicationEnabled:false})}catch(e){fail(res,e)}
+      try{const list=itemsOf(read(),c);res.json({ok:true,items:activeOf(list).map(publicRecord).reverse(),trash:trashOf(list).map(publicRecord).reverse(),quota:{maxFiles:MAX_OWNER_ITEMS,maxBytes:MAX_OWNER_BYTES,usedFiles:list.length,usedBytes:list.reduce((n,r)=>n+r.bytes,0)},aiGenerationEnabled:false,externalPublicationEnabled:false})}catch(e){fail(res,e)}
     });
     app.post('/api/campanha-midias-d7/v1/:type/upload',async(req,res)=>{
       const c=context(req,res);if(!c)return;
@@ -132,9 +135,41 @@ function createMediaCore({dataDir,campaignCore}={}){
         const all=read();const item=all.find(x=>x.id===r.id&&x.type===c.type&&x.owner===c.owner);item.campaignId=campaignId;write(all);res.json({ok:true,item:publicRecord(item)});
       }catch(e){fail(res,e)}
     });
+    // D7.2: mover para lixeira NAO apaga bytes, nem reaproveita a cota.
     app.delete('/api/campanha-midias-d7/v1/:type/:id',(req,res)=>{
       const c=context(req,res);if(!c)return;
-      try{mutation(req);const r=record(req,c);const p=fileFor(r,c);const all=read();write(all.filter(x=>x.id!==r.id));try{fs.rmSync(p,{force:true})}catch(e){console.error('[D7] Falha ao eliminar arquivo',e.message)}res.json({ok:true})}catch(e){fail(res,e)}
+      try{
+        mutation(req);const r=record(req,c),all=read();
+        const item=all.find(x=>x.id===r.id&&x.type===c.type&&x.owner===c.owner);
+        item.deletedAt=new Date().toISOString();write(all);
+        res.json({ok:true,item:publicRecord(item)});
+      }catch(e){fail(res,e)}
+    });
+    app.post('/api/campanha-midias-d7/v1/:type/:id/restaurar',(req,res)=>{
+      const c=context(req,res);if(!c)return;
+      try{
+        mutation(req);const r=record(req,c,{allowDeleted:true,requireDeleted:true});
+        if(!fs.existsSync(fileFor(r,c)))throw error(404,'Arquivo nao disponivel para restauracao');
+        const all=read(),item=all.find(x=>x.id===r.id&&x.type===c.type&&x.owner===c.owner);
+        // Campanha removida? Restaura midia sem vinculo, nunca em outra loja.
+        if(item.campaignId){try{verifyCampaign(c,item.campaignId)}catch(e){item.campaignId=''}}
+        delete item.deletedAt;write(all);res.json({ok:true,item:publicRecord(item)});
+      }catch(e){fail(res,e)}
+    });
+    app.delete('/api/campanha-midias-d7/v1/:type/:id/definitivo',(req,res)=>{
+      const c=context(req,res);if(!c)return;
+      try{
+        mutation(req);const r=record(req,c,{allowDeleted:true,requireDeleted:true}),p=fileFor(r,c);
+        const all=read(),tomb=p+'.excluindo-'+crypto.randomUUID();
+        // Primeiro isola o arquivo. Se o indice falhar, devolve o original.
+        let moved=false;
+        try{
+          if(fs.existsSync(p)){fs.renameSync(p,tomb);moved=true}
+          write(all.filter(x=>!(x.id===r.id&&x.type===c.type&&x.owner===c.owner)));
+        }catch(e){if(moved&&fs.existsSync(tomb))fs.renameSync(tomb,p);throw e}
+        if(moved){try{fs.rmSync(tomb,{force:true})}catch(e){console.error('[D7.2] Falha ao remover arquivo ja desvinculado',e.message)}}
+        res.json({ok:true});
+      }catch(e){fail(res,e)}
     });
     app.get('/api/campanha-midias-d7/v1/:type/:id/arquivo',(req,res)=>{
       const c=context(req,res);if(!c)return;

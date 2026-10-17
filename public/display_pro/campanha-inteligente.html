@@ -148,6 +148,17 @@
     @media(max-width:700px){.top{gap:8px}.top>.brand{min-width:0;flex:1 1 170px;overflow-wrap:normal}.top>.back{flex:0 1 auto}.pp-d7-buttons>*{min-height:44px}}
     @media(max-width:420px){.top>.back{width:100%;text-align:center}.pp-d7-box>summary{font-size:15px;padding:14px}.pp-d72-drawer>summary{font-size:15px}}
 
+    /* D8A: editor de geracoes somente texto, isolado do D7 e dos perfis D3. */
+    .pp-d8-box{margin-top:18px;border:1px solid var(--border);border-radius:17px;background:#fff;box-shadow:var(--shadow)}
+    .pp-d8-box>summary{cursor:pointer;padding:17px 20px;font-size:17px;font-weight:800;color:var(--deep)}
+    .pp-d8-body{padding:0 20px 20px}
+    .pp-d8-body select{max-width:430px}
+    .pp-d8-status{border:1px solid #ead6df;background:#fff8fb;padding:12px;border-radius:10px;margin-top:12px;font-size:13px;overflow-wrap:anywhere}
+    .pp-d8-results{display:grid;gap:10px;margin-top:12px}
+    .pp-d8-result{padding:12px;border:1px solid var(--border);border-radius:12px;min-width:0}
+    .pp-d8-result small{font-size:12px;color:var(--muted)}
+    .pp-d8-result pre{font:13px/1.5 system-ui,sans-serif;white-space:pre-wrap;overflow-wrap:anywhere;margin-bottom:0}
+    @media(max-width:700px){.pp-d8-box>summary{padding:14px;font-size:15px}.pp-d8-body{padding:0 14px 16px}.pp-d8-body .buttons>button{flex:1 1 135px}}
   </style>
 </head>
 <body>
@@ -216,6 +227,18 @@
       <p class="fine">As mensagens são modelos locais de texto; não são criadas por modelos de IA externos. Os agentes exibidos são perfis de configuração, não serviços executando postagens.</p>
     </section>
   </div>
+  <details class="pp-d8-box" id="ppD8AI">
+    <summary>✦ Motor Central de IA — D8A (textos sob aprovacao)</summary>
+    <div class="pp-d8-body">
+      <p class="muted">Primeira etapa: um agente de cada vez, com confirmacao antes de cada chamada paga. O Produtor deve habilitar cotas no servidor; por padrao a IA fica DESLIGADA. Selecione e salve um rascunho no editor acima.</p>
+      <label for="ppD8Agent">Escolha qual dos oito agentes vai preparar um rascunho</label>
+      <select id="ppD8Agent"></select>
+      <div class="buttons"><button type="button" id="ppD8Refresh" class="secondary">Conferir limites</button><button type="button" id="ppD8Generate" class="primary" disabled>Gerar texto com IA (pode ter custo)</button></div>
+      <div id="ppD8Status" class="pp-d8-status" role="status" aria-live="polite">Abra esta gaveta para consultar a configuracao do D8A.</div>
+      <div id="ppD8Results" class="pp-d8-results"></div>
+      <p class="fine">Design gera briefing textual; Video gera roteiro; Publicacao prepara checklist; Analise prepara indicadores. Nenhum deles produz arquivos, publica anuncios, sincroniza estoque ou mede resultados reais nesta fase. Os limites sao por numero de chamadas, nao garantia de teto de custo em reais.</p>
+    </div>
+  </details>
   <details class="profile" id="agent-settings">
     <summary>⚙ Configuração dos oito agentes (D3) — por aplicativo / loja</summary>
     <div class="profile-body">
@@ -278,4 +301,5 @@
 <script src="campanha-anuncios-guiados-v1.js" defer></script>
 <script src="campanha-inteligente.js" defer></script>
 <script src="campanha-midias-d7.js" defer></script>
+<script src="campanha-ia-d8.js" defer></script>
 </body></html>

@@ -11,6 +11,8 @@ const $=id=>document.getElementById(id);
 let type=isStore?'vendas_lojista':qp.get('app')==='central_produtor'?'central_produtor':'vendas_produtor';
 let items=[],selectedId=null,profile=null,previewResult=null,dirty=false,contextVersion=0,busy=false;
 const api=()=>`/api/campanha-unificada/v1/${type}`;
+// D8A fornece somente a selecao atual, sem expor dados ou alterar o editor D5.
+window.PPD8CurrentCampaign=()=>({type,selectedId,dirty,loja:qp.get('loja')||''});
 const setText=(id,value)=>{$(id).textContent=String(value??'')};
 function status(message,kind=''){
   const e=$('status'); e.textContent=message;e.className='status'+(kind?' '+kind:'');

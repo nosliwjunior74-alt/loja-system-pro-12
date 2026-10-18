@@ -22,7 +22,8 @@ async function refresh(){if(busy)return;const s=cur();disable('Carregando limite
  try{const data=await getStatus(s);const latest=cur();if(!latest||key!==latest.type+'::'+latest.selectedId+'::'+latest.loja||latest.dirty)return;
    currentKey=key;const remaining=Math.max(0,data.monthlyLimit-data.monthlyUsed),gRemaining=Math.max(0,data.globalMonthlyLimit-data.globalMonthlyUsed);
    const enabled=data.enabled&&remaining>0&&gRemaining>0;
-   text(info,(enabled?'IA habilitada para testes controlados. ':'IA desativada ou sem cotas. ')+`Cota deste ambiente: ${data.monthlyUsed}/${data.monthlyLimit}; cota geral: ${data.globalMonthlyUsed}/${data.globalMonthlyLimit}. Nenhuma publicacao automatica.`);
+   const budget=data.budgetCurrency==='USD' ? ` Orcamento estimado USD: ${Number(data.monthlyReservedOrUsedUSD||0).toFixed(4)}/${Number(data.monthlyBudgetUSD||0).toFixed(2)} (ambiente); ${Number(data.globalReservedOrUsedUSD||0).toFixed(4)}/${Number(data.globalBudgetUSD||0).toFixed(2)} (geral). Nao e teto absoluto da OpenAI.` : '';
+   text(info,(enabled?'IA habilitada para teste controlado. ':String(data.disabledReason||'IA desativada ou sem cotas. ')+' ')+`Cota deste ambiente: ${data.monthlyUsed}/${data.monthlyLimit}; cota geral: ${data.globalMonthlyUsed}/${data.globalMonthlyLimit}.`+budget+' Nenhuma publicacao automatica.');
    generate.disabled=!enabled||data.agentEnabled?.[select.value]===false;select.querySelectorAll('option').forEach(opt=>{opt.disabled=data.agentEnabled?.[opt.value]===false});draw(data.results||[]);
  }catch(e){disable('Nao foi possivel consultar o D8: '+e.message)}
 }

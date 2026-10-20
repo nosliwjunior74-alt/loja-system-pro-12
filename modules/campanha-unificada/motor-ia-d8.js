@@ -42,6 +42,10 @@ const pricePerMillion=(v)=>{
 const asMicro=(value)=>Math.ceil(value);
 const usd=(micro)=>Number((micro/1000000).toFixed(6));
 const LOCK_TIMEOUT_MS=120000;
+// PILOTO D8B: guarda provisoria fail-closed somente para a primeira chamada paga.
+// Nao liberar outros agentes, contextos ou campanhas enquanto esta guarda existir.
+const PILOT_CAMPAIGN_ID='04e00ce2-bb89-4094-83a1-a97c312ba05a';
+const PILOT_EXPIRES_UTC='2026-11-01T00:00:00.000Z';
 
 function extractText(data){
   if(typeof data?.output_text==='string')return data.output_text.trim();
@@ -69,6 +73,8 @@ function createD8AI({dataDir,context,readCampaigns,readProfile,now=()=>new Date(
     globalBudgetCents:cents(env.PP_D8B_GLOBAL_BUDGET_USD,10000),
     maxRequestCents:cents(env.PP_D8B_MAX_REQUEST_USD,200)
   });
+  const pilotScope=(c,id,agent)=>c.type==='central_produtor' && c.owner==='produtor' &&
+    id===PILOT_CAMPAIGN_ID && agent==='coordenador' && now().getTime()<Date.parse(PILOT_EXPIRES_UTC);
   const budgetConfigured=s=>s.inputPrice>0&&s.outputPrice>0&&s.monthlyBudgetCents>0&&s.globalBudgetCents>0&&s.maxRequestCents>0;
   const ready=s=>s.on&&Boolean(s.key)&&s.monthly>0&&s.globalMonthly>0&&budgetConfigured(s);
   const reserveEstimate=(s,instructions)=>{
@@ -172,9 +178,10 @@ function createD8AI({dataDir,context,readCampaigns,readProfile,now=()=>new Date(
         const s=setting(), rows=load(),p=period(),used=counts(rows,c,p),costs=monthlyCost(rows,c,p);
         const profile=readProfile(c).profile;
         const results=rows.filter(x=>x.ownerKey===keyOf(c)&&x.campaignId===campaign.id).slice(-16).reverse().map(publicRecord);
-        const canUse=ready(s)&&!costs.unknown&&used.own<s.monthly&&used.global<s.globalMonthly&&
+        const canUse=pilotScope(c,campaign.id,'coordenador')&&ready(s)&&!costs.unknown&&used.own<s.monthly&&used.global<s.globalMonthly&&
           costs.own<s.monthlyBudgetCents*10000&&costs.global<s.globalBudgetCents*10000;
-        const reason=!s.on?'IA D8 desligada pelo Produtor.':
+        const reason=!pilotScope(c,campaign.id,'coordenador')?'Piloto D8B limitado a campanha tecnica, Coordenador e prazo autorizado.':
+          !s.on?'IA D8 desligada pelo Produtor.':
           !budgetConfigured(s)?'D8B sem orcamentos e precos USD completos; nenhuma chamada paga permitida.':
           costs.unknown?'Historico antigo sem custo registrado: bloquear ate reconciliacao tecnica.':
           !canUse?'Cota ou orcamento estimado esgotado.':'IA habilitada para teste controlado.';
@@ -190,6 +197,9 @@ function createD8AI({dataDir,context,readCampaigns,readProfile,now=()=>new Date(
       const c=allowed(req,res);if(!c)return;
       let reserved;
       try{
+        // Guarda ANTES da reserva financeira e de qualquer chamada paga.
+        if(!pilotScope(c,req.params.id,String(req.body?.agent||'')))
+          throw err(403,'Piloto D8B: somente Coordenador da campanha tecnica do Produtor');
         mutation(req);
         const campaign=findCampaign(c,req.params.id);if(!campaign)return res.status(404).json({ok:false,error:'Campanha nao encontrada'});
         if(campaign.state==='cancelado')throw err(409,'Campanha cancelada');
@@ -236,7 +246,7 @@ function createD8AI({dataDir,context,readCampaigns,readProfile,now=()=>new Date(
         try{
           const reply=await fetchImpl('https://api.openai.com/v1/responses',{
             method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+s.key},signal:controller.signal,
-            body:JSON.stringify({model:s.model,input:instructions,max_output_tokens:s.maxOutput})
+            body:JSON.stringify({model:s.model,input:instructions,max_output_tokens:s.maxOutput,reasoning:{effort:'none'}})
           });
           const payload=await reply.json().catch(()=>({}));
           if(!reply.ok)throw err(502,'Provedor IA indisponivel (HTTP '+reply.status+')');

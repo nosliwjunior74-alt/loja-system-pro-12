@@ -38,6 +38,13 @@ self.addEventListener('activate',event=>{
           }
         })
       ))
+      // D8B: remover somente respostas antigas de campanhas deste cache.
+      // Nao limpar caches de outros aplicativos nem arquivos do modo offline.
+      .then(async()=>{
+        const cache=await caches.open(CACHE);
+        const keys=await cache.keys();
+        await Promise.all(keys.filter(isCampaignApiRequest).map(request=>cache.delete(request)));
+      })
       .then(()=>self.clients.claim())
   );
 });
@@ -48,6 +55,13 @@ function isSameOrigin(request){
   }catch(_){
     return false;
   }
+}
+
+// D8B: respostas da Campanha Inteligente contem dados da sessao atual.
+function isCampaignApiRequest(request){
+  if(!isSameOrigin(request)) return false;
+  const pathname=new URL(request.url).pathname;
+  return pathname==='/api/campanha-unificada' || pathname.startsWith('/api/campanha-unificada/');
 }
 
 function isFreshAsset(request){
@@ -66,6 +80,13 @@ function isFreshAsset(request){
 self.addEventListener('fetch',event=>{
   const request=event.request;
   if(request.method!=='GET') return;
+
+  // Usar somente rede nas APIs das campanhas, sem resposta antiga do cache.
+  // Offline nao devolve dados de outra sessao: erro de rede esperado.
+  if(isCampaignApiRequest(request)){
+    event.respondWith(fetch(request,{cache:'no-store'}));
+    return;
+  }
 
   if(isFreshAsset(request)){
     event.respondWith(

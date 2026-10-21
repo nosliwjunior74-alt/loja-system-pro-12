@@ -8,6 +8,7 @@ const LIMIT=500;
 const {previewCampaign}=require('./coordenador');
 const {createAgentSettings}=require('./configuracoes-agentes');
 const {createD8AI}=require('./motor-ia-d8');
+const {createD8CPreview}=require('./orquestrador-d8c-v1');
 function createCore({dataDir,producerAuthenticated=()=>false,clientStoreId=()=>'',getStoreById=()=>null,now=()=>new Date()}={}){
   if(!dataDir)throw Error('dataDir obrigatorio');
   const file=path.join(dataDir,'campanha-unificada-v1152d-base.json');
@@ -40,8 +41,10 @@ function createCore({dataDir,producerAuthenticated=()=>false,clientStoreId=()=>'
   }
   function structuredConfig(obj){if(obj==null)return {};if(!obj||typeof obj!=='object'||Array.isArray(obj))throw Error('Configuracao invalida');const value=JSON.stringify(obj);if(value.length>12000)throw Error('Configuracao excede o limite');return JSON.parse(value)}
   const d8AI=createD8AI({dataDir,context,readCampaigns:read,readProfile:c=>agentSettings.get(c)});
+  const d8cPreview=createD8CPreview({context,readCampaigns:read,readProfile:c=>agentSettings.get(c),getStoreById});
   function setup(app){
     d8AI.setup(app);
+    d8cPreview.setup(app);
     // D3 perfis sao propriedade exclusiva do contexto autenticado.
     app.get('/api/campanha-unificada/v1/:type/configuracao-ia',(req,res)=>{const c=context(req,req.params.type);if(c.error)return res.status(c.error).json({error:c.message});try{return res.json({ok:true,...agentSettings.get(c)})}catch(e){return res.status(500).json({error:'Erro ao consultar perfil'})}});
     app.put('/api/campanha-unificada/v1/:type/configuracao-ia',(req,res)=>{const c=context(req,req.params.type);if(c.error)return res.status(c.error).json({error:c.message});try{return res.json({ok:true,...agentSettings.put(c,req.body||{})})}catch(e){if(/^(Configuracao|Campo|Texto|Agente|Ativacao|Instrucoes)/.test(e.message))return res.status(400).json({error:e.message});return res.status(500).json({error:'Erro ao salvar perfil'})}});

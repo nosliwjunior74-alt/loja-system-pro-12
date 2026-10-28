@@ -1,0 +1,73 @@
+/* PROVADOR PRO — V4 MENU UNICO — camada externa. A aparencia V3 continua preservada. */
+body.pp-v4-shell{--v4-sidebar:#0b1c37;--v4-sidebar2:#061426;--v4-accent:#236dff;--v4-bg:#f2f6fc;--v4-surface:#fff;--v4-ink:#1a2d49;--v4-muted:#647792;--v4-line:#dce6f2;--v4-gold:#e4bb55;background:var(--v4-bg);color:var(--v4-ink)}
+body.pp-v4-shell[data-v4-sidebar="green"]{--v4-sidebar:#075137;--v4-sidebar2:#042b25;--v4-accent:#0fbd6f}
+body.pp-v4-shell[data-v4-sidebar="purple"]{--v4-sidebar:#34215f;--v4-sidebar2:#1e1437;--v4-accent:#8255e9}
+body.pp-v4-shell[data-v4-sidebar="graphite"]{--v4-sidebar:#303b4e;--v4-sidebar2:#16212f;--v4-accent:#4c87df}
+body.pp-v4-shell[data-v4-bg="sand"]{--v4-bg:#fcf6e9}
+body.pp-v4-shell[data-v4-bg="mint"]{--v4-bg:#ebfaf3}
+body.pp-v4-shell[data-v4-bg="lavender"]{--v4-bg:#f3efff}
+body.pp-v4-shell[data-v4-mode="dark"]{--v4-bg:#121b2a;--v4-surface:#1c293e;--v4-ink:#f0f5ff;--v4-muted:#bfd1e9;--v4-line:#37455b;color-scheme:dark}
+body.pp-v4-shell .shell{grid-template-columns:var(--pp-sidebar-width,292px) minmax(0,1fr);background:var(--v4-bg)}
+body.pp-v4-shell .sidebar.pp-pro-sidebar{background:linear-gradient(180deg,var(--v4-sidebar),var(--v4-sidebar2))!important;border-right:1px solid #ffffff22!important;color:#eaf2ff;box-shadow:5px 0 20px #0614261c;gap:11px;padding:14px 12px}
+body.pp-v4-shell .pp-sidebar-profile{border-color:#ffffff28!important;background:#ffffff10!important;box-shadow:none!important;padding:10px 12px!important;gap:10px!important;overflow:hidden}
+body.pp-v4-shell .pp-sidebar-profile .brand-logo{display:none!important}
+body.pp-v4-shell .pp-v4-logo{flex:0 0 42px;display:grid;place-items:center;width:42px;height:42px;border-radius:50%;color:#152641;background:linear-gradient(135deg,#f5d988,#b78c35);box-shadow:0 4px 14px #0003}
+body.pp-v4-shell .pp-v4-logo svg{width:34px;height:26px}
+body.pp-v4-shell .pp-sidebar-profile .brand-copy{min-width:0}
+body.pp-v4-shell .pp-sidebar-profile .brand-kicker{color:#f6d58b!important;font-size:9px;letter-spacing:.06em}
+body.pp-v4-shell .pp-sidebar-profile .brand-copy h1{color:#fff!important;font-size:14px;max-width:180px}
+body.pp-v4-shell .pp-sidebar-profile .brand-copy p{color:#cbdaf0!important;font-size:10px}
+body.pp-v4-shell .pp-pro-menu{display:flex!important;flex-direction:column;gap:6px!important}
+body.pp-v4-shell .pp-pro-menu .menu-group{padding:2px 1px!important;background:transparent!important;border:0!important;box-shadow:none!important;gap:3px}
+body.pp-v4-shell .pp-pro-menu .menu-label{color:#9dbbe4!important;font-size:10px!important;letter-spacing:.09em;padding:5px 8px 6px!important}
+body.pp-v4-shell .pp-pro-menu .menu-btn{display:flex;align-items:center;gap:8px;border-radius:10px;background:transparent;color:#e6f0ff!important;border:1px solid transparent!important;box-shadow:none;padding:10px!important;min-height:38px;font-size:12.5px;font-weight:700;line-height:1.3;transform:none!important}
+body.pp-v4-shell .pp-pro-menu .menu-btn:hover{background:#ffffff1a!important;color:#fff!important}
+body.pp-v4-shell .pp-pro-menu .menu-btn.active{background:var(--v4-accent)!important;color:#fff!important;box-shadow:0 5px 16px #0002!important}
+body.pp-v4-shell .pp-pro-menu .menu-icon{display:grid;place-items:center;flex:0 0 24px;width:24px;height:26px;margin:0;font-size:16px;background:#ffffff12;border-radius:7px}
+body.pp-v4-shell .pp-pro-menu .pp-menu-text{color:inherit!important;white-space:normal;line-height:1.3;min-width:0}
+body.pp-v4-shell .pp-v4-group{border:1px solid #ffffff14;border-radius:12px;background:#ffffff08}
+body.pp-v4-shell .pp-v4-group>summary{list-style:none;display:flex;align-items:center;gap:9px;min-height:40px;color:#d8e9ff;cursor:pointer;padding:9px 11px;font-size:12px;font-weight:780}
+body.pp-v4-shell .pp-v4-group>summary::-webkit-details-marker{display:none}
+body.pp-v4-shell .pp-v4-group>summary::after{content:'⌄';font-size:17px;margin-left:auto;line-height:1;color:#b7c9e8}
+body.pp-v4-shell .pp-v4-group[open]>summary::after{content:'⌃'}
+body.pp-v4-shell .pp-v4-group .menu-group{padding:4px 7px 8px!important}
+body.pp-v4-shell .pp-v4-group .menu-label{display:none!important}
+body.pp-v4-shell .pp-v4-pending{padding:8px 10px;color:#d4e2fb;font-size:11px;display:flex;gap:9px;align-items:center}
+body.pp-v4-shell .pp-v4-pending span:last-child{margin-left:auto;font-size:9px;color:#f6d58b}
+body.pp-v4-shell .pp-v4-drawer{border:1px solid #ffffff32;border-radius:12px;background:#ffffff0c;color:#f0f5ff;padding:9px 10px}
+body.pp-v4-shell .pp-v4-drawer summary{cursor:pointer;font-size:12px;font-weight:780;list-style:auto}
+body.pp-v4-shell .pp-v4-drawer-body{display:grid;gap:9px;margin-top:12px}
+body.pp-v4-shell .pp-v4-drawer label{font-size:11px;color:#d5e5ff;font-weight:700}
+body.pp-v4-shell .pp-v4-drawer select{display:block;width:100%;margin-top:4px;background:#f3f7ff;border:1px solid #a3b8ce;border-radius:9px;height:34px;color:#15253e;font-size:12px}
+body.pp-v4-shell .pp-v4-action{background:#ffffff18;border:1px solid #ffffff42;color:white;padding:10px;border-radius:10px;cursor:pointer;font-size:11px;font-weight:750;text-align:left}
+body.pp-v4-shell .pp-v4-action:hover{background:#ffffff2c}
+body.pp-v4-shell .pp-v4-description{font-size:10px;line-height:1.5;color:#c4d6f3}
+body.pp-v4-shell .pp-sidebar-tools-premium,body.pp-v4-shell .pp-sidebar-user{background:#ffffff0e!important;border-color:#ffffff26!important;color:white!important;box-shadow:none!important}
+body.pp-v4-shell .pp-sidebar-tools-premium .menu-label{color:#a7bfe0!important}
+body.pp-v4-shell .pp-sidebar-tools-premium .utility-btn{color:#eef6ff;background:#ffffff11;border-color:#ffffff24;border-radius:9px;font-size:12px}
+body.pp-v4-shell .pp-sidebar-tools-premium .utility-btn:hover{background:#ffffff23}
+body.pp-v4-shell .pp-sidebar-user strong{color:white!important}
+body.pp-v4-shell .pp-sidebar-user span{color:#bbd2eb!important}
+body.pp-v4-shell .pp-sidebar-avatar{background:#ffffff20;color:#fff;border:1px solid #ffffff3b}
+body.pp-v4-shell .pp-sidebar-footer{border-color:#ffffff25}
+body.pp-v4-shell .pp-footer-mini-btn{background:#ffffff13;border-color:#ffffff2b;color:white}
+body.pp-v4-shell .topbar{background:var(--v4-surface);border-color:var(--v4-line)}
+body.pp-v4-shell .topbar strong{color:var(--v4-ink)}
+body.pp-v4-shell .topbar span{color:var(--v4-muted)}
+body.pp-v4-shell #appFrame{background:var(--v4-bg)}
+body.pp-v4-shell .active-store-chip{background:var(--v4-surface);color:var(--v4-ink);border-color:var(--v4-line)}
+body.pp-v4-shell .active-store-dot{background:var(--v4-accent)}
+body.pp-v4-shell .mobile-menu-toggle{color:var(--v4-accent)!important;border-color:var(--v4-line)!important}
+body.pp-v4-shell .pp-sidebar-mobile-brand{color:white}
+body.pp-v4-shell .pp-sidebar-mobile-brand svg{color:var(--v4-gold)}
+body.pp-v4-shell .pp-sidebar-mobile-brand span{color:#cadeef}
+body.pp-v4-shell .pp-sidebar-close{background:#ffffff12;color:white;border-color:#ffffff30}
+body.pp-v4-shell .pp-sidebar-mobile-head{background:var(--v4-sidebar)!important}
+body.pp-v4-shell .pp-v4-help-backdrop{position:fixed;inset:0;z-index:2400;background:#05172da6;display:grid;place-items:center;padding:18px}
+body.pp-v4-shell .pp-v4-help{width:min(540px,100%);border-radius:17px;border:1px solid var(--v4-line);background:var(--v4-surface);color:var(--v4-ink);padding:24px;box-shadow:0 15px 60px #0005}
+body.pp-v4-shell .pp-v4-help h2{margin:0 0 14px;font-size:20px}
+body.pp-v4-shell .pp-v4-help li{font-size:13px;line-height:1.7;margin:7px 0}
+body.pp-v4-shell .pp-v4-help button{background:var(--v4-accent);color:white;border:0;border-radius:9px;padding:10px 16px;font-weight:700;cursor:pointer}
+body.pp-v4-shell :is(button,a,summary,select):focus-visible{outline:3px solid var(--v4-gold);outline-offset:2px}
+@media(min-width:761px){body.pp-v4-shell.pp-sidebar-collapsed .pp-v4-extra,body.pp-v4-shell.pp-sidebar-collapsed .pp-v4-drawer{display:none!important}body.pp-v4-shell.pp-sidebar-collapsed .pp-sidebar-profile .pp-v4-logo{flex-basis:40px}body.pp-v4-shell.pp-sidebar-collapsed .pp-sidebar-profile{justify-content:center!important}}
+@media(max-width:760px){body.pp-v4-shell .shell{display:block}body.pp-v4-shell .pp-pro-sidebar{width:min(88vw,340px)!important;height:100dvh!important;padding:12px!important}body.pp-v4-shell .pp-sidebar-profile{margin-top:0!important}body.pp-v4-shell .pp-pro-menu{display:flex!important;grid-template-columns:none!important}body.pp-v4-shell .pp-v4-help{padding:16px}}

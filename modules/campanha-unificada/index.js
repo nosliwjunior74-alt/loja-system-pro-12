@@ -9,6 +9,9 @@ const {previewCampaign}=require('./coordenador');
 const {createAgentSettings}=require('./configuracoes-agentes');
 const {createD8AI}=require('./motor-ia-d8');
 const {createD8CPreview}=require('./orquestrador-d8c-v1');
+const {createD8CCommunicationLab}=require('./d8c-comunicacao-lab-v1');
+const {createD8CRealBridgePrep}=require('./d8c-ponte-real-prep-v1');
+const {createD8CTextRealPilot}=require('./d8c-texto-real-piloto-v1');
 const {createAuditPreview}=require('./auditor-d8b-v36');
 function createCore({dataDir,producerAuthenticated=()=>false,clientStoreId=()=>'',getStoreById=()=>null,now=()=>new Date()}={}){
   if(!dataDir)throw Error('dataDir obrigatorio');
@@ -45,9 +48,15 @@ function createCore({dataDir,producerAuthenticated=()=>false,clientStoreId=()=>'
   const d8cPreview=createD8CPreview({context,readCampaigns:read,readProfile:c=>agentSettings.get(c),getStoreById});
   // V3.6: consulta administrativa read-only, nao modifica motor D8B ou D8C.
   const d8bAudit=createAuditPreview({dataDir,producerAuthenticated});
+  const d8cCommunicationLab=createD8CCommunicationLab({context,readCampaigns:read,readProfile:c=>agentSettings.get(c),getStoreById});
+  const d8cRealBridgePrep=createD8CRealBridgePrep({context,readCampaigns:read,readProfile:c=>agentSettings.get(c),getStoreById});
+  const d8cTextRealPilot=createD8CTextRealPilot({dataDir,context,readCampaigns:read,readProfile:c=>agentSettings.get(c),getStoreById});
   function setup(app){
     d8AI.setup(app);
     d8cPreview.setup(app);
+    d8cCommunicationLab.setup(app);
+    d8cRealBridgePrep.setup(app);
+    d8cTextRealPilot.setup(app);
     d8bAudit.setup(app);
     // D3 perfis sao propriedade exclusiva do contexto autenticado.
     app.get('/api/campanha-unificada/v1/:type/configuracao-ia',(req,res)=>{const c=context(req,req.params.type);if(c.error)return res.status(c.error).json({error:c.message});try{return res.json({ok:true,...agentSettings.get(c)})}catch(e){return res.status(500).json({error:'Erro ao consultar perfil'})}});

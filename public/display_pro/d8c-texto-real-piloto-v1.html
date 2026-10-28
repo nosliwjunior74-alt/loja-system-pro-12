@@ -1,0 +1,69 @@
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Campanha PRO — Piloto de Texto Real D8C</title><style>
+:root{font:15px/1.6 system-ui,Arial,sans-serif;color:#10254b;background:#f2f6fc}*{box-sizing:border-box}body{margin:0}
+header{background:#0d213f;color:#fff;padding:18px 28px;border-bottom:4px solid #e0ab44}h1{font-size:23px;margin:0}main{max-width:950px;margin:25px auto;padding:0 12px}.card{padding:22px;background:#fff;border:1px solid #d8e4f6;border-radius:14px;margin-bottom:12px;box-shadow:0 4px 14px #182c4d0b}.notice{background:#fff5d9;border:1px solid #efc06b;border-radius:10px;padding:14px}label{display:block;font-weight:650;margin:11px 0 5px}select,input{width:100%;max-width:760px;padding:12px;border:1px solid #c7d5ee;border-radius:8px;background:#fff;font:inherit}button{background:#2164e7;color:white;border:0;border-radius:8px;font-weight:700;padding:12px 16px;cursor:pointer;margin:12px 8px 0 0}button:disabled{opacity:.4;cursor:not-allowed}.secondary{background:#203f71}.muted{color:#586c8d;font-size:13px}.ok{color:#126c43}.warn{color:#a54c0a}.entry{background:#f5f8ff;border:1px solid #dce5f3;padding:12px;border-radius:8px;margin:9px 0}pre{white-space:pre-wrap;overflow-wrap:anywhere;font:13px/1.5 ui-monospace,monospace}.status{background:#e8f1ff;padding:12px;border-radius:8px;margin:12px 0}footer{text-align:center;color:#60718f;padding:14px}input[type=checkbox]{width:auto;margin-right:8px}a{color:#1d57ad}.busca-feedback{margin:10px 0 4px;padding:10px 12px;border-radius:8px;background:#e7f2ff;border:1px solid #a9c8f5;color:#153c73;font-size:14px}.busca-feedback.erro{background:#fff0e9;border-color:#e6ac93;color:#823c19}.busca-feedback.sucesso{background:#e6f8ed;border-color:#94d6ac;color:#135b35}
+</style></head><body><header><h1>♧ Provador Pro System — Piloto D8C: respostas reais</h1><div class="muted" style="color:#dbe7ff">Um agente por aprovação • Sem publicação • Sem geração de imagem ou MP4</div></header><main>
+<div class="notice"><strong>Atenção:</strong> esta é uma ferramenta de testes para futura geração textual REAL. Nunca execute uma chamada sem conferir o orçamento. O painel começa bloqueado, a configuração de servidor e o piloto são obrigatórios. Os dados não são enviados enquanto você não clicar para autorizar uma chamada.</div>
+<section class="card"><h2>1. Escolher a campanha</h2>
+<label for="tipo">Aplicativo</label><select id="tipo"><option value="central_produtor">Central do Produtor</option><option value="vendas_produtor">Vendas do Produtor</option><option value="vendas_lojista">Vendas do Lojista</option></select>
+<label for="loja">Slug da loja (somente lojista)</label><input id="loja" placeholder="Ex.: boutique" autocomplete="off">
+<button id="buscar" type="button">Buscar campanhas da minha sessão</button>
+<div id="busca-feedback" class="busca-feedback" role="status" aria-live="polite" hidden></div>
+<label for="campanha">Campanha</label><select id="campanha"><option value="">Selecione após buscar</option></select>
+<label for="ad">Tipo de anúncio</label><select id="ad"><option value="organico">Orgânico</option><option value="pago">Pago (sem ativação de anúncios)</option></select>
+</section>
+<section class="card"><h2>2. Consultar estado do piloto</h2><button id="consultar" type="button" class="secondary">Consultar disponibilidade e entregas</button><div id="status" class="status" role="status">Nenhuma chamada realizada. Escolha uma campanha para consultar.</div><div id="entregas"></div></section>
+<section class="card"><h2>3. Gerar texto real — somente quando autorizado</h2>
+<label for="agente">Agente</label><select id="agente"><option value="coordenador">Coordenador</option><option value="estrategia">Estratégia</option><option value="redacao">Redação</option><option value="design">Design (somente briefing textual)</option><option value="video">Vídeo (somente roteiro textual)</option><option value="conformidade">Conformidade</option><option value="analise">Análise</option><option value="publicacao">Publicação (somente checklist)</option></select>
+<label><input id="aprovar" type="checkbox"> Entendo que <strong>uma chamada paga</strong> poderá ser enviada ao provedor e que os limites do servidor são estimativas, não garantias absolutas.</label>
+<button id="executar" disabled type="button">Executar somente este agente</button><div id="execucao" class="status" role="status">Bloqueado até consultar o piloto e confirmar a autorização.</div>
+<p class="muted">O texto de cada agente depende das respostas já aprovadas dos agentes anteriores. Uma campanha já executada não é repetida automaticamente. Não faz pedidos, pagamentos, disparos, agendamentos ou publicações.</p>
+</section>
+<section class="card"><h2>Ajuda rápida</h2><details><summary>Como funciona a ordem?</summary><p>Coordenador → Estratégia → (Redação, Design, Vídeo) → (Conformidade, Análise) → Publicação. Cada chamada exige confirmação separada.</p></details><details><summary>O que é pago?</summary><p>Somente a chamada textual à OpenAI, quando o servidor e o piloto estiverem explicitamente liberados. O orçamento de mídia dos anúncios pagos e a GPU Vast.ai são separados.</p></details><details><summary>Por que os botões estão bloqueados?</summary><p>O servidor não foi autorizado, não há piloto, não há créditos configurados, ou faltam resultados anteriores. Não force a ativação.</p></details></section>
+</main><footer>Campanha PRO • Piloto D8C • Nenhuma publicação automática</footer><script>
+'use strict';const $=id=>document.getElementById(id);let enabled=false;
+const query=()=>{const s=$('tipo').value==='vendas_lojista'?'?loja='+encodeURIComponent($('loja').value.trim()):'';return s};
+const base=()=>'/api/campanha-unificada/v1/'+encodeURIComponent($('tipo').value);
+const detail=()=>base()+'/'+encodeURIComponent($('campanha').value)+'/d8c/texto-real-v1'+query();
+const err=e=>String(e&&e.message||e);
+function mark(text){$('status').textContent=text}
+function update(){enabled=false;$('executar').disabled=true;$('aprovar').checked=false}
+['tipo','campanha','loja','ad'].forEach(id=>$(id).addEventListener('change',update));
+$('aprovar').addEventListener('change',()=>{$('executar').disabled=!enabled||!$('aprovar').checked});
+$('buscar').addEventListener('click',async()=>{
+  update();$('campanha').replaceChildren(new Option('Escolha uma campanha',''));
+  const button=$('buscar'),feedback=$('busca-feedback'),original=button.textContent;
+  button.disabled=true;button.textContent='Buscando...';feedback.hidden=false;feedback.className='busca-feedback';feedback.textContent='Consultando as campanhas desta sessão...';
+  mark('Buscando campanhas...');
+  try{
+    const r=await fetch(base()+query(),{credentials:'same-origin',cache:'no-store'});
+    const data=await r.json();if(!r.ok||!data.ok)throw Error(data.error||'Falha na busca');
+    const items=Array.isArray(data.items)?data.items:[];
+    for(const c of items)$('campanha').add(new Option(c.title+' — '+c.state,c.id));
+    let msg='';
+    if(items.length===1){
+      $('campanha').value=String(items[0].id);
+      msg='1 campanha encontrada e selecionada: '+items[0].title+'. Agora clique em Consultar disponibilidade e entregas.';
+    }else if(items.length>1){msg=items.length+' campanhas encontradas. Escolha uma no campo Campanha.';}
+    else{msg='Nenhuma campanha encontrada neste aplicativo e nesta sessão.';}
+    feedback.className='busca-feedback sucesso';feedback.textContent=msg;mark(msg);
+  }catch(e){
+    const msg='Não foi possível buscar campanhas: '+err(e)+'. Confira se está logado e se escolheu o aplicativo correto.';
+    feedback.className='busca-feedback erro';feedback.textContent=msg;mark(msg);
+  }finally{button.disabled=false;button.textContent=original;}
+});
+$('consultar').addEventListener('click',async()=>{update();if(!$('campanha').value){mark('Selecione uma campanha.');return}
+  mark('Consultando disponibilidade...');$('entregas').replaceChildren();try{const r=await fetch(detail(),{credentials:'same-origin',cache:'no-store'}),data=await r.json();if(!r.ok||!data.ok)throw Error(data.error||'Falha na consulta');
+    enabled=Boolean(data.enabled);mark('Piloto '+(enabled?'liberado para solicitacoes individuais':'BLOQUEADO')+' | Modelo: '+data.modelLabel+' | Teto estimado por chamada: US$ '+data.maxRequestBudgetUSD+' | Publicacao: DESLIGADA');
+    for(const row of data.results||[]){const box=document.createElement('div');box.className='entry';const h=document.createElement('strong');h.textContent=row.agent+' — '+row.status;box.append(h);
+      if(row.text){const p=document.createElement('pre');p.textContent=row.text;box.append(p)}$('entregas').append(box)}
+  }catch(e){mark('Consulta bloqueada: '+err(e))}});
+$('executar').addEventListener('click',async()=>{if(!enabled||!$('aprovar').checked||!$('campanha').value)return;
+  const agent=$('agente').value;const confirmed=confirm('Autorizar UMA chamada paga de texto para '+agent+'? Não haverá publicação.');if(!confirmed)return;
+  enabled=false;$('executar').disabled=true;$('aprovar').checked=false;$('execucao').textContent='Solicitação enviada. Não repita este pedido.';
+  try{const req={agent,adType:$('ad').value,confirmarCusto:true,confirmarModo:'UM_AGENTE',requestId:crypto.randomUUID()};
+    const r=await fetch(detail(),{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json','x-pp-d8-action':'1'},body:JSON.stringify(req)});
+    const data=await r.json();if(!r.ok||!data.ok)throw Error(data.error||'Falha no processamento');
+    $('execucao').textContent='Resposta registrada para '+agent+'. Consulte as entregas antes de prosseguir.';
+  }catch(e){$('execucao').textContent='Operação não concluída: '+err(e)+' — consulte o histórico antes de tentar novamente.'}
+});
+</script></body></html>

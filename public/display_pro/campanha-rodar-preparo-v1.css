@@ -1,0 +1,28 @@
+/* PP_RODAR_CAMPANHA_PREPARO_V1 - escopo independente, sem alterar o visual V4 */
+.pp-run-campaign{margin:0 0 18px;border:1px solid var(--border,#dde2ec);border-radius:18px;background:var(--white,#fff);box-shadow:var(--shadow,0 8px 22px rgba(28,39,66,.06));overflow:hidden;color:inherit}
+.pp-run-campaign>summary{cursor:pointer;padding:16px 20px;font-size:17px;font-weight:850;color:var(--deep,#2d4675);display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;list-style-position:inside}
+.pp-run-campaign>summary:focus-visible{outline:3px solid #7b9aff;outline-offset:-3px}
+.pp-run-pill{font-size:11px;font-weight:800;border:1px solid #decda4;border-radius:999px;background:#fff8e7;color:#755521;padding:6px 10px;letter-spacing:0}
+.pp-run-body{border-top:1px solid var(--border,#e7e7e7);padding:0 20px 20px}
+.pp-run-explain{font-size:13px;line-height:1.6;color:var(--muted,#5d6073);margin:14px 0}
+.pp-run-fields{display:grid;grid-template-columns:minmax(210px,1fr) minmax(290px,1.55fr);align-items:start;gap:14px}
+.pp-run-fieldset{border:1px solid var(--border,#e6d8e0);border-radius:13px;padding:12px;margin:0;min-width:0}
+.pp-run-fieldset legend{padding:0 5px;font-weight:850;color:var(--deep,#2d4675);font-size:14px}
+.pp-run-fieldset label{display:flex;align-items:center;gap:9px;cursor:pointer;padding:9px 6px;margin:0;min-height:40px;font-size:13px;font-weight:650}
+.pp-run-fieldset input{width:17px;height:17px;flex:0 0 17px;accent-color:var(--pink,#3477c6);cursor:pointer}
+.pp-run-channel-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:2px 8px}
+.pp-run-hint{font-size:11px;color:var(--muted,#65687b);line-height:1.55;margin:9px 3px 1px}
+.pp-run-buttons{display:flex;flex-wrap:wrap;gap:9px;margin-top:17px}
+.pp-run-btn{border-radius:10px;border:1px solid var(--border,#d2d6e5);padding:10px 14px;min-height:44px;font-size:13px;font-weight:800;background:#fff;color:var(--deep,#2d4675)}
+.pp-run-btn:focus-visible{outline:3px solid #86abff;outline-offset:2px}
+.pp-run-btn:disabled{opacity:.48;cursor:not-allowed;filter:grayscale(.65)}
+.pp-run-btn-primary{background:var(--deep,#31518a);color:#fff;border-color:var(--deep,#31518a)}
+.pp-run-btn-alt{background:var(--light,#eff5fe);color:var(--deep,#31518a);border-color:var(--border,#d2d6e5)}
+.pp-run-result{margin-top:13px;border:1px solid #d3c69f;background:#fff8eb;color:#75531c;padding:11px 13px;border-radius:10px;white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.6;font-size:12px}
+.pp-run-result.pp-run-info{background:#f2f7ff;color:#254876;border-color:#a8c4e9}
+.pp-run-plan{margin-top:10px;border:1px solid var(--border,#ddd);border-radius:11px;padding:12px;background:#fbfcff;font-size:13px;line-height:1.55;overflow-wrap:anywhere}
+.pp-run-plan p{margin:4px 0 9px}.pp-run-plan strong{color:var(--deep,#2d4675)}
+.pp-run-help{margin-top:14px;border:1px solid var(--border,#dedede);border-radius:11px;background:#fff;padding:11px 14px;font-size:12px;color:var(--muted,#5d6073)}
+.pp-run-help>summary{cursor:pointer;font-weight:750;color:var(--deep,#2d4675)}.pp-run-help p{line-height:1.5}
+@media(max-width:740px){.pp-run-fields{grid-template-columns:1fr}.pp-run-campaign>summary{padding:14px;font-size:15px}.pp-run-body{padding:0 14px 14px}.pp-run-btn{flex:1 1 140px}}
+@media(max-width:430px){.pp-run-channel-grid{grid-template-columns:1fr}}

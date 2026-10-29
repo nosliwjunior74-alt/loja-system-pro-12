@@ -160,6 +160,7 @@
     .pp-d8-result pre{font:13px/1.5 system-ui,sans-serif;white-space:pre-wrap;overflow-wrap:anywhere;margin-bottom:0}
     @media(max-width:700px){.pp-d8-box>summary{padding:14px;font-size:15px}.pp-d8-body{padding:0 14px 16px}.pp-d8-body .buttons>button{flex:1 1 135px}}
   </style>
+  <link rel="stylesheet" href="campanha-rodar-preparo-v1.css">
 </head>
 <body>
 <header class="top"><div class="brand">✦ Provador Pro <small>Campanha Inteligente · D5 · Gestão de rascunhos</small></div><a class="back" id="back" href="/lojas_master.html">← Voltar ao painel</a></header>
@@ -195,6 +196,50 @@
       <p class="ad-guide-note" id="adGuideStatus">A orientação pode ser aplicada ao editor abaixo. Depois, revise e clique em “Salvar rascunho”.</p>
     </div>
   </details>
+    <!-- PP_RODAR_CAMPANHA_PREPARO_V1: interface de planejamento, sem disparos -->
+  <details id="ppRunCampaignV1" class="pp-run-campaign">
+    <summary><span>🚀 RODAR CAMPANHA</span><span class="pp-run-pill">Preparação • Publicação bloqueada</span></summary>
+    <div class="pp-run-body">
+      <p class="pp-run-explain">Prepare a distribuição da campanha para as redes que você pretende utilizar. <strong>Nenhuma rede será conectada, nenhum agente será executado e nenhuma publicação ou cobrança será feita por estes botões.</strong></p>
+      <div class="pp-run-fields">
+        <fieldset class="pp-run-fieldset" id="ppRunType">
+          <legend>1. Modalidade da campanha</legend>
+          <label><input type="radio" name="ppRunAdType" value="organico" checked> 🌱 Orgânica — sem impulsionamento</label>
+          <label><input type="radio" name="ppRunAdType" value="pago"> 🎯 Paga — orçamento e aprovação futuros</label>
+        </fieldset>
+        <fieldset class="pp-run-fieldset" id="ppRunChannels">
+          <legend>2. Redes pretendidas</legend>
+          <div class="pp-run-channel-grid">
+            <label><input type="checkbox" value="instagram"> Instagram</label>
+            <label><input type="checkbox" value="facebook"> Facebook</label>
+            <label><input type="checkbox" value="tiktok"> TikTok</label>
+            <label><input type="checkbox" value="youtube"> YouTube</label>
+            <label><input type="checkbox" value="google_business"> Perfil da Empresa no Google</label>
+            <label><input type="checkbox" value="google_ads"> Google Ads</label>
+            <label><input type="checkbox" value="whatsapp"> WhatsApp Business</label>
+          </div>
+          <p class="pp-run-hint">Selecionar aqui não conecta contas nem autoriza envios. Cada rede dependerá das integrações oficiais e de suas regras.</p>
+        </fieldset>
+      </div>
+      <div class="pp-run-buttons">
+        <button type="button" id="ppRunPrepare" class="pp-run-btn pp-run-btn-alt">📋 Preparar seleção</button>
+        <button type="button" id="ppRunCampaignAction" class="pp-run-btn pp-run-btn-primary" aria-describedby="ppRunBlockers">🚀 RODAR CAMPANHA</button>
+        <button type="button" id="ppRunApprove" class="pp-run-btn" disabled title="Aguardando oito agentes e revisão de peças">✅ Aprovar peças</button>
+        <button type="button" id="ppRunSchedule" class="pp-run-btn" disabled title="Aguardando integração oficial de agendamento">🗓 Agendar</button>
+        <button type="button" id="ppRunPublish" class="pp-run-btn" disabled title="Aguardando conexão e aprovação humana">📤 Publicar</button>
+        <button type="button" id="ppRunPause" class="pp-run-btn" disabled title="Não há publicação ativa para pausar">⏸ Pausar</button>
+      </div>
+      <div id="ppRunResult" class="pp-run-result" role="status" aria-live="polite">Escolha as redes e clique em “Preparar seleção”. O botão RODAR CAMPANHA mostra as pendências e não executa publicação.</div>
+      <div id="ppRunPlan" class="pp-run-plan" hidden></div>
+      <details class="pp-run-help" id="ppRunHelp">
+        <summary>ℹ️ Como funcionará quando os oito agentes estiverem prontos?</summary>
+        <p>O futuro fluxo será: campanha salva → seleção de redes → produção dos oito agentes → conformidade → revisão e aprovação humana → conexão das contas → agendamento ou publicação → análise e CRM.</p>
+        <p id="ppRunBlockers"><strong>Bloqueios atuais:</strong> os oito agentes ainda não estão integralmente validados para produção; imagens e vídeos reais, credenciais das redes, agendamento e publicação ainda exigem integração. No modo pago também serão exigidos orçamento e aprovação específica.</p>
+        <p>WhatsApp requer opt-in e respeito às regras de mensagens; anúncios pagos usam contas e permissões próprias. Não existe aprovação automática garantida pelas plataformas.</p>
+      </details>
+    </div>
+  </details>
+  <!-- /PP_RODAR_CAMPANHA_PREPARO_V1 -->
   <div class="status" id="status" role="status" aria-live="polite">Carregando campanhas…</div>
   <div class="grid">
     <section class="panel list-panel" aria-label="Campanhas salvas">
@@ -302,4 +347,5 @@
 <script src="campanha-inteligente.js" defer></script>
 <script src="campanha-midias-d7.js" defer></script>
 <script src="campanha-ia-d8.js" defer></script>
+  <script src="campanha-rodar-preparo-v1.js" defer></script>
 </body></html>
